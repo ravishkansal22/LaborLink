@@ -17,6 +17,19 @@ class TradeRate(BaseModel):
     minimum_charge: float = Field(ge=0)
 
 
+class OfferLimits(BaseModel):
+    """Platform policy for worker offers, applied to the job's current labour estimate.
+
+    permitted labour amount = [labour.min x floor_ratio, labour.max x ceiling_ratio]
+    These are illustrative LaborLink demo limits, not legal requirements.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    floor_ratio: float = Field(default=1.0, gt=0, le=1)
+    ceiling_ratio: float = Field(default=1.25, ge=1, le=3)
+
+
 class RateCard(BaseModel):
     """Pricing configuration loaded from JSON (see app/data/rate_card.json)."""
 
@@ -34,6 +47,7 @@ class RateCard(BaseModel):
     # Hourly statutory wage floors per trade. Only add VERIFIED, jurisdiction-specific figures.
     wage_floors: dict[Trade, float] = Field(default_factory=dict)
     wage_floor_source: str | None = None
+    offer_limits: OfferLimits = Field(default_factory=OfferLimits)
 
     @model_validator(mode="after")
     def _complete(self) -> RateCard:
@@ -81,3 +95,15 @@ class PriceEstimate(BaseModel):
     rate_card_version: str
     is_indicative: Literal[True] = True
     created_at: datetime | None = None
+
+
+class OfferTerms(BaseModel):
+    """What a worker may offer for a job, derived from its current estimate."""
+
+    price_estimate_id: str
+    currency: str
+    suggested_labour_amount: int = Field(gt=0)
+    permitted_min: int = Field(gt=0)
+    permitted_max: int = Field(gt=0)
+    travel_allowance: int = Field(ge=0)
+    basis: str

@@ -1,10 +1,12 @@
-# LaborLink API Reference (Phase 1)
+# LaborLink API Reference (Phases 1–2)
 
 - Base URL (local): `http://127.0.0.1:8000`
 - All routes are under `/api/v1`. Interactive OpenAPI docs: `/docs` (Swagger) and `/redoc`;
   schema at `/openapi.json`.
 - JSON in/out (except image upload, which is `multipart/form-data`). Timestamps are UTC ISO-8601.
-- No authentication in Phase 1 (local/demo only).
+- **No authentication** (local/demo only). Anyone who can reach the API can create workers, make
+  offers and confirm bookings; production use requires access control (see the security notes
+  in [BACKEND_ARCHITECTURE.md](./BACKEND_ARCHITECTURE.md#security-boundary-development)).
 - Examples below are real responses from the implementation (ids/timestamps vary).
 
 ## Error envelope
@@ -17,12 +19,20 @@ Every non-2xx response has this shape:
 
 | HTTP | `code` | When |
 |---|---|---|
-| 404 | `not_found` | Unknown job id or route |
-| 409 | `trade_required` | Recalculating a job whose trade is unknown |
+| 404 | `not_found` | Unknown job, worker or route; job has no booking yet |
+| 409 | `trade_required` | Job's trade is unknown (`needs_information`): cannot be priced, matched, offered on or booked |
+| 409 | `job_not_open` | Job is `booked`: no new offers, matches or recalculation |
+| 409 | `job_already_booked` | Booking a job that already has a confirmed booking (including a lost race) |
+| 409 | `worker_not_eligible` | Worker's trade, availability or service radius does not fit the job; `details` lists `{issue, message}` |
+| 409 | `duplicate_offer` | Worker already has a pending offer for this job; `details` holds its `offer_id` |
+| 409 | `estimate_unavailable` | Job has no valid current price estimate, so an offer cannot be validated |
+| 409 | `offer_not_pending` | Selected offer is no longer pending |
 | 413 | `payload_too_large` | Image larger than the upload limit |
 | 415 | `unsupported_media_type` | Upload is empty or not JPEG/PNG/WebP |
 | 422 | `validation_error` | Request body/field validation failed; `details` lists `{loc, msg, type}` |
-| 422 | `invalid_reference` | `image_id` does not exist |
+| 422 | `invalid_reference` | `image_id`, `worker_id` or `offer_id` does not exist |
+| 422 | `offer_out_of_range` | Offer amount outside the permitted range; `details` holds the range |
+| 422 | `offer_job_mismatch` | Booking an offer that belongs to a different job |
 | 500 | `storage_error` | Upload could not be written to disk |
 | 500 | `internal_error` | Unexpected error (no internal details are returned) |
 | 503 | `database_unavailable` | Database read/write failed; nothing was persisted |
@@ -263,7 +273,331 @@ loaded by the server, stores it as a new estimate (history is kept) and makes it
 request body.
 
 - **200** — a `PriceEstimate` (same shape as `price_estimate` above, with a new `id`).
-- **404** `not_found`, **409** `trade_required` (job has no trade), **503** `database_unavailable`.
+- **404** `not_found`, **409** `trade_required` (job has no trade), **409** `job_not_open` (job is
+  `booked` — the booking keeps the estimate it was agreed against), **503** `database_unavailable`.
+
+---
+
+# Phase 2 — Workers, matching, offers and booking
+
+## Job lifecycle
+
+| Status | Meaning | Discoverable / matchable / offers / booking |
+|---|---|---|
+| `needs_information` | Trade unknown, no estimate | No (`409 trade_required`) |
+| `estimated` | Work order + current FairRate estimate — **open** | Yes |
+| `booked` | A booking is confirmed | No (`409 job_not_open` / `job_already_booked`) |
+
+Permitted transitions: `estimated → estimated` (recalculate), `estimated → booked` (confirm
+booking). Every other transition is rejected. `in_progress` and `completed` belong to Phase 3 and
+do not exist yet.
+
+## Offer limits (fairness rules)
+
+Offers are validated against the job's **current FairRate estimate** (`price_estimate.labour`):
+
+```
+permitted_min           = labour.min × offer_limits.floor_ratio    (rounded up to rounding_step)
+permitted_max           = labour.max × offer_limits.ceiling_ratio  (rounded down to rounding_step)
+suggested_labour_amount = midpoint of labour.min..labour.max       (rounded half up, clamped)
+```
+
+- Configured in `backend/app/data/rate_card.json` → `"offer_limits": {"floor_ratio": 1.0,
+  "ceiling_ratio": 1.25}`. `floor_ratio` must be in (0, 1], `ceiling_ratio` in [1, 3].
+- With the default `floor_ratio` of 1.0 a worker cannot undercut the estimate's minimum labour,
+  which prevents a race to the bottom; the ceiling protects the employer.
+- These are **illustrative LaborLink platform limits, not legal minimum wages**. They inherit the
+  estimate's wage-floor status (by default `not_configured`).
+- Offer amounts are **labour only**. Each offer also records the estimate's flat
+  `travel_allowance`; `total_amount = labour_amount + travel_allowance`. Materials are excluded.
+- At booking time the amount is checked again against the job's *current* estimate.
+
+---
+
+## POST `/api/v1/workers`
+
+Create a worker profile. Profiles are **self-declared**: `verification_status` is always
+`"unverified"`; LaborLink performs no identity, document or skill checks.
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `display_name` | string | yes | 2–80 chars, whitespace collapsed |
+| `trades` | list of `plumber` \| `electrician` \| `mason` \| `carpenter` | yes | 1–4, no duplicates |
+| `years_experience` | integer | no | 0–60, self-reported |
+| `location.latitude` / `location.longitude` | number | yes | −90..90 / −180..180 |
+| `location.locality` | string | no | ≤ 120 chars |
+| `service_radius_km` | number | no (default 10) | > 0 and ≤ 50 |
+| `availability` | `available` \| `unavailable` | no (default `available`) | |
+
+```json
+{
+  "display_name": "Ramesh Patel",
+  "trades": ["plumber"],
+  "years_experience": 8,
+  "location": {"latitude": 23.0225, "longitude": 72.5714, "locality": "Ellisbridge"},
+  "service_radius_km": 8
+}
+```
+
+**201**:
+
+```json
+{
+  "id": "7de3a40c-9478-46ab-9231-6e4b6085fbdc",
+  "display_name": "Ramesh Patel",
+  "trades": ["plumber"],
+  "years_experience": 8,
+  "location": {"latitude": 23.0225, "longitude": 72.5714, "locality": "Ellisbridge"},
+  "service_radius_km": 8.0,
+  "availability": "available",
+  "verification_status": "unverified",
+  "created_at": "2026-10-16T07:58:23.333829Z",
+  "updated_at": "2026-10-16T07:58:23.333829Z"
+}
+```
+
+Errors: 422 `validation_error`, 503 `database_unavailable`.
+
+## GET `/api/v1/workers/{worker_id}`
+
+**200** `WorkerResponse` (as above) · **404** `not_found`.
+
+## PATCH `/api/v1/workers/{worker_id}`
+
+Partial update: send only the fields to change (same rules as create). `years_experience` may be
+set to `null`; other fields may not. `location` is replaced as a whole. An empty body is rejected.
+
+```json
+{"availability": "unavailable"}
+```
+
+**200** updated `WorkerResponse` · **404** `not_found` · **422** `validation_error`.
+
+---
+
+## GET `/api/v1/jobs/{job_id}/matches?limit=20`
+
+Ranked workers for an open job. `limit` 1–100 (default 20).
+
+Eligibility: the worker lists the job's trade, is `available`, and — when the job has coordinates —
+the haversine distance is within the worker's `service_radius_km`.
+
+Score (0–100), **price is never used**: distance up to 60 points (`60 × (1 − distance/radius)`)
+plus experience up to 40 points (`40 × min(years, 10)/10`). Ties: nearer first, then worker id.
+
+If the job has **no coordinates**, `distance_matching` is `"unavailable"`, `distance_km` and
+`within_service_radius` are `null` (never invented), the radius rule is not applied, and a
+limitation explains why. `excluded` counts workers filtered out (each under its first failing
+rule) without exposing them.
+
+```json
+{
+  "job_id": "3dfc392e-8de0-4f75-93f7-a7d2f4be47ba",
+  "trade": "plumber",
+  "distance_matching": "complete",
+  "limitations": [],
+  "scoring": "score = distance points (up to 60, closer within the worker's service radius is better) + experience points (up to 40, capped at 10 years). Price is not used for ranking. Ties: nearer first, then worker id.",
+  "candidates": [
+    {
+      "worker": {"id": "7de3a40c-9478-46ab-9231-6e4b6085fbdc", "display_name": "Ramesh Patel",
+                 "trades": ["plumber"], "years_experience": 8, "verification_status": "unverified"},
+      "availability": "available",
+      "distance_km": 1.88,
+      "service_radius_km": 8.0,
+      "within_service_radius": true,
+      "score": 77.9,
+      "score_breakdown": {"distance": 45.9, "experience": 32.0},
+      "reasons": ["Offers plumber work", "Marked as available",
+                  "1.88 km away, within a 8 km service radius",
+                  "8 years of self-reported experience"],
+      "limitations": []
+    }
+  ],
+  "excluded": {"trade_mismatch": 0, "unavailable": 0, "outside_service_radius": 0}
+}
+```
+
+Worker coordinates are not included. Errors: 404 `not_found`, 409 `trade_required` /
+`job_not_open`, 422 (bad `limit`).
+
+## GET `/api/v1/workers/{worker_id}/jobs?limit=20`
+
+Open (`estimated`) jobs matching the worker's trades and service area, nearest first (jobs without
+coordinates last, with a limitation). The employer's address, coordinates and request details are
+**not** included. An `unavailable` worker gets an empty list and a limitation. Poll this endpoint
+for new jobs (no push notifications).
+
+```json
+{
+  "worker_id": "8b870fe5-0edc-4db1-93bb-cc0e5d424d98",
+  "worker_availability": "available",
+  "limitations": [],
+  "items": [
+    {
+      "job_id": "3dfc392e-8de0-4f75-93f7-a7d2f4be47ba",
+      "trade": "plumber",
+      "problem_category": "leak_repair",
+      "problem_summary": "Leaking pipe, tap or joint needs repair",
+      "complexity": "low",
+      "urgency": "normal",
+      "estimated_duration": {"min_hours": 1.0, "max_hours": 2.0},
+      "distance_km": 1.88,
+      "limitations": [],
+      "offer_terms": {
+        "price_estimate_id": "17568e85-51a3-4c95-ba30-2e9fac4ce3ed",
+        "currency": "INR",
+        "suggested_labour_amount": 380,
+        "permitted_min": 300,
+        "permitted_max": 560,
+        "travel_allowance": 50,
+        "basis": "Labour estimate INR 300-INR 450; offers allowed from 1x the minimum to 1.25x the maximum (illustrative LaborLink policy, not a legal requirement)."
+      },
+      "has_active_offer": false,
+      "created_at": "2026-10-16T07:58:23.269435Z"
+    }
+  ]
+}
+```
+
+Errors: 404 `not_found`.
+
+---
+
+## POST `/api/v1/jobs/{job_id}/offers`
+
+A worker responds to an open job.
+
+| Field | Type | Rules |
+|---|---|---|
+| `worker_id` | string | must exist (`422 invalid_reference`) |
+| `kind` | `accept_suggested` \| `counter` | |
+| `labour_amount` | integer > 0 | **required** for `counter`; **must be omitted** for `accept_suggested` (which uses `suggested_labour_amount`) |
+| `message` | string ≤ 280 | optional |
+
+Checks, in order: job exists (404) → job open (409 `trade_required` / `job_not_open`) → worker
+exists (422) → current estimate valid (409 `estimate_unavailable`) → worker eligible (409
+`worker_not_eligible`) → no pending offer by this worker for this job (409 `duplicate_offer`; also
+enforced by a database index) → counter amount within the permitted range (422
+`offer_out_of_range`).
+
+```json
+{"worker_id": "8b870fe5-0edc-4db1-93bb-cc0e5d424d98", "kind": "counter",
+ "labour_amount": 450, "message": "Can come this evening"}
+```
+
+**201** `OfferResponse`:
+
+```json
+{
+  "id": "f832a282-8990-4417-b501-f8ea61bfda3f",
+  "job_id": "3dfc392e-8de0-4f75-93f7-a7d2f4be47ba",
+  "worker": {"id": "8b870fe5-0edc-4db1-93bb-cc0e5d424d98", "display_name": "Sunil Kumar",
+             "trades": ["plumber", "mason"], "years_experience": 2,
+             "verification_status": "unverified"},
+  "kind": "counter",
+  "labour_amount": 450,
+  "travel_allowance": 50,
+  "total_amount": 500,
+  "currency": "INR",
+  "price_estimate_id": "17568e85-51a3-4c95-ba30-2e9fac4ce3ed",
+  "message": "Can come this evening",
+  "status": "pending",
+  "closed_reason": null,
+  "created_at": "2026-10-16T07:58:23.468869Z",
+  "updated_at": "2026-10-16T07:58:23.468869Z"
+}
+```
+
+Out-of-range example (422):
+
+```json
+{"error": {"code": "offer_out_of_range",
+  "message": "labour_amount must be between 300 and 560 INR.",
+  "details": [{"permitted_min": 300, "permitted_max": 560, "currency": "INR",
+               "basis": "Labour estimate INR 300-INR 450; offers allowed from 1x the minimum to 1.25x the maximum (illustrative LaborLink policy, not a legal requirement)."}]}}
+```
+
+Offer statuses: `pending` → `accepted` (selected in a booking) or `rejected` (closed with
+`closed_reason: "another_offer_booked"`). Offers cannot be edited or withdrawn in Phase 2.
+
+## GET `/api/v1/jobs/{job_id}/offers`
+
+All offers for a job (any status), **oldest first** — not sorted by price — with comparison
+context: `distance_km`, `match_score` (null if the worker is no longer eligible),
+`difference_from_suggested`, `currently_eligible` and `eligibility_issues`. `offer_terms` holds the
+current terms (or `null` if the job has no valid estimate).
+
+```json
+{
+  "job_id": "3dfc392e-8de0-4f75-93f7-a7d2f4be47ba",
+  "job_status": "estimated",
+  "offer_terms": {"price_estimate_id": "17568e85-…", "currency": "INR", "suggested_labour_amount": 380,
+                  "permitted_min": 300, "permitted_max": 560, "travel_allowance": 50, "basis": "…"},
+  "ordering": "Oldest first. Offers are not ranked by price; compare amount, distance, experience and match_score.",
+  "offers": [
+    {"id": "b5040066-…", "kind": "accept_suggested", "labour_amount": 380, "total_amount": 430,
+     "status": "pending", "worker": {"display_name": "Ramesh Patel", "years_experience": 8, "…": "…"},
+     "distance_km": 1.88, "match_score": 77.9, "difference_from_suggested": 0,
+     "currently_eligible": true, "eligibility_issues": [], "…": "…"},
+    {"id": "f832a282-…", "kind": "counter", "labour_amount": 450, "total_amount": 500,
+     "status": "pending", "worker": {"display_name": "Sunil Kumar", "years_experience": 2, "…": "…"},
+     "distance_km": 1.88, "match_score": 56.72, "difference_from_suggested": 70,
+     "currently_eligible": true, "eligibility_issues": [], "…": "…"}
+  ]
+}
+```
+
+(`…` marks fields shortened here; each offer contains every `OfferResponse` field.)
+Errors: 404 `not_found`.
+
+## GET `/api/v1/workers/{worker_id}/offers`
+
+The worker's offers, newest first. Each item is an `OfferResponse` plus `job_status`, `job_trade`
+and `problem_summary`, so a worker can see whether an offer was accepted or closed
+(`"status": "rejected", "closed_reason": "another_offer_booked"`). Errors: 404 `not_found`.
+
+---
+
+## POST `/api/v1/jobs/{job_id}/bookings`
+
+The employer selects one offer. Body: `{"offer_id": "<id>"}`.
+
+Checks: job exists (404) → offer exists (422 `invalid_reference`) → offer belongs to the job (422
+`offer_job_mismatch`) → job not already booked (409 `job_already_booked`) and open (409
+`trade_required`) → offer pending (409 `offer_not_pending`) → worker still eligible (409
+`worker_not_eligible`) → amount still within the current permitted range (422
+`offer_out_of_range`).
+
+Then, in **one transaction**: the job moves `estimated → booked` (conditional update), a booking
+row is created, the offer becomes `accepted`, and every other pending offer becomes `rejected`
+with `closed_reason: "another_offer_booked"`. If two bookings race, exactly one succeeds and the
+other gets `409 job_already_booked`. On a database failure nothing changes (503).
+
+**201** `BookingResponse`:
+
+```json
+{
+  "id": "d87a94f7-f119-4e5e-a3b1-6b1a21611c11",
+  "job_id": "3dfc392e-8de0-4f75-93f7-a7d2f4be47ba",
+  "offer_id": "b5040066-229b-40ba-9906-cf5155a81538",
+  "status": "confirmed",
+  "worker": {"id": "7de3a40c-9478-46ab-9231-6e4b6085fbdc", "display_name": "Ramesh Patel",
+             "trades": ["plumber"], "years_experience": 8, "verification_status": "unverified"},
+  "agreed_labour_amount": 380,
+  "travel_allowance": 50,
+  "agreed_total_amount": 430,
+  "currency": "INR",
+  "price_estimate_id": "17568e85-51a3-4c95-ba30-2e9fac4ce3ed",
+  "payment": "not_handled",
+  "created_at": "2026-10-16T07:58:23.516608Z"
+}
+```
+
+`payment: "not_handled"` — LaborLink does not process payments or escrow.
+
+## GET `/api/v1/jobs/{job_id}/booking`
+
+**200** `BookingResponse` · **404** `not_found` (unknown job, or the job has no booking yet).
 
 ---
 
@@ -273,7 +607,15 @@ The repository's `frontend/` is currently empty, so no client has been wired up.
 
 1. Optionally upload the photo with `POST /api/v1/images` and keep the returned `id`.
 2. Send speech as a transcript in `description` with `description_source: "voice_transcript"`
-   (speech-to-text is not part of the backend in Phase 1).
+   (speech-to-text is not part of the backend).
 3. `POST /api/v1/jobs`; show `work_order.follow_up_questions`, the price range and its
    `assumptions`/`warnings`, and label the price as indicative.
-4. Add the frontend origin to `LABORLINK_CORS_ORIGINS` if it is not `localhost:5173`/`3000`.
+4. Employer view: `GET /jobs/{id}/matches` for candidates, poll `GET /jobs/{id}/offers`, then
+   `POST /jobs/{id}/bookings` with the chosen `offer_id`. Show that profiles are unverified.
+5. Worker view: create/patch the profile, poll `GET /workers/{id}/jobs`, show `offer_terms`
+   (suggested amount and permitted range) before `POST /jobs/{id}/offers`, and poll
+   `GET /workers/{id}/offers` for the outcome.
+6. Without authentication the client has to remember its own worker id; this is a demo
+   convenience, not a security mechanism.
+7. Add the frontend origin to `LABORLINK_CORS_ORIGINS` if it is not `localhost:5173`/`3000`.
+   CORS allows GET, POST and PATCH.

@@ -28,10 +28,36 @@ class Complexity(str, Enum):
 
 
 class JobStatus(str, Enum):
-    """Phase 1 statuses. Phase 2+ will add e.g. `open`, `booked`, `completed`."""
+    """Job lifecycle (see docs/BACKEND_ARCHITECTURE.md#job-lifecycle).
 
-    estimated = "estimated"  # work order + price estimate available
-    needs_information = "needs_information"  # trade could not be determined; no estimate yet
+    Phase 3 is expected to add `in_progress` and `completed` after `booked`.
+    """
+
+    needs_information = "needs_information"  # trade unknown; no estimate, not discoverable
+    estimated = "estimated"  # work order + estimate available; open for matching and offers
+    booked = "booked"  # a booking is confirmed; closed to new offers
+
+
+class Availability(str, Enum):
+    available = "available"
+    unavailable = "unavailable"
+
+
+class OfferKind(str, Enum):
+    accept_suggested = "accept_suggested"  # worker accepts the suggested labour amount
+    counter = "counter"  # worker proposes a different amount within the permitted range
+
+
+class OfferStatus(str, Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
+class BookingStatus(str, Enum):
+    """Phase 3 is expected to add in-progress/completed states."""
+
+    confirmed = "confirmed"
 
 
 class ErrorDetail(BaseModel):

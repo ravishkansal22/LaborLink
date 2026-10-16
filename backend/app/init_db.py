@@ -9,10 +9,11 @@ from app.db import create_db_engine, init_db
 def main() -> None:
     settings = get_settings()
     engine = create_db_engine(settings)
-    init_db(engine)
+    created = init_db(engine)
     settings.upload_path.mkdir(parents=True, exist_ok=True)
     engine.dispose()
     print(f"Database ready: {settings.resolved_database_url}")
+    print(f"Tables created: {', '.join(created) if created else 'none (schema already current)'}")
     print(f"Upload folder ready: {settings.upload_path}")
 
 

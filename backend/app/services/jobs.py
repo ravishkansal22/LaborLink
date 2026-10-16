@@ -7,19 +7,18 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.db import utcnow
-from app.errors import ConflictError, InvalidReferenceError, NotFoundError
+from app.errors import InvalidReferenceError, NotFoundError
 from app.models import ImageUpload, Job, PriceEstimateRecord, WorkOrderRecord
 from app.schemas.common import JobStatus, Trade, Urgency
 from app.schemas.jobs import JobCreate, JobRequestDetails, JobResponse, Location
 from app.schemas.pricing import PriceEstimate, RateCard
 from app.schemas.work_order import WorkOrderV1
 from app.services.db_guard import db_guard
+from app.services.lifecycle import JobNotOpenError, TradeRequiredError, ensure_transition
 from app.services.pricing import calculate_estimate
 from app.services.work_orders import ImageInput, WorkOrderInput, WorkOrderService
 
-
-class TradeRequiredError(ConflictError):
-    code = "trade_required"
+__all__ = ["TradeRequiredError", "create_job", "get_job", "recalculate_estimate", "to_response"]
 
 
 def pricing_warnings(work_order: WorkOrderV1) -> list[str]:
@@ -147,6 +146,12 @@ def recalculate_estimate(session: Session, job_id: str, *, rate_card: RateCard) 
             "This job has no trade yet, so it cannot be priced. Create the job again with a "
             "trade selected."
         )
+    if job.status != JobStatus.estimated.value:
+        # A booked job keeps the estimate its booking was agreed against.
+        raise JobNotOpenError(
+            f"Job '{job.id}' is '{job.status}'; its estimate can no longer be recalculated."
+        )
+    ensure_transition(job, JobStatus.estimated)
     work_order = WorkOrderV1.model_validate(job.work_order.payload)
     estimate = _estimate_for(work_order, Urgency(job.urgency), rate_card)
     record = _estimate_record(estimate, sequence=len(job.price_estimates) + 1)

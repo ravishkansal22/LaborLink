@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Engine, create_engine, event, text
+from sqlalchemy import DateTime, Engine, create_engine, event, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.types import TypeDecorator
 
@@ -61,11 +61,18 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
     return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
-def init_db(engine: Engine) -> None:
-    """Create all tables that do not yet exist (idempotent)."""
+def init_db(engine: Engine) -> list[str]:
+    """Create tables (and their indexes) that do not exist yet; return the names created.
+
+    This is the schema-upgrade strategy while every schema change is additive (new tables
+    only): existing tables and their rows are never dropped or altered. A change to an
+    existing table requires a real migration tool (e.g. Alembic) instead.
+    """
     from app import models  # noqa: F401  (registers models on Base.metadata)
 
+    existing = set(inspect(engine).get_table_names())
     Base.metadata.create_all(engine)
+    return [t.name for t in Base.metadata.sorted_tables if t.name not in existing]
 
 
 def check_database(engine: Engine) -> bool:

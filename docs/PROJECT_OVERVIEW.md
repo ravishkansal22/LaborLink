@@ -16,7 +16,8 @@ LaborLink connects employers with nearby skilled workers and makes each job tran
    description; LaborLink turns it into a structured work order (trade, problem, tools, materials,
    duration, open questions).
 2. **FairRate.** An indicative, explainable price range with every assumption stated.
-3. **Matching.** Suitable workers nearby are matched to the job (Phase 2).
+3. **Matching and booking.** Suitable workers nearby are matched to the job, make offers within
+   fair limits, and the employer books one (Phase 2).
 4. **Kamai Passbook.** Completed jobs and earnings are recorded as a digital passbook for the
    worker (Phase 3).
 
@@ -51,20 +52,23 @@ LaborLink connects employers with nearby skilled workers and makes each job tran
 1. Employer photographs the problem and records/types a description.
 2. LaborLink creates a work order and a FairRate estimate; the employer answers any follow-up
    questions. *(Phase 1 — implemented in the backend)*
-3. Nearby workers see the job, accept or counter-bid; the employer books one. *(Phase 2)*
+3. Nearby workers see the job, accept the suggested amount or counter-offer within the
+   permitted range; the employer compares offers and books one. *(Phase 2 — implemented in the
+   backend)*
 4. The worker completes the job and uploads evidence; the employer confirms; payment is
    (simulated) settled and the job is added to the worker's Kamai Passbook. *(Phase 3)*
 
 ## Full vision vs. hackathon prototype
 
-The prototype implements step 2 above as a backend API. Speech recognition, real image
-understanding (unless an API key is configured), worker accounts, matching, bookings, payments and
-the passbook are part of the vision but **not** of the current prototype.
+The prototype implements steps 2 and 3 above as a backend API. Speech recognition, real image
+understanding (unless an API key is configured), user accounts and authentication, verified worker
+identities, ratings, notifications, payments, completion evidence and the passbook are part of the
+vision but **not** of the current prototype.
 
 ## Roadmap
 
 | Phase | Scope | Status |
 |---|---|---|
 | **Phase 1** | Backend foundation, job intake, structured work orders, FairRate price estimates, persistence | **Complete** (see [IMPLEMENTATION_PROGRESS.md](./IMPLEMENTATION_PROGRESS.md)) |
-| **Phase 2** | Worker profiles, location-based matching, job discovery, counter-bidding and booking | Pending |
+| **Phase 2** | Worker profiles, location-based matching, job discovery, counter-bidding and booking | **Complete** (see [IMPLEMENTATION_PROGRESS.md](./IMPLEMENTATION_PROGRESS.md)) |
 | **Phase 3** | Job completion evidence, completion confirmation, simulated payment settlement, Kamai Passbook | Pending |

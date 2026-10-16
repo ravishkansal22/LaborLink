@@ -18,7 +18,13 @@ import math
 from pathlib import Path
 
 from app.schemas.common import Complexity, Trade, Urgency
-from app.schemas.pricing import AmountRange, PriceEstimate, RateCard, WageFloorCheck
+from app.schemas.pricing import (
+    AmountRange,
+    OfferTerms,
+    PriceEstimate,
+    RateCard,
+    WageFloorCheck,
+)
 from app.schemas.work_order import DurationRange
 
 
@@ -147,4 +153,37 @@ def calculate_estimate(
         warnings=warnings,
         wage_floor_check=wage_check,
         rate_card_version=card.version,
+    )
+
+
+def offer_terms(card: RateCard, estimate: PriceEstimate) -> OfferTerms:
+    """Offer limits for a job, derived from its current estimate (no second pricing formula).
+
+    The suggested amount is the midpoint of the estimated labour range. Counter-offers may not
+    go below `labour.min x floor_ratio` (protecting workers from a race to the bottom) or above
+    `labour.max x ceiling_ratio` (protecting employers).
+    """
+    if estimate.id is None:
+        raise ValueError("estimate must be persisted before offer terms are derived")
+    step = card.rounding_step
+    limits = card.offer_limits
+    permitted_min = max(_round_up(estimate.labour.min * limits.floor_ratio, step), step)
+    permitted_max = max(_round_down(estimate.labour.max * limits.ceiling_ratio, step),
+                        permitted_min)
+    midpoint = (estimate.labour.min + estimate.labour.max) / 2
+    suggested = int(math.floor(midpoint / step + 0.5) * step)  # round half up
+    suggested = min(max(suggested, permitted_min), permitted_max)
+    return OfferTerms(
+        price_estimate_id=estimate.id,
+        currency=estimate.currency,
+        suggested_labour_amount=suggested,
+        permitted_min=permitted_min,
+        permitted_max=permitted_max,
+        travel_allowance=estimate.travel_allowance,
+        basis=(
+            f"Labour estimate {_money(card, estimate.labour.min)}-"
+            f"{_money(card, estimate.labour.max)}; offers allowed from {limits.floor_ratio:g}x "
+            f"the minimum to {limits.ceiling_ratio:g}x the maximum (illustrative LaborLink "
+            "policy, not a legal requirement)."
+        ),
     )

@@ -49,3 +49,20 @@ When submitting changes, please append an entry following this format:
 - **Execution & Testing**:
   - `cd backend`, `python -m pip install -r requirements.txt`, `python -m uvicorn app.main:app --reload`, open `/docs`.
   - `python -m pytest` (87 passed) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Phase 2 backend: workers, matching, offers, booking
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | docs
+- **Type**: Feature
+- **Description**:
+  - Worker profiles (`POST/GET/PATCH /api/v1/workers`), self-declared and marked unverified.
+  - Matching (`GET /jobs/{id}/matches`): trade, availability, haversine distance vs service radius; transparent score from distance and experience, never price; explicit handling of jobs without coordinates.
+  - Worker job discovery (`GET /workers/{id}/jobs`) without employer address.
+  - Offers (`POST/GET /jobs/{id}/offers`, `GET /workers/{id}/offers`): accept suggested amount or counter within rate-card `offer_limits` applied to the current FairRate estimate; one pending offer per worker per job (DB-enforced).
+  - Booking (`POST /jobs/{id}/bookings`, `GET /jobs/{id}/booking`): single transaction, conditional job update + UNIQUE(job_id) prevent double booking; competing offers closed.
+  - Lifecycle: new `booked` status; recalculating a booked job now returns 409 `job_not_open`. CORS now allows PATCH.
+  - Schema: new tables `workers`, `offers`, `bookings` only; existing databases upgrade in place via `python -m app.init_db` or startup.
+  - Docs updated: API, BACKEND_ARCHITECTURE, IMPLEMENTATION_PROGRESS, PROJECT_OVERVIEW, EXECUTION_GUIDE. `frontend/` untouched. Phase 3 not started.
+- **Execution & Testing**:
+  - `cd backend`, `python -m app.init_db`, `python -m uvicorn app.main:app --reload`, follow the Phase 2 walkthrough in EXECUTION_GUIDE.
+  - `python -m pytest` (165 passed: 87 Phase 1 unchanged + 78 Phase 2) and `python -m ruff check .` (clean).

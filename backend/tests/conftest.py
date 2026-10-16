@@ -74,3 +74,53 @@ def make_png(width: int = 2, height: int = 2) -> bytes:
 @pytest.fixture
 def png_bytes() -> bytes:
     return make_png()
+
+
+# --- Phase 2 helpers -----------------------------------------------------------------------------
+
+JOB_LAT, JOB_LNG = 23.0365, 72.5611  # Navrangpura, Ahmedabad
+NEAR = {"latitude": 23.0225, "longitude": 72.5714}  # ~1.9 km from the job
+FAR = {"latitude": 23.2156, "longitude": 72.6369}  # ~21 km away (Gandhinagar)
+
+
+@pytest.fixture
+def make_worker(client):
+    def _make(c=None, **overrides) -> dict:
+        body = {
+            "display_name": "Ramesh Patel",
+            "trades": ["plumber"],
+            "years_experience": 5,
+            "location": dict(NEAR),
+            "service_radius_km": 10,
+        }
+        body.update(overrides)
+        resp = (c or client).post("/api/v1/workers", json=body)
+        assert resp.status_code == 201, resp.text
+        return resp.json()
+
+    return _make
+
+
+@pytest.fixture
+def make_job(client):
+    def _make(c=None, **overrides) -> dict:
+        body = {
+            "description": "Kitchen sink tap is leaking and dripping all night",
+            "location": {"address": "Navrangpura", "latitude": JOB_LAT, "longitude": JOB_LNG},
+        }
+        body.update(overrides)
+        resp = (c or client).post("/api/v1/jobs", json=body)
+        assert resp.status_code == 201, resp.text
+        return resp.json()
+
+    return _make
+
+
+@pytest.fixture
+def make_offer(client):
+    def _make(job_id: str, worker_id: str, c=None, **overrides):
+        body = {"worker_id": worker_id, "kind": "accept_suggested"}
+        body.update(overrides)
+        return (c or client).post(f"/api/v1/jobs/{job_id}/offers", json=body)
+
+    return _make
