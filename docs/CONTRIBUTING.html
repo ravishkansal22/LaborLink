@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaborLink — Contributor Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8ff; --surface: #ffffff; --surface-2: #eef0ff; --line: #e2e5f3;
+    --ink: #10193c; --ink-2: #4f5568; --ink-3: #7a7f92;
+    --brand: #0758d8; --brand-soft: #e3e9ff; --navy: #29335b; --accent: #08799e;
+    --warn-bg: #fff6e5; --warn-ink: #7a4b00; --ok: #127a45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1222; --surface: #161b30; --surface-2: #1d2440; --line: #2a3254;
+      --ink: #eef0fb; --ink-2: #b9bfd6; --ink-3: #8a90a8;
+      --brand: #6f9dff; --brand-soft: #1f2c55; --navy: #1b2347; --accent: #4cc3e6;
+      --warn-bg: #3a2c10; --warn-ink: #ffd88a; --ok: #5fd39a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Mukta', system-ui, sans-serif; font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  header.hero { background: var(--navy); color: #fff; padding: 56px 0 48px; }
+  header.hero .eyebrow { display: inline-block; padding: 2px 12px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 14px; font-weight: 600; letter-spacing: .03em; }
+  header.hero h1 { margin: 14px 0 8px; font-size: clamp(32px, 6vw, 48px); line-height: 1.1; font-weight: 800; }
+  header.hero p { margin: 0; max-width: 680px; color: #d4d9f0; font-size: 19px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 18px; overflow-x: auto; padding-top: 12px; padding-bottom: 12px; white-space: nowrap; font-size: 15px; }
+  nav.toc a { color: var(--ink-2); }
+  section { padding: 40px 0 8px; }
+  h2 { margin: 0 0 6px; font-size: 28px; line-height: 1.2; font-weight: 800; }
+  h3 { margin: 0 0 4px; font-size: 19px; font-weight: 700; }
+  p { margin: 0 0 12px; }
+  .lead { color: var(--ink-2); margin-bottom: 20px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .card p, .card li { color: var(--ink-2); font-size: 16px; }
+  .card ul { margin: 6px 0 0; padding-left: 18px; }
+  .tag { display: inline-block; margin-bottom: 8px; padding: 1px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 700; }
+  .steps { counter-reset: step; display: grid; gap: 12px; padding: 0; list-style: none; }
+  .steps li { position: relative; padding: 14px 16px 14px 62px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 16px; top: 14px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; }
+  .steps strong { display: block; }
+  .steps span { color: var(--ink-2); font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-size: 16px; }
+  th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 700; }
+  tr:last-child td { border-bottom: 0; }
+  .table-scroll { overflow-x: auto; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .flow span { padding: 4px 12px; border-radius: 10px; background: var(--surface-2); font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+  .flow i { color: var(--ink-3); font-style: normal; }
+  .note { padding: 14px 16px; border-radius: 14px; background: var(--warn-bg); color: var(--warn-ink); font-size: 16px; }
+  .ok { color: var(--ok); font-weight: 700; }
+  code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); font-family: ui-monospace, Consolas, monospace; font-size: .88em; }
+  pre { margin: 8px 0 14px; padding: 14px 16px; overflow-x: auto; border-radius: 12px; background: #0f1530; color: #e6e9f8; font-size: 14px; line-height: 1.55; }
+  header.hero code { background: rgba(255,255,255,.18); color: #fff; }
+  pre code { padding: 0; background: none; color: inherit; font-size: inherit; }
+  .steps li pre { margin-bottom: 6px; }
+  .small-note { color: var(--ink-3); font-size: 15px; }
+  .card pre { font-size: 13px; }
+  h3 + pre, p + pre { margin-top: 6px; }
+  section > h3 { margin-top: 18px; }
+  footer { margin-top: 48px; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 15px; }
+  @media (max-width: 560px) { body { font-size: 16px; } section { padding-top: 32px; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">SEWA Hackathon · Contributor Guide</span>
+    <h1>How to work on LaborLink</h1>
+    <p>Set up the project, run the backend and frontend, and send your changes through a feature
+      branch and a pull request. <strong>Nobody pushes directly to <code>main</code>.</strong>
+      Ravish reviews and merges every PR.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#rules">Ground rules</a><a href="#setup">One-time setup</a><a href="#run">Run the app</a>
+    <a href="#workflow">Branch &amp; PR workflow</a><a href="#naming">Naming</a><a href="#checklist">PR checklist</a>
+    <a href="#sync">Staying up to date</a><a href="#help">Troubleshooting</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="rules">
+    <h2>Ground rules</h2>
+    <div class="grid">
+      <div class="card"><span class="tag">1</span><h3>Never commit to <code>main</code></h3><p><code>main</code> is the stable, demo-ready branch. All work happens on your own feature branch.</p></div>
+      <div class="card"><span class="tag">2</span><h3>One feature, one branch, one PR</h3><p>Keep PRs small and focused, so they’re easy to review and to undo.</p></div>
+      <div class="card"><span class="tag">3</span><h3>Ravish merges</h3><p>Open a pull request into <code>main</code> and request a review from <strong>Ravish</strong>. Don’t merge your own PR.</p></div>
+      <div class="card"><span class="tag">4</span><h3>Green checks + docs</h3><p>Tests, lint and typecheck must pass, and every change gets an entry in <code>docs/CHANGELOG.md</code>.</p></div>
+      <div class="card"><span class="tag">5</span><h3>No secrets, no data</h3><p>Never commit <code>.env</code>, API keys, <code>backend/var/</code> (the database and uploads), <code>node_modules/</code> or <code>.venv/</code>.</p></div>
+      <div class="card"><span class="tag">6</span><h3>Keep demo honesty</h3><p>Payments stay labelled “simulated” or “demo”. Don’t add fake login, real payments or identity checks without a team decision.</p></div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <h2>One-time setup</h2>
+    <p class="lead">You need <strong>Git</strong>, <strong>Python 3.10+</strong> and
+      <strong>Node.js 18.17+</strong> (20 LTS recommended). Check them with
+      <code>git --version</code>, <code>python --version</code> and <code>node --version</code>.</p>
+
+    <h3>1. Clone the repository</h3>
+<pre><code>git clone https://github.com/ravishkansal22/LaborLink.git
+cd LaborLink</code></pre>
+
+    <h3>2. Create the Python virtual environment (in the repo root)</h3>
+    <p><strong>Windows (PowerShell)</strong></p>
+<pre><code>python -m venv .venv
+.venv\Scripts\Activate.ps1</code></pre>
+    <p><strong>macOS / Linux</strong></p>
+<pre><code>python3 -m venv .venv
+source .venv/bin/activate</code></pre>
+    <p class="small-note">If PowerShell says scripts are disabled, run
+      <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code> once.</p>
+
+    <h3>3. Install the backend dependencies</h3>
+<pre><code>cd backend
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt</code></pre>
+    <p>Optional: copy the example settings. The defaults work without this.</p>
+<pre><code># Windows
+Copy-Item .env.example .env
+# macOS / Linux
+cp .env.example .env</code></pre>
+
+    <h3>4. Install the frontend dependencies</h3>
+<pre><code>cd ../frontend
+npm install</code></pre>
+  </section>
+
+  <section id="run">
+    <h2>Run the app</h2>
+    <p class="lead">Use two terminals and keep both running.</p>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Terminal 1 · Backend</span>
+<pre><code>cd backend
+# activate .venv first
+python -m uvicorn app.main:app --reload</code></pre>
+        <p>API: <code>http://127.0.0.1:8000</code><br>
+           Health: <code>/api/v1/health</code><br>
+           Swagger docs: <code>/docs</code></p>
+        <p>The SQLite database is created automatically in <code>backend/var/</code>.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Terminal 2 · Frontend</span>
+<pre><code>cd frontend
+npm run dev</code></pre>
+        <p>Open <code>http://localhost:3000</code>.</p>
+        <p>The frontend forwards <code>/api/v1/*</code> to the backend on port 8000. For a
+          different backend, set <code>LABORLINK_API_URL</code> before <code>npm run dev</code>.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:22px">Checks to run before every PR</h3>
+<pre><code># backend (from backend/, venv active)
+python -m pytest
+python -m ruff check .
+
+# frontend (from frontend/)
+npm run typecheck
+npm run lint</code></pre>
+    <p>To test the whole flow in the browser, follow “Try the full demo” in the
+      <a href="../README.md">README</a>. Use one tab as the employer and another as the worker.</p>
+    <p class="note">Want a clean database? Stop the backend and delete
+      <code>backend/var/laborlink.db</code>; it’s recreated on the next start. Never commit that file.</p>
+  </section>
+
+  <section id="workflow">
+    <h2>Branch &amp; pull request workflow</h2>
+    <ol class="steps">
+      <li><strong>Start from the latest <code>main</code></strong>
+<pre><code>git checkout main
+git pull origin main</code></pre></li>
+      <li><strong>Create your feature branch</strong>
+<pre><code>git checkout -b feature/worker-ratings</code></pre>
+        <span>Use a short, descriptive name. See <a href="#naming">naming</a>.</span></li>
+      <li><strong>Make your changes and commit often</strong>
+<pre><code>git status
+git add backend/app/services/ratings.py docs/CHANGELOG.md
+git commit -m "Add worker ratings after job completion"</code></pre>
+        <span>Add specific files rather than <code>git add .</code>, so you don’t commit stray files. Write messages in the imperative (“Add…”, “Fix…”).</span></li>
+      <li><strong>Run the checks</strong><span>pytest, ruff, typecheck and lint must all pass (see above). If you touched the UI, test it in the browser.</span></li>
+      <li><strong>Push your branch</strong>
+<pre><code>git push -u origin feature/worker-ratings</code></pre></li>
+      <li><strong>Open a pull request into <code>main</code></strong><span>On GitHub, click <em>Compare &amp; pull request</em>, set the base to <code>main</code>, fill in the template below, and request a review from <strong>Ravish</strong>. Or use the GitHub CLI:</span>
+<pre><code>gh pr create --base main --title "Add worker ratings" --body-file pr.md</code></pre></li>
+      <li><strong>Respond to review</strong><span>Push more commits to the same branch; the PR updates automatically. Don’t open a new PR for fixes.</span></li>
+      <li><strong>Ravish merges</strong><span>Once it’s approved, Ravish merges the PR into <code>main</code>. Then clean up:</span>
+<pre><code>git checkout main
+git pull origin main
+git branch -d feature/worker-ratings</code></pre></li>
+    </ol>
+
+    <h3 style="margin-top:22px">Pull request description template</h3>
+<pre><code>## What
+Short summary of the change.
+
+## Why
+The problem it solves / the issue it closes.
+
+## How to test
+1. Start backend and frontend
+2. Steps to see the change…
+
+## Checks
+- [ ] pytest and ruff pass
+- [ ] npm run typecheck and npm run lint pass
+- [ ] docs/CHANGELOG.md updated (and API.md / EXECUTION_GUIDE.md if needed)
+- [ ] No secrets, .env, database or upload files committed
+
+## Screenshots (UI changes)</code></pre>
+  </section>
+
+  <section id="naming">
+    <h2>Branch naming</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Prefix</th><th>Use for</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><code>feature/</code></td><td>New functionality</td><td><code>feature/worker-ratings</code></td></tr>
+          <tr><td><code>backend/</code></td><td>Backend-only work</td><td><code>backend/geolocation</code></td></tr>
+          <tr><td><code>frontend/</code></td><td>UI-only work</td><td><code>frontend/hindi-labels</code></td></tr>
+          <tr><td><code>fix/</code></td><td>Bug fixes</td><td><code>fix/offer-amount-rounding</code></td></tr>
+          <tr><td><code>docs/</code></td><td>Documentation only</td><td><code>docs/contributor-guide</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px">Use lowercase words separated by hyphens. Don’t reuse a branch after
+      it has been merged; start a new one from <code>main</code>.</p>
+  </section>
+
+  <section id="checklist">
+    <h2>Before you open a PR</h2>
+    <div class="grid">
+      <div class="card"><h3>Code</h3><ul><li>Follows the existing style in the files you touched</li><li>Error responses use the existing <code>{"error": {...}}</code> envelope</li><li>Frontend shows real API data; no hardcoded fake content</li></ul></div>
+      <div class="card"><h3>Tests</h3><ul><li>New backend behaviour has pytest tests</li><li>All existing tests still pass</li><li>The UI was checked in the browser at phone size</li></ul></div>
+      <div class="card"><h3>Docs</h3><ul><li><code>docs/CHANGELOG.md</code> entry with your name and the date</li><li><code>docs/API.md</code> updated for any endpoint change</li><li><code>docs/EXECUTION_GUIDE.md</code> updated for new setup steps or environment variables</li></ul></div>
+      <div class="card"><h3>Safety</h3><ul><li>No keys, <code>.env</code> or personal data</li><li>No <code>backend/var/</code>, <code>.next/</code> or <code>node_modules/</code></li><li>New dependencies are added to <code>requirements.txt</code> or <code>package.json</code> and mentioned in the PR</li></ul></div>
+    </div>
+  </section>
+
+  <section id="sync">
+    <h2>Keeping your branch up to date</h2>
+    <p class="lead">If <code>main</code> moves on while you’re working, bring those changes into your
+      branch before asking for a review.</p>
+<pre><code>git checkout main
+git pull origin main
+git checkout feature/worker-ratings
+git merge main
+# fix any conflicts, then:
+git add &lt;fixed files&gt;
+git commit
+git push</code></pre>
+    <p>If you’re unsure about a conflict, ask in the team chat before forcing anything. Never use
+      <code>git push --force</code> on a branch someone else is also working on, and never on <code>main</code>.</p>
+  </section>
+
+  <section id="help">
+    <h2>Troubleshooting</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Problem</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>The app says it can’t reach the server</td><td>Start the backend first (terminal 1), and check <code>http://127.0.0.1:8000/api/v1/health</code>.</td></tr>
+          <tr><td>Port 8000 or 3000 is already in use</td><td>Stop the other process, or run <code>python -m uvicorn app.main:app --reload --port 8010</code> and start the frontend with <code>LABORLINK_API_URL=http://127.0.0.1:8010</code>. For the frontend: <code>npm run dev -- -p 3005</code>.</td></tr>
+          <tr><td><code>ModuleNotFoundError</code> in the backend</td><td>The venv isn’t active, or the requirements aren’t installed. Activate <code>.venv</code> and reinstall.</td></tr>
+          <tr><td>The map or route doesn’t load</td><td>Check your internet connection. Map tiles and road routes are fetched online.</td></tr>
+          <tr><td>Voice input is missing</td><td>Use Chrome or Edge.</td></tr>
+          <tr><td>The worker’s location isn’t shared</td><td>Allow location in the browser, or use “Run a demo trip instead” on the trip screen.</td></tr>
+          <tr><td>Accidentally committed to <code>main</code> locally</td><td>Don’t push. Run <code>git branch feature/my-work</code>, then <code>git reset --hard origin/main</code> on main, and continue on the new branch. Ask if unsure.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    LaborLink · SEWA Hackathon · See also <a href="PROJECT_IDEA.html">Project Idea</a>
+    and <a href="FACILITIES_REQUIRED.html">Facilities Required</a>. Questions? Ask Ravish.
+  </div>
+</footer>
+</body>
+</html>

@@ -9,6 +9,9 @@ Welcome to the documentation repository for the project. This folder is dedicate
 
 ## Directory Index
 
+- [PROJECT_IDEA.html](./PROJECT_IDEA.html): The project idea, features and impact, as a web page.
+- [FACILITIES_REQUIRED.html](./FACILITIES_REQUIRED.html): Every API, cloud service and resource the project uses or will need.
+- [CONTRIBUTING.html](./CONTRIBUTING.html): Contributor guide — setup, running the app, feature branches and pull requests (merged by Ravish).
 - [../README.md](../README.md): Start here — project idea, features, and setup from `pip install` to running the frontend and backend.
 
 - [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md): Problem, solution, users, features, stack, user flow and the three-phase roadmap.

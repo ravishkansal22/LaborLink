@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaborLink — Facilities Required</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8ff; --surface: #ffffff; --surface-2: #eef0ff; --line: #e2e5f3;
+    --ink: #10193c; --ink-2: #4f5568; --ink-3: #7a7f92;
+    --brand: #0758d8; --brand-soft: #e3e9ff; --navy: #29335b; --accent: #08799e;
+    --warn-bg: #fff6e5; --warn-ink: #7a4b00; --ok: #127a45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1222; --surface: #161b30; --surface-2: #1d2440; --line: #2a3254;
+      --ink: #eef0fb; --ink-2: #b9bfd6; --ink-3: #8a90a8;
+      --brand: #6f9dff; --brand-soft: #1f2c55; --navy: #1b2347; --accent: #4cc3e6;
+      --warn-bg: #3a2c10; --warn-ink: #ffd88a; --ok: #5fd39a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Mukta', system-ui, sans-serif; font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  header.hero { background: var(--navy); color: #fff; padding: 56px 0 48px; }
+  header.hero .eyebrow { display: inline-block; padding: 2px 12px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 14px; font-weight: 600; letter-spacing: .03em; }
+  header.hero h1 { margin: 14px 0 8px; font-size: clamp(32px, 6vw, 48px); line-height: 1.1; font-weight: 800; }
+  header.hero p { margin: 0; max-width: 680px; color: #d4d9f0; font-size: 19px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 18px; overflow-x: auto; padding-top: 12px; padding-bottom: 12px; white-space: nowrap; font-size: 15px; }
+  nav.toc a { color: var(--ink-2); }
+  section { padding: 40px 0 8px; }
+  h2 { margin: 0 0 6px; font-size: 28px; line-height: 1.2; font-weight: 800; }
+  h3 { margin: 0 0 4px; font-size: 19px; font-weight: 700; }
+  p { margin: 0 0 12px; }
+  .lead { color: var(--ink-2); margin-bottom: 20px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .card p, .card li { color: var(--ink-2); font-size: 16px; }
+  .card ul { margin: 6px 0 0; padding-left: 18px; }
+  .tag { display: inline-block; margin-bottom: 8px; padding: 1px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 700; }
+  .steps { counter-reset: step; display: grid; gap: 12px; padding: 0; list-style: none; }
+  .steps li { position: relative; padding: 14px 16px 14px 62px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 16px; top: 14px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; }
+  .steps strong { display: block; }
+  .steps span { color: var(--ink-2); font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-size: 16px; }
+  th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 700; }
+  tr:last-child td { border-bottom: 0; }
+  .table-scroll { overflow-x: auto; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .flow span { padding: 4px 12px; border-radius: 10px; background: var(--surface-2); font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+  .flow i { color: var(--ink-3); font-style: normal; }
+  .note { padding: 14px 16px; border-radius: 14px; background: var(--warn-bg); color: var(--warn-ink); font-size: 16px; }
+  .ok { color: var(--ok); font-weight: 700; }
+  code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); font-family: ui-monospace, Consolas, monospace; font-size: .88em; }
+  pre { margin: 8px 0 14px; padding: 14px 16px; overflow-x: auto; border-radius: 12px; background: #0f1530; color: #e6e9f8; font-size: 14px; line-height: 1.55; }
+  header.hero code { background: rgba(255,255,255,.18); color: #fff; }
+  pre code { padding: 0; background: none; color: inherit; font-size: inherit; }
+  .steps li pre { margin-bottom: 6px; }
+  .small-note { color: var(--ink-3); font-size: 15px; }
+  .card pre { font-size: 13px; }
+  h3 + pre, p + pre { margin-top: 6px; }
+  section > h3 { margin-top: 18px; }
+  footer { margin-top: 48px; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 15px; }
+  @media (max-width: 560px) { body { font-size: 16px; } section { padding-top: 32px; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">SEWA Hackathon · Facilities Required</span>
+    <h1>What LaborLink needs to run</h1>
+    <p>This page covers every API, cloud service, database, key and resource the project uses today, and what it
+      would need for a real pilot launch.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#summary">Summary</a><a href="#now">Used today</a><a href="#browser">Device &amp; browser APIs</a>
+    <a href="#ai">AI &amp; language APIs</a><a href="#ocr">OCR</a><a href="#cloud">Cloud services</a>
+    <a href="#database">Database &amp; storage</a><a href="#maps">Maps &amp; location</a><a href="#comms">Login &amp; messaging</a>
+    <a href="#payments">Payments &amp; identity</a><a href="#devops">DevOps</a><a href="#stack">Software</a>
+    <a href="#hardware">Hardware &amp; people</a><a href="#keys">API keys</a><a href="#compliance">Compliance</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="summary">
+    <h2>At a glance</h2>
+    <div class="grid">
+      <div class="card"><span class="tag">Prototype today</span><h3>No paid service needed</h3><p>The project runs on a laptop with Python, Node.js and an internet connection. Every external service it uses today is free and needs no API key.</p></div>
+      <div class="card"><span class="tag">Next step</span><h3>Indian-language AI</h3><p>Sarvam AI for speech-to-text, translation and text-to-speech in Hindi and regional languages. OCR to read documents and labels in photos.</p></div>
+      <div class="card"><span class="tag">For a pilot</span><h3>Cloud, database &amp; APIs</h3><p>Cloud hosting, a managed PostgreSQL database, photo storage, maps and routing, OTP login, notifications and, later, payments and KYC.</p></div>
+    </div>
+    <div class="table-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Legend</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ok">In use</span></td><td>Already used by the running prototype</td></tr>
+          <tr><td><strong>Must</strong></td><td>Required before real users can use the app (pilot)</td></tr>
+          <tr><td><strong>Should</strong></td><td>Strongly recommended for the pilot</td></tr>
+          <tr><td><strong>Later</strong></td><td>After the pilot, once there’s traction and a legal review</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="now">
+    <h2>External services used today</h2>
+    <p class="lead">These are called by the running prototype. None needs a key.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Service</th><th>What we use it for</th><th>Where</th><th>Key / cost</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>OpenStreetMap tiles</strong><br><small>tile.openstreetmap.org</small></td><td>Map background on the tracking screens</td><td>Frontend (Leaflet)</td><td>No key, free</td><td>Fair-use policy: fine for a demo, not for heavy traffic.</td></tr>
+          <tr><td><strong>OSRM public routing</strong><br><small>router.project-osrm.org</small></td><td>Road route between the worker and the home, used for the path, remaining distance and ETA</td><td>Frontend (<code>lib/route.ts</code>)</td><td>No key, free</td><td>A demo server with no uptime guarantee. The worker’s start point and the job’s coordinates are sent to it. Falls back to a straight-line estimate.</td></tr>
+          <tr><td><strong>Google Maps (links only)</strong></td><td>“Navigate in Google Maps” and “Open route” buttons</td><td>Frontend</td><td>No key, free</td><td>We only open a <code>google.com/maps/dir</code> URL; nothing is embedded.</td></tr>
+          <tr><td><strong>Google Fonts</strong></td><td>Mukta typeface (Latin + Devanagari)</td><td>Frontend (<code>next/font</code>)</td><td>No key, free</td><td>Downloaded at build time.</td></tr>
+          <tr><td><strong>Rule-based work-order engine</strong></td><td>Turns the job description into a structured work order and trade</td><td>Backend (offline)</td><td>No key</td><td>Deterministic and runs without internet. It understands common Hindi and Hinglish keywords.</td></tr>
+          <tr><td><strong>GitHub</strong></td><td>Code hosting, branches, pull requests</td><td>Team</td><td>Free</td><td><a href="https://github.com/ravishkansal22/LaborLink">ravishkansal22/LaborLink</a></td></tr>
+          <tr><td><strong>PyPI &amp; npm</strong></td><td>Installing dependencies</td><td>Setup</td><td>Free</td><td>Internet needed only during installation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="browser">
+    <h2>Device &amp; browser APIs</h2>
+    <p class="lead">These are built into the user’s phone or browser, so there’s nothing to buy, but
+      they have requirements.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>API</th><th>Used for</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Geolocation</strong> (<code>watchPosition</code>)</td><td>Worker’s live location during the trip; employer’s home location</td><td>HTTPS or <code>localhost</code>, plus the user’s permission. A phone with GPS gives the best accuracy.</td></tr>
+          <tr><td><strong>Web Speech API</strong> (SpeechRecognition)</td><td>Voice-to-text job description today</td><td>Chrome or Edge only, and weak for regional languages. The Sarvam AI speech-to-text API (below) is planned to replace it.</td></tr>
+          <tr><td><strong>Camera / file picker</strong></td><td>Job photo and before/after completion photos</td><td>Any modern browser. Photos are limited to 5 MB (JPEG, PNG or WebP).</td></tr>
+          <tr><td><strong>localStorage</strong></td><td>Remembers the session (role, employer and worker IDs) on the device</td><td>Clearing site data resets the app.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="ai">
+    <h2>AI &amp; Indian-language APIs</h2>
+    <p class="lead">Many of our users are more comfortable speaking than typing, often in Hindi or a
+      regional language. These services make voice the main way to use the app.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Service</th><th>What it does for LaborLink</th><th>Key (env var)</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sarvam AI — Speech-to-Text</strong><br><small>Saarika model</small></td><td>Turns the employer’s voice note into text in Hindi, English and other Indian languages, with code-mixed Hinglish. Works on every browser, because audio is sent to our backend rather than recognised in the browser.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Sarvam AI — Speech-to-Text-Translate</strong><br><small>Saaras model</small></td><td>Takes speech in a regional language and returns English text directly for the work-order engine, while keeping the original for the worker.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>Sarvam AI — Text-to-Speech</strong><br><small>Bulbul model</small></td><td>Reads job details, offers and passbook entries aloud to workers with low literacy, in their language.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>Sarvam AI — Translation</strong><br><small>Mayura model</small></td><td>Translates the work order and messages between the employer’s and the worker’s languages.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>Bhashini</strong> (Government of India)</td><td>Alternative or backup for speech recognition, translation and text-to-speech across the 22 scheduled languages</td><td><code>BHASHINI_USER_ID</code>, <code>BHASHINI_API_KEY</code></td><td>Later (backup)</td></tr>
+          <tr><td><strong>Image understanding</strong><br><small>Google Gemini / Cloud Vision, Azure AI Vision</small></td><td>Looks at the problem photo (a leaking pipe, burnt switch or cracked wall) to suggest the trade and complexity. Shown as a suggestion, never as a confirmed fact.</td><td><code>VISION_API_KEY</code></td><td>Should</td></tr>
+          <tr><td><strong>Content moderation</strong></td><td>Flags abusive text or unsafe photos in job posts and messages</td><td>Through the chosen AI provider</td><td>Later</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:14px">Voice and photos are personal data. Send them to an AI
+      provider only with the user’s consent, don’t let providers keep them for training (where the
+      provider allows this), and delete the raw audio once it has been transcribed.</p>
+  </section>
+
+  <section id="ocr">
+    <h2>OCR (reading text from images)</h2>
+    <p class="lead">Optical character recognition reads printed or handwritten text in photos. In
+      LaborLink it would save typing and help build trust.</p>
+    <div class="grid">
+      <div class="card"><span class="tag">Use case</span><h3>Worker documents</h3><p>Read the name and number from a skill certificate (ITI, Skill India), e-Shram card or trade licence during onboarding. Store only what’s needed, with consent.</p></div>
+      <div class="card"><span class="tag">Use case</span><h3>Appliance labels</h3><p>Read the model number and rating plate from a photo of a pump, geyser, MCB or fan, so the worker knows which spare part to bring.</p></div>
+      <div class="card"><span class="tag">Use case</span><h3>Material bills</h3><p>Read the total from a shop receipt for materials the worker bought, and add it to the job’s settlement and the passbook.</p></div>
+      <div class="card"><span class="tag">Use case</span><h3>Handwritten notes</h3><p>Turn a contractor’s handwritten job list or measurements into text.</p></div>
+    </div>
+    <div class="table-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>OCR option</th><th>Strengths</th><th>Key (env var)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Google Cloud Vision OCR</strong></td><td>Strong on Devanagari and mixed scripts; handles handwriting</td><td><code>GOOGLE_APPLICATION_CREDENTIALS</code> (service-account JSON)</td></tr>
+          <tr><td><strong>Azure AI Document Intelligence</strong></td><td>Ready-made receipt and ID-document models</td><td><code>AZURE_DOCINTEL_ENDPOINT</code>, <code>AZURE_DOCINTEL_KEY</code></td></tr>
+          <tr><td><strong>AWS Textract</strong></td><td>Forms, tables and receipts; fits an AWS deployment</td><td><code>AWS_ACCESS_KEY_ID</code>, <code>AWS_SECRET_ACCESS_KEY</code></td></tr>
+          <tr><td><strong>Tesseract OCR</strong> (open source, self-hosted)</td><td>Free and offline, with Hindi language packs; lower accuracy on photos</td><td>None</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="cloud">
+    <h2>Cloud services</h2>
+    <p class="lead">Pick one main cloud, so billing, credentials and logs stay in one place. A region
+      in India (Mumbai, Hyderabad or Pune) keeps latency low and data local.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Need</th><th>AWS</th><th>Google Cloud</th><th>Azure</th><th>Simpler hosts</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Backend API (FastAPI)</strong></td><td>App Runner, ECS Fargate, EC2</td><td>Cloud Run</td><td>App Service, Container Apps</td><td>Render, Railway, Fly.io</td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Frontend (Next.js)</strong></td><td>Amplify Hosting</td><td>Cloud Run, Firebase Hosting</td><td>Static Web Apps</td><td>Vercel, Netlify</td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Photo &amp; document storage</strong></td><td>S3</td><td>Cloud Storage</td><td>Blob Storage</td><td>Cloudflare R2, Supabase Storage</td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>CDN for images and the app</strong></td><td>CloudFront</td><td>Cloud CDN</td><td>Front Door</td><td>Cloudflare</td><td>Should</td></tr>
+          <tr><td><strong>Background jobs</strong> (transcription, OCR, notifications)</td><td>SQS + Lambda</td><td>Pub/Sub + Cloud Tasks</td><td>Service Bus + Functions</td><td>Redis + Celery/RQ</td><td>Should</td></tr>
+          <tr><td><strong>Secrets manager</strong> (API keys)</td><td>Secrets Manager</td><td>Secret Manager</td><td>Key Vault</td><td>Host environment variables</td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Domain, DNS &amp; HTTPS</strong></td><td>Route 53 + ACM</td><td>Cloud DNS + managed certificates</td><td>Azure DNS</td><td>Cloudflare, Let’s Encrypt</td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Logs &amp; monitoring</strong></td><td>CloudWatch</td><td>Cloud Logging / Monitoring</td><td>Azure Monitor</td><td>Sentry, Grafana Cloud, UptimeRobot</td><td>Should</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small-note" style="margin-top:10px">Student and startup credit programmes (AWS Activate,
+      Google for Startups Cloud, Microsoft for Startups, GitHub Student Pack) can cover a pilot’s
+      early costs.</p>
+  </section>
+
+  <section id="database">
+    <h2>Database &amp; storage services</h2>
+    <p class="lead">The prototype uses one SQLite file, which is perfect for a demo. Real users need a
+      server database with backups, many connections at once, and location queries.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Purpose</th><th>Recommended</th><th>Managed options</th><th>Key (env var)</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Main database</strong> (jobs, workers, offers, bookings, passbook)</td><td>PostgreSQL + <strong>PostGIS</strong> for “workers within X km”</td><td>Supabase, Neon, AWS RDS / Aurora, Google Cloud SQL, Azure Database for PostgreSQL</td><td><code>LABORLINK_DATABASE_URL</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Cache &amp; live location</strong></td><td>Redis: latest worker positions, rate limits, job queues</td><td>Upstash, Redis Cloud, AWS ElastiCache, Google Memorystore</td><td><code>REDIS_URL</code></td><td>Should</td></tr>
+          <tr><td><strong>Realtime updates</strong></td><td>WebSockets for live location and new offers, instead of polling</td><td>FastAPI WebSockets, Supabase Realtime, Firebase Realtime Database, Ably, Pusher</td><td><code>REALTIME_API_KEY</code> (if hosted)</td><td>Should</td></tr>
+          <tr><td><strong>Files</strong> (photos, documents, voice notes)</td><td>Object storage with private buckets and signed URLs</td><td>S3, Cloud Storage, Azure Blob, Cloudflare R2, Supabase Storage</td><td><code>STORAGE_BUCKET</code>, <code>STORAGE_ACCESS_KEY</code>, <code>STORAGE_SECRET_KEY</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Analytics warehouse</strong></td><td>Anonymised demand, fair-rate and earnings trends</td><td>BigQuery, Amazon Redshift, ClickHouse Cloud</td><td>Provider credentials</td><td>Later</td></tr>
+          <tr><td><strong>Backups</strong></td><td>Daily automatic backups with point-in-time recovery</td><td>Built into the managed database services</td><td>None</td><td><strong>Must</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small-note" style="margin-top:10px">The backend already uses SQLAlchemy, so moving to
+      PostgreSQL mainly means changing <code>LABORLINK_DATABASE_URL</code> and adding a migration tool
+      such as Alembic.</p>
+  </section>
+
+  <section id="maps">
+    <h2>Maps, routing &amp; location</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Need</th><th>Options</th><th>Key (env var)</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Map tiles</strong></td><td>Google Maps Platform, Mapbox, MapTiler, Ola Maps, MapmyIndia (Mappls), self-hosted OpenStreetMap</td><td><code>NEXT_PUBLIC_MAPS_API_KEY</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Routing &amp; traffic-aware ETA</strong></td><td>Google Routes API, Mapbox Directions, Ola Maps, Mappls, self-hosted OSRM or GraphHopper</td><td><code>ROUTING_API_KEY</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Address search &amp; geocoding</strong></td><td>Google Places / Geocoding, Mapbox Geocoding, Mappls, Nominatim (self-hosted)</td><td><code>GEOCODING_API_KEY</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Background location on Android</strong></td><td>A native or React Native app shell. Browsers stop GPS when the screen locks.</td><td>None</td><td>Should</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="comms">
+    <h2>Login, notifications &amp; messaging</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Need</th><th>Why</th><th>Options</th><th>Key (env var)</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Phone OTP login</strong></td><td>Real accounts instead of IDs stored in the browser; stops anyone from acting as someone else</td><td>Firebase Authentication, MSG91 OTP, Twilio Verify, Supabase Auth</td><td><code>OTP_API_KEY</code> / <code>FIREBASE_*</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Push notifications</strong></td><td>“New job near you”, “Worker booked”, “Worker has arrived”</td><td>Firebase Cloud Messaging (FCM), Web Push</td><td><code>FCM_SERVER_KEY</code> / service account</td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>SMS</strong></td><td>Reach workers on basic phones or without data. Needs DLT template registration in India.</td><td>MSG91, Gupshup, Twilio, Exotel</td><td><code>SMS_API_KEY</code></td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>WhatsApp</strong></td><td>Job alerts and booking updates on the app most workers already use</td><td>WhatsApp Business Platform (Cloud API), Gupshup, Interakt</td><td><code>WHATSAPP_TOKEN</code></td><td>Should</td></tr>
+          <tr><td><strong>Masked calling</strong></td><td>Employer and worker can call each other without sharing their numbers</td><td>Exotel, Knowlarity, Twilio</td><td><code>CALLING_API_KEY</code></td><td>Later</td></tr>
+          <tr><td><strong>Email</strong></td><td>Receipts and alerts for business employers</td><td>Amazon SES, SendGrid, Resend</td><td><code>EMAIL_API_KEY</code></td><td>Later</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="payments">
+    <h2>Payments, identity &amp; verification</h2>
+    <p class="lead">These are out of scope for the prototype, where payments are simulated. They
+      need regulated partners and a legal review.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Need</th><th>Options</th><th>Key (env var)</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>UPI / card payments</strong></td><td>Razorpay, Cashfree, PhonePe PG, Paytm PG</td><td><code>PAYMENT_KEY_ID</code>, <code>PAYMENT_KEY_SECRET</code>, <code>PAYMENT_WEBHOOK_SECRET</code></td><td>Later</td></tr>
+          <tr><td><strong>Payouts to workers</strong></td><td>RazorpayX Payouts, Cashfree Payouts (UPI or bank)</td><td>Same provider keys</td><td>Later</td></tr>
+          <tr><td><strong>Escrow-style holding</strong></td><td>Only through an RBI-regulated escrow or nodal-account partner</td><td>Provider keys</td><td>Later</td></tr>
+          <tr><td><strong>Identity &amp; document verification</strong></td><td>DigiLocker (with consent); e-KYC and PAN/bank checks via licensed providers such as Signzy, IDfy or HyperVerge</td><td><code>KYC_API_KEY</code></td><td>Later</td></tr>
+          <tr><td><strong>Worker registries</strong></td><td>Link to e-Shram or Skill India records (with consent) to show verified skills</td><td>Through government partnership</td><td>Later</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="devops">
+    <h2>Developer &amp; operations services</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Service</th><th>Use</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>GitHub</strong> + branch protection</td><td>Code, pull requests, reviews (Ravish merges)</td><td><span class="ok">In use</span></td></tr>
+          <tr><td><strong>GitHub Actions</strong></td><td>Run pytest, ruff, typecheck and lint on every PR, then deploy automatically</td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>Docker</strong></td><td>The same backend image locally and in the cloud</td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>Sentry</strong></td><td>Error tracking for the frontend and backend</td><td><strong>Should</strong></td></tr>
+          <tr><td><strong>UptimeRobot / Better Stack</strong></td><td>Alert the team when the API is down</td><td>Should</td></tr>
+          <tr><td><strong>PostHog / Plausible</strong></td><td>Privacy-friendly product analytics (where people drop off in the flow)</td><td>Later</td></tr>
+          <tr><td><strong>Figma</strong></td><td>UI design and handoff</td><td>Could</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="stack">
+    <h2>Software &amp; libraries</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Backend</span>
+        <ul>
+          <li>Python 3.10+</li>
+          <li>FastAPI, Uvicorn</li>
+          <li>Pydantic v2, pydantic-settings</li>
+          <li>SQLAlchemy 2.0 + SQLite (PostgreSQL for the pilot)</li>
+          <li>python-multipart (photo uploads)</li>
+          <li>pytest, httpx, ruff (dev)</li>
+          <li>Planned: Alembic, httpx clients for Sarvam/OCR, Redis</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Frontend</span>
+        <ul>
+          <li>Node.js 18.17+ (20 LTS recommended), npm</li>
+          <li>Next.js 14, React 18, TypeScript</li>
+          <li>Leaflet 1.9 (maps)</li>
+          <li>lucide-react (icons)</li>
+          <li>Tailwind base + custom CSS</li>
+          <li>ESLint, typescript-eslint (dev)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Developer tools</span>
+        <ul>
+          <li>Git + a GitHub account with access to the repo</li>
+          <li>VS Code (recommended) with the Python and ESLint extensions</li>
+          <li>Chrome or Edge, for DevTools device mode</li>
+          <li>Postman or the built-in Swagger UI (<code>/docs</code>) for API testing</li>
+          <li>Optional: an Android phone on the same Wi-Fi, to test GPS</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="hardware">
+    <h2>Hardware, data &amp; people</h2>
+    <div class="grid">
+      <div class="card"><h3>Hardware</h3><ul><li>Developer laptops: 8 GB RAM recommended for running Next.js and the backend together</li><li>At least one Android phone with GPS and a microphone for field testing</li><li>A pilot server: a small cloud instance (1–2 vCPU, 2–4 GB RAM) is enough at the start</li></ul></div>
+      <div class="card"><h3>Data</h3><ul><li>A verified rate card per city and trade, to replace the illustrative rates</li><li>Lists of localities with coordinates for each pilot city</li><li>Sample voice notes and photos in Hindi and regional languages, to test speech-to-text and OCR</li></ul></div>
+      <div class="card"><h3>People &amp; partners</h3><ul><li>A field partner such as SEWA to onboard workers and gather feedback</li><li>Legal review of terms, privacy policy and payment flows</li><li>Support for disputes and help requests</li></ul></div>
+    </div>
+  </section>
+
+  <section id="keys">
+    <h2>API keys &amp; secrets</h2>
+    <p class="lead">This is the full list of keys the project needs, now and planned. Variable names
+      for planned services are suggestions, to be finalised when each integration is built.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Key / env var</th><th>Service</th><th>Side</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>LABORLINK_DATABASE_URL</code></td><td>Database connection (SQLite today, PostgreSQL in the pilot)</td><td>Backend</td><td><span class="ok">In use</span></td></tr>
+          <tr><td><code>LABORLINK_API_URL</code></td><td>Where the frontend forwards API calls</td><td>Frontend</td><td><span class="ok">In use</span></td></tr>
+          <tr><td><code>SARVAM_API_KEY</code></td><td>Sarvam AI: speech-to-text, translation, text-to-speech</td><td>Backend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>GOOGLE_APPLICATION_CREDENTIALS</code> or <code>AZURE_DOCINTEL_KEY</code></td><td>OCR provider</td><td>Backend</td><td>Should</td></tr>
+          <tr><td><code>VISION_API_KEY</code></td><td>Image-understanding model for problem photos</td><td>Backend</td><td>Should</td></tr>
+          <tr><td><code>BHASHINI_USER_ID</code>, <code>BHASHINI_API_KEY</code></td><td>Backup Indian-language AI</td><td>Backend</td><td>Later</td></tr>
+          <tr><td><code>NEXT_PUBLIC_MAPS_API_KEY</code></td><td>Map tiles (restrict it to our domain, because it’s visible in the browser)</td><td>Frontend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>ROUTING_API_KEY</code>, <code>GEOCODING_API_KEY</code></td><td>Routes, ETA, address search</td><td>Backend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>STORAGE_BUCKET</code>, <code>STORAGE_ACCESS_KEY</code>, <code>STORAGE_SECRET_KEY</code></td><td>Cloud photo and document storage</td><td>Backend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>REDIS_URL</code></td><td>Cache, live location, job queue</td><td>Backend</td><td>Should</td></tr>
+          <tr><td><code>OTP_API_KEY</code> / <code>FIREBASE_*</code></td><td>Phone OTP login</td><td>Backend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>JWT_SECRET</code></td><td>Signing login sessions</td><td>Backend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>FCM_SERVER_KEY</code></td><td>Push notifications</td><td>Backend</td><td>Should</td></tr>
+          <tr><td><code>SMS_API_KEY</code>, <code>WHATSAPP_TOKEN</code></td><td>SMS and WhatsApp alerts</td><td>Backend</td><td>Should</td></tr>
+          <tr><td><code>SENTRY_DSN</code></td><td>Error tracking</td><td>Both</td><td>Should</td></tr>
+          <tr><td><code>PAYMENT_KEY_ID</code>, <code>PAYMENT_KEY_SECRET</code>, <code>PAYMENT_WEBHOOK_SECRET</code></td><td>Payment gateway</td><td>Backend</td><td>Later</td></tr>
+          <tr><td><code>KYC_API_KEY</code></td><td>Identity and document verification</td><td>Backend</td><td>Later</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:14px"><strong>Rules for keys:</strong>
+      <br>• Keep them in <code>backend/.env</code> locally (git-ignored) and in the cloud secrets manager in production. Never put them in code, screenshots or chat.
+      <br>• Only variables starting with <code>NEXT_PUBLIC_</code> reach the browser, so never give a secret that prefix.
+      <br>• Use separate keys for development and production, set usage limits, and rotate a key straight away if it leaks.</p>
+  </section>
+
+
+  <section id="compliance">
+    <h2>Compliance &amp; privacy to plan for</h2>
+    <div class="grid">
+      <div class="card"><h3>Location data</h3><p>Share it only while a job is booked or in progress, with clear consent. Keep only the latest position (as the prototype already does), and use routing that doesn’t send locations to third parties.</p></div>
+      <div class="card"><h3>Personal data</h3><p>Follow India’s Digital Personal Data Protection Act, 2023: consent, a stated purpose, data minimisation and the right to delete.</p></div>
+      <div class="card"><h3>Payments &amp; KYC</h3><p>Real money movement and identity checks must go through RBI-regulated partners. They are out of scope for the prototype.</p></div>
+      <div class="card"><h3>Voice, photos &amp; documents</h3><p>Voice notes, OCR’d IDs and photos are sensitive. Get consent, keep only the fields you need, store them in private buckets, and set retention limits. Don’t store full Aadhaar numbers.</p></div>
+      <div class="card"><h3>Fair pay</h3><p>Check FairRate ranges against the applicable state minimum wages before showing them as anything other than illustrative.</p></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    LaborLink · SEWA Hackathon · See also <a href="PROJECT_IDEA.html">Project Idea</a>
+    and <a href="CONTRIBUTING.html">Contributor Guide</a>.
+  </div>
+</footer>
+</body>
+</html>
