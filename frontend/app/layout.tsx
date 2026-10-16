@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Mukta } from 'next/font/google';
 import { BatteryFull, Signal, Wifi } from 'lucide-react';
+import { Clock } from './components/clock';
 import { DeviceScaler } from './device-scaler';
 import './globals.css';
 
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <div className="device">
             <div className="device-screen">
               <div className="status-bar" aria-hidden="true">
-                <span className="status-time">9:41</span>
+                <Clock />
                 <span className="dynamic-island" />
                 <span className="status-icons">
                   <Signal size={16} strokeWidth={2.5} />

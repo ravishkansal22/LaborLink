@@ -346,3 +346,32 @@ svg.filled { fill: var(--star); color: var(--star); }
 .btn:disabled { background: #b9c6e6; cursor: not-allowed; transform: none; }
 .field-label .tiny-tag { margin-left: 4px; }
 .screen > .chip { align-self: flex-start; }
+
+/* ------------------------------------------------------------------ live data states */
+.loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 28px 0; color: var(--ink-3); font-size: 14px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-note { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #f5c2bf; border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--danger); font-size: 14px; line-height: 1.45; }
+.error-note svg { flex: 0 0 auto; margin-top: 2px; }
+.error-note p { flex: 1; }
+.error-note button { color: var(--danger); }
+.empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 16px; border: 1px dashed #c9cfe6; border-radius: var(--radius); text-align: center; }
+.empty .tile-icon { margin-bottom: 4px; }
+.input { width: 100%; height: 48px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); outline: 0; background: var(--surface); font-size: 16px; color: var(--ink); }
+.input:focus { border-color: var(--brand); }
+select.input { appearance: auto; }
+.job-card { width: 100%; display: block; text-align: left; }
+.picked { position: relative; }
+.picked > button { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: rgba(16, 25, 60, .75); color: #fff; }
+.mic-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 9px; background: var(--brand-soft); color: var(--brand); font-size: 14px; font-weight: 600; }
+.mic-chip.on { background: var(--danger-soft); color: var(--danger); }
+.segmented button { padding: 8px; border-radius: 9px; text-align: center; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.segmented button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.segmented.three { grid-template-columns: repeat(3, 1fr); }
+.bullets { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.details summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--brand); }
+.details[open] summary { margin-bottom: 8px; }
+.btn-danger { background: var(--danger); color: #fff; }
+.list-row:disabled { color: inherit; cursor: default; }
+.lead-row .right { flex-direction: column; align-items: flex-end; }
+.add-photo:disabled { opacity: .7; }

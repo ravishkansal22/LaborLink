@@ -95,3 +95,17 @@ When submitting changes, please append an entry following this format:
   - Docs updated: API, BACKEND_ARCHITECTURE, EXECUTION_GUIDE, IMPLEMENTATION_PROGRESS. `frontend/` untouched.
 - **Execution & Testing**:
   - `cd backend`, `python -m pytest` (242 passed) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Frontend connected to the backend
+- **Author**: Claude Code (AI assistant)
+- **Component**: frontend | backend | docs
+- **Type**: Feature
+- **Description**:
+  - Frontend rebuilt on a typed API client; all screens use live API data (no sample content). New modules: `app/lib/{api,session,places}.ts`, `app/components/{ui,clock}.tsx`, `app/screens/{onboarding,employer,worker}.tsx`; `next.config.mjs` proxies `/api/v1` to the backend.
+  - Employer and worker flows cover job intake (photo + speech-to-text), estimates, matches, offers, booking, start, completion photos, confirm/dispute, demo payment and the Kamai Passbook.
+  - Backend: new `GET /api/v1/images/{image_id}` (+2 tests); pricing assumption text no longer mentions Phase 2.
+  - `.gitignore`: the Python `lib/` rule no longer hides `frontend/app/lib/` (it would have left the API client out of commits).
+  - Docs: API, BACKEND_ARCHITECTURE, EXECUTION_GUIDE (how to run both apps and demo the flow), IMPLEMENTATION_PROGRESS.
+- **Execution & Testing**:
+  - Backend: `cd backend`, `python -m uvicorn app.main:app --reload`; `python -m pytest` (244 passed), `python -m ruff check .`.
+  - Frontend: `cd frontend`, `npm run dev`, open http://localhost:3000; `npx tsc --noEmit`, `npx eslint app`.

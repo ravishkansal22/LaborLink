@@ -228,7 +228,8 @@ All are optional. Set them in `backend/.env` (git-ignored) or the shell. See `ba
 
 ## 3. Frontend Execution Workflow
 
-> The `frontend/` directory does not contain an application yet; the steps below apply once one is added.
+The frontend is a Next.js app shown inside a phone frame. All data comes from the backend; start
+the backend first (section 2, port 8000).
 
 1. Navigate to the frontend directory:
    ```powershell
@@ -242,6 +243,30 @@ All are optional. Set them in `backend/.env` (git-ignored) or the shell. See `ba
    ```powershell
    npm run dev
    ```
+   Open http://localhost:3000. The app calls `/api/v1/*` on itself and Next forwards those calls to
+   the backend, so no CORS setup is needed. If the backend is not on `http://127.0.0.1:8000`, set
+   `LABORLINK_API_URL` before `npm run dev` (e.g. `$env:LABORLINK_API_URL="http://127.0.0.1:8001"`).
+4. Check: `npx tsc --noEmit` and `npx eslint app`.
+
+### Demo through the app (one browser)
+1. Onboarding → “I need work done” → allow or skip permissions → enter a name, number and area.
+2. Home → “Describe a new job” (type or tap Speak; add a photo) → **Get price estimate**.
+3. Profile → **Switch to worker mode** → create a worker with the same trade in an area within the
+   chosen radius (e.g. Karol Bagh is ~3.4 km from Connaught Place).
+4. Worker home / Find work → open the job → Accept or Counter offer.
+5. Worker Profile → **Switch to hiring mode** → open the job → **Book**.
+6. Switch to worker → open the job → **I’ve arrived — start job** → add photos → **Send for confirmation**.
+7. Switch to employer → **Work is done — confirm** (or report a problem) → **Pay (demo)**.
+8. Switch to worker → **Passbook** shows the job and the demo payment.
+
+Notes:
+- “Who am I” (employer details, worker id, jobs posted) is kept in the browser’s local storage
+  because the backend has no login yet. **Sign out of this phone** in Profile clears it; the data in
+  the backend stays.
+- Voice input uses the browser’s speech recognition (Chrome/Edge), in Hindi or English depending on
+  the language chosen at the start. Other browsers can type instead.
+- If the browser blocks location, pick an area from the list; matching needs map coordinates.
+- `?screen=` jumps to a dashboard tab for re-recording, e.g. `/?screen=passbook` or `/?screen=jobs`.
 
 ---
 

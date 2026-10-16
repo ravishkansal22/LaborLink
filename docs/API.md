@@ -119,6 +119,14 @@ Optional photo upload. `multipart/form-data` with a single field `file`.
 curl -F "file=@leak.jpg" http://127.0.0.1:8000/api/v1/images
 ```
 
+## GET `/api/v1/images/{image_id}`
+
+Returns the stored photo bytes with its verified type (`image/jpeg`, `image/png` or `image/webp`)
+and `X-Content-Type-Options: nosniff`. Used by the app to show job photos and completion evidence.
+
+- **200** image bytes · **404** `not_found` (unknown id, or the file is no longer on disk) · **503**.
+- No authentication: anyone with the id can download the photo (demo limitation).
+
 ---
 
 ## POST `/api/v1/jobs`
@@ -216,7 +224,7 @@ Unknown fields are rejected (422).
       "Labour time of 1-2 hours comes from the work order and is an estimate, not a measurement.",
       "Complexity 'low' multiplier 0.9 x urgency 'normal' multiplier 1 = 0.9.",
       "Minimum call-out charge of INR 300 applies.",
-      "Flat travel allowance of INR 50; actual travel distance is not yet used because worker locations are introduced in Phase 2.",
+      "Flat travel allowance of INR 50; the actual distance to the worker is not priced yet.",
       "Materials and spare parts are not included; they are billed separately at actual cost.",
       "Amounts are rounded outward to the nearest INR 10."
     ],
