@@ -62,6 +62,12 @@ class JobCreate(BaseModel):
         max_length=36,
         description="id returned by POST /api/v1/images (optional).",
     )
+    employer_id: str | None = Field(
+        default=None,
+        pattern=r"^[A-Za-z0-9_.:@-]{1,64}$",
+        description="Optional self-asserted employer label (not authentication). Required later "
+        "to confirm completion and settle; can also be set when confirming the booking.",
+    )
 
     @field_validator("description")
     @classmethod
@@ -86,6 +92,7 @@ class JobResponse(BaseModel):
     id: str
     status: JobStatus
     trade: Trade | None
+    employer_id: str | None = None
     request: JobRequestDetails
     work_order: WorkOrderV1
     price_estimate: PriceEstimate | None

@@ -36,7 +36,7 @@ def create_app(
     async def lifespan(_app: FastAPI):
         created = init_db(engine)
         if created:
-            logging.getLogger("laborlink").info("Created database tables: %s", ", ".join(created))
+            logging.getLogger("laborlink").info("Schema additions: %s", ", ".join(created))
         settings.upload_path.mkdir(parents=True, exist_ok=True)
         yield
         engine.dispose()

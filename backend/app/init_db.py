@@ -13,7 +13,8 @@ def main() -> None:
     settings.upload_path.mkdir(parents=True, exist_ok=True)
     engine.dispose()
     print(f"Database ready: {settings.resolved_database_url}")
-    print(f"Tables created: {', '.join(created) if created else 'none (schema already current)'}")
+    summary = ", ".join(created) if created else "none (schema already current)"
+    print(f"Schema additions: {summary}")
     print(f"Upload folder ready: {settings.upload_path}")
 
 

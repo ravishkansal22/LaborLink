@@ -28,14 +28,15 @@ class Complexity(str, Enum):
 
 
 class JobStatus(str, Enum):
-    """Job lifecycle (see docs/BACKEND_ARCHITECTURE.md#job-lifecycle).
-
-    Phase 3 is expected to add `in_progress` and `completed` after `booked`.
-    """
+    """Job lifecycle (see app/services/lifecycle.py and docs/BACKEND_ARCHITECTURE.md)."""
 
     needs_information = "needs_information"  # trade unknown; no estimate, not discoverable
     estimated = "estimated"  # work order + estimate available; open for matching and offers
     booked = "booked"  # a booking is confirmed; closed to new offers
+    in_progress = "in_progress"  # the booked worker has started
+    awaiting_confirmation = "awaiting_confirmation"  # evidence submitted; employer to review
+    completed = "completed"  # employer confirmed; eligible for simulated settlement
+    disputed = "disputed"  # employer disputed; never settled (resolution not implemented)
 
 
 class Availability(str, Enum):
@@ -55,9 +56,21 @@ class OfferStatus(str, Enum):
 
 
 class BookingStatus(str, Enum):
-    """Phase 3 is expected to add in-progress/completed states."""
+    """The booking record itself stays `confirmed`; execution progress lives on the job status."""
 
     confirmed = "confirmed"
+
+
+class ReviewDecision(str, Enum):
+    confirmed = "confirmed"
+    disputed = "disputed"
+
+
+class SettlementStatus(str, Enum):
+    """Simulated states only — LaborLink never moves real money."""
+
+    simulated_pending = "simulated_pending"
+    simulated_settled = "simulated_settled"
 
 
 class ErrorDetail(BaseModel):

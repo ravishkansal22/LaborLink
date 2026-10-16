@@ -5,12 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_rate_card
 from app.schemas.common import ErrorResponse
+from app.schemas.completion import PassbookResponse
 from app.schemas.marketplace import OpportunitiesResponse, WorkerOffersResponse
 from app.schemas.pricing import RateCard
 from app.schemas.workers import WorkerCreate, WorkerResponse, WorkerUpdate
 from app.services import offers as offer_service
 from app.services import workers as worker_service
 from app.services.discovery import discover_jobs
+from app.services.passbook import build_passbook
 
 router = APIRouter(prefix="/workers", tags=["workers"])
 
@@ -65,3 +67,14 @@ def worker_jobs(
             summary="Offers made by the worker, newest first")
 def worker_offers(worker_id: str, db: Session = Depends(get_db)) -> WorkerOffersResponse:
     return offer_service.list_worker_offers(db, worker_id)
+
+
+@router.get("/{worker_id}/passbook", response_model=PassbookResponse, responses=_NOT_FOUND,
+            summary="Kamai Passbook: work and (simulated) earnings history")
+def worker_passbook(
+    worker_id: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    rate_card: RateCard = Depends(get_rate_card),
+) -> PassbookResponse:
+    return build_passbook(db, worker_id, default_currency=rate_card.currency, limit=limit)

@@ -153,6 +153,12 @@ class BookingCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     offer_id: str = Field(min_length=1, max_length=36)
+    employer_id: str | None = Field(
+        default=None,
+        pattern=r"^[A-Za-z0-9_.:@-]{1,64}$",
+        description="Optional. Records the employer on jobs created without one; must match "
+        "the job's employer_id if it already has one (prototype check, not authentication).",
+    )
 
 
 class BookingResponse(BaseModel):

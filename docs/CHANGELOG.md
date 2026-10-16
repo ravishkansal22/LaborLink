@@ -66,3 +66,20 @@ When submitting changes, please append an entry following this format:
 - **Execution & Testing**:
   - `cd backend`, `python -m app.init_db`, `python -m uvicorn app.main:app --reload`, follow the Phase 2 walkthrough in EXECUTION_GUIDE.
   - `python -m pytest` (165 passed: 87 Phase 1 unchanged + 78 Phase 2) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Phase 3 backend: completion, simulated settlement, Kamai Passbook
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | docs
+- **Type**: Feature
+- **Description**:
+  - Job execution: `POST /jobs/{id}/start` (booked worker only); lifecycle `booked -> in_progress -> awaiting_confirmation -> completed | disputed`, centralised in `services/lifecycle.py`.
+  - Completion evidence: `POST/GET /jobs/{id}/completion-evidence` with before/after photos referencing existing `/images` uploads; one immutable submission per job.
+  - Employer review: `POST /jobs/{id}/completion-confirmation` (confirm or dispute with reason); one final decision per job; disputes are never settled.
+  - Simulated settlement: `POST/GET /jobs/{id}/settlement`; amount always taken from the booking; `simulated_pending -> simulated_settled` once; UNIQUE per booking. No real payments, escrow or banking.
+  - Kamai Passbook: `GET /workers/{id}/passbook`, computed from persisted bookings, reviews and settlements.
+  - Optional self-asserted `employer_id` on `POST /jobs` and `POST /jobs/{id}/bookings` (prototype actor check, not authentication).
+  - Schema: new tables `job_executions`, `completion_evidence`, `completion_evidence_images`, `completion_reviews`, `settlements`; new nullable column `jobs.employer_ref` added in place by `init_db` (`ALTER TABLE ... ADD COLUMN`).
+  - Docs updated: API, BACKEND_ARCHITECTURE, IMPLEMENTATION_PROGRESS, PROJECT_OVERVIEW, EXECUTION_GUIDE (10-step demo). `frontend/` untouched.
+- **Execution & Testing**:
+  - `cd backend`, `python -m app.init_db`, `python -m uvicorn app.main:app --reload`, then run the end-to-end demo in EXECUTION_GUIDE.
+  - `python -m pytest` (233 passed: 165 Phases 1-2 + 68 Phase 3) and `python -m ruff check .` (clean).

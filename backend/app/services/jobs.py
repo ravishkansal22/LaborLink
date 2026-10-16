@@ -110,6 +110,7 @@ def create_job(
         latitude=payload.location.latitude,
         longitude=payload.location.longitude,
         image_id=image.id if image else None,
+        employer_ref=payload.employer_id,
         status=JobStatus.needs_information.value,
     )
     job.work_order = WorkOrderRecord(
@@ -169,6 +170,7 @@ def to_response(job: Job) -> JobResponse:
         id=job.id,
         status=JobStatus(job.status),
         trade=Trade(job.trade) if job.trade else None,
+        employer_id=job.employer_ref,
         request=JobRequestDetails(
             description=job.description,
             description_source=job.description_source,

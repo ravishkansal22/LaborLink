@@ -17,9 +17,10 @@ from app.models import Booking, Job, Offer
 from app.schemas.common import BookingStatus, JobStatus, OfferStatus
 from app.schemas.marketplace import BookingCreate, BookingResponse
 from app.schemas.pricing import RateCard
+from app.services.actors import ActorMismatchError
 from app.services.db_guard import db_guard
 from app.services.jobs import get_job
-from app.services.lifecycle import ensure_transition, require_open
+from app.services.lifecycle import BOOKED_STATUSES, ensure_transition, require_open
 from app.services.matching import assess
 from app.services.offers import check_amount, current_terms, ineligible_error
 from app.services.workers import to_summary
@@ -58,7 +59,7 @@ def confirm_booking(
         raise OfferJobMismatchError(
             f"Offer '{offer.id}' belongs to a different job, not '{job.id}'."
         )
-    if job.status == JobStatus.booked.value:  # 4. job still open
+    if JobStatus(job.status) in BOOKED_STATUSES:  # 4. job still open
         raise _already_booked(job.id)
     require_open(job)
     ensure_transition(job, JobStatus.booked)
@@ -71,12 +72,21 @@ def confirm_booking(
         raise ineligible_error(assessment.issues)
     check_amount(current_terms(job, card), offer.labour_amount)  # 6. amount still permitted
 
+    employer_ref = job.employer_ref
+    if payload.employer_id is not None:
+        if employer_ref is not None and employer_ref != payload.employer_id:
+            raise ActorMismatchError(
+                "employer_id does not match the employer recorded for this job "
+                "(prototype check, not authentication)."
+            )
+        employer_ref = payload.employer_id
+
     now = utcnow()
     with db_guard(session, on_integrity_error=lambda: _already_booked(job.id)):
         claimed = session.execute(  # 8. job state -> booked (only if still open)
             update(Job)
             .where(Job.id == job.id, Job.status == JobStatus.estimated.value)
-            .values(status=JobStatus.booked.value, updated_at=now)
+            .values(status=JobStatus.booked.value, updated_at=now, employer_ref=employer_ref)
             .execution_options(synchronize_session=False)
         ).rowcount
         if claimed != 1:  # someone else booked the job after we read it
@@ -104,6 +114,7 @@ def confirm_booking(
         )
         session.commit()
     job.status = JobStatus.booked.value  # keep the in-memory object in step with the row
+    job.employer_ref = employer_ref
     return booking
 
 
