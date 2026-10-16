@@ -299,7 +299,9 @@ earnings. It is a work/earnings history, not a bank statement or credit score.
 `POST /api/v1/images` (multipart field `file`): type detected from magic bytes (JPEG/PNG/WebP
 only), size enforced while reading (`LABORLINK_MAX_UPLOAD_BYTES`, default 5 MB), stored as
 `<uuid>.<ext>` in `LABORLINK_UPLOAD_DIR` (default `backend/var/uploads`, git-ignored). Files are
-never executed and not served back in Phase 1. If the DB write fails the file is deleted.
+never executed. If the DB write fails the file is deleted. `GET /api/v1/images/{id}` serves a
+stored file back with the type verified at upload and `nosniff` (added for the app to show job
+photos and completion evidence).
 
 ## Errors
 

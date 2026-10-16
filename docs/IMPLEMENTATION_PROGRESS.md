@@ -443,3 +443,43 @@ manual SQL fills only an empty reference and then enables the verified employer.
 
 **Results:** `python -m pytest` 242 passed (233 existing, unchanged, + 9 new);
 `python -m ruff check .` clean. `frontend/` unchanged.
+
+---
+
+## Frontend integration with the backend (2026-10-16)
+
+**Goal:** every screen shows live data from the API; no hard-coded sample content.
+
+**Done**
+- Next.js app (`frontend/app`) rebuilt on a typed API client (`app/lib/api.ts`); Next rewrites
+  `/api/v1/*` to the backend (`LABORLINK_API_URL`, default `http://127.0.0.1:8000`).
+- Onboarding: real browser permission requests (location, microphone, camera); profile step creates
+  a worker via `POST /workers`, or stores an employer profile (name, phone, address, coordinates,
+  `employer_id`) on the device.
+- Employer: home (own active jobs), new job (photo upload, browser speech-to-text, trade, urgency,
+  address → `POST /jobs`), status-driven job screen (estimate and its assumptions/warnings, live
+  matches and offers, booking, completion photos, confirm/dispute, demo payment), My jobs, Profile.
+- Worker: home (passbook summary, booked jobs, offer statuses, new jobs), Find work (live
+  opportunities; radius changes `PATCH /workers`), job offer (accept or counter within the
+  backend's permitted range), active job (start, before/after photo upload, send for confirmation,
+  payment status), Kamai Passbook (filters by earning status), Profile (availability, trades,
+  radius).
+- Ratings, review counts and invented statistics were removed because the backend has no such data.
+- Backend: `GET /api/v1/images/{image_id}` added so the app can show uploaded photos (2 tests).
+  Corrected an outdated pricing assumption text that referred to Phase 2.
+
+**Verified**
+- `python -m pytest`: 244 passed; `python -m ruff check .`: clean.
+- `npx tsc --noEmit` and `npx eslint app`: clean.
+- Full flow run in the browser against a live backend on a scratch database: employer onboarding →
+  job with photo → worker onboarding → counter offer → booking → start → before/after photos →
+  confirm → demo payment → passbook shows ₹700 paid. All API calls returned 2xx.
+
+**Known limitations**
+- Identity is device-local (local storage); no authentication. Anyone with an id can act as that
+  worker/employer — demo only.
+- The API has no “list my jobs” endpoint, so the employer sees jobs posted from this device.
+- Workers can’t see the customer’s photo before booking (opportunities don’t include it).
+- After a dispute, the reason is not retrievable later (no GET for reviews).
+- Language choice affects voice recognition and the job’s `language` field; screens are not yet
+  translated.

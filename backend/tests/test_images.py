@@ -59,3 +59,23 @@ def test_safe_original_name_edge_cases():
     assert safe_original_name(None) is None
     assert safe_original_name("..") is None
     assert safe_original_name(r"C:\Users\x\img.jpg") == "img.jpg"
+
+
+def test_uploaded_image_can_be_downloaded(client, png_bytes):
+    image_id = _upload(client, png_bytes).json()["id"]
+    resp = client.get(f"/api/v1/images/{image_id}")
+    assert resp.status_code == 200
+    assert resp.content == png_bytes
+    assert resp.headers["content-type"] == "image/png"
+    assert resp.headers["x-content-type-options"] == "nosniff"
+
+
+def test_download_unknown_or_missing_image_returns_404(client, settings, png_bytes):
+    resp = client.get("/api/v1/images/does-not-exist")
+    assert resp.status_code == 404 and resp.json()["error"]["code"] == "not_found"
+
+    image_id = _upload(client, png_bytes).json()["id"]
+    for stored in settings.upload_path.iterdir():
+        stored.unlink()
+    resp = client.get(f"/api/v1/images/{image_id}")
+    assert resp.status_code == 404 and resp.json()["error"]["code"] == "not_found"

@@ -131,8 +131,8 @@ def calculate_estimate(
             f"Minimum call-out charge of {_money(card, trade_rate.minimum_charge)} applies."
         )
     assumptions.append(
-        f"Flat travel allowance of {_money(card, travel)}; actual travel distance is not yet "
-        "used because worker locations are introduced in Phase 2."
+        f"Flat travel allowance of {_money(card, travel)}; the actual distance to the worker "
+        "is not priced yet."
     )
     assumptions.append(
         "Materials and spare parts are not included; they are billed separately at actual cost."

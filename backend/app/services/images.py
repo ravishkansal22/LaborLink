@@ -17,7 +17,7 @@ from typing import BinaryIO
 
 from sqlalchemy.orm import Session
 
-from app.errors import AppError, PayloadTooLargeError, UnsupportedMediaError
+from app.errors import AppError, NotFoundError, PayloadTooLargeError, UnsupportedMediaError
 from app.models import ImageUpload
 from app.services.db_guard import db_guard
 
@@ -99,4 +99,12 @@ def store_image(
     except Exception:
         target.unlink(missing_ok=True)  # don't leave orphaned files behind
         raise
+    return record
+
+
+def find_image(session: Session, image_id: str) -> ImageUpload:
+    with db_guard(session):
+        record = session.get(ImageUpload, image_id)
+    if record is None:
+        raise NotFoundError(f"Image '{image_id}' was not found.")
     return record
