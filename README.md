@@ -381,6 +381,9 @@ This is a hackathon prototype, and some things are deliberately out of scope:
 
 | Document | What's in it |
 |---|---|
+| [docs/PROJECT_IDEA.html](docs/PROJECT_IDEA.html) | The project idea and features, as a web page |
+| [docs/FACILITIES_REQUIRED.html](docs/FACILITIES_REQUIRED.html) | APIs, cloud services and resources used today and needed for launch |
+| [docs/CONTRIBUTING.html](docs/CONTRIBUTING.html) | Contributor guide: setup, running the app, feature branches and PRs |
 | [docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | Problem, users, features and roadmap |
 | [docs/BACKEND_ARCHITECTURE.md](docs/BACKEND_ARCHITECTURE.md) | Modules, data model, FairRate formula, security boundary |
 | [docs/API.md](docs/API.md) | Every endpoint with examples |

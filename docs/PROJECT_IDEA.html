@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaborLink — Project Idea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8ff; --surface: #ffffff; --surface-2: #eef0ff; --line: #e2e5f3;
+    --ink: #10193c; --ink-2: #4f5568; --ink-3: #7a7f92;
+    --brand: #0758d8; --brand-soft: #e3e9ff; --navy: #29335b; --accent: #08799e;
+    --warn-bg: #fff6e5; --warn-ink: #7a4b00; --ok: #127a45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1222; --surface: #161b30; --surface-2: #1d2440; --line: #2a3254;
+      --ink: #eef0fb; --ink-2: #b9bfd6; --ink-3: #8a90a8;
+      --brand: #6f9dff; --brand-soft: #1f2c55; --navy: #1b2347; --accent: #4cc3e6;
+      --warn-bg: #3a2c10; --warn-ink: #ffd88a; --ok: #5fd39a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Mukta', system-ui, sans-serif; font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  header.hero { background: var(--navy); color: #fff; padding: 56px 0 48px; }
+  header.hero .eyebrow { display: inline-block; padding: 2px 12px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 14px; font-weight: 600; letter-spacing: .03em; }
+  header.hero h1 { margin: 14px 0 8px; font-size: clamp(32px, 6vw, 48px); line-height: 1.1; font-weight: 800; }
+  header.hero p { margin: 0; max-width: 680px; color: #d4d9f0; font-size: 19px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 18px; overflow-x: auto; padding-top: 12px; padding-bottom: 12px; white-space: nowrap; font-size: 15px; }
+  nav.toc a { color: var(--ink-2); }
+  section { padding: 40px 0 8px; }
+  h2 { margin: 0 0 6px; font-size: 28px; line-height: 1.2; font-weight: 800; }
+  h3 { margin: 0 0 4px; font-size: 19px; font-weight: 700; }
+  p { margin: 0 0 12px; }
+  .lead { color: var(--ink-2); margin-bottom: 20px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .card p, .card li { color: var(--ink-2); font-size: 16px; }
+  .card ul { margin: 6px 0 0; padding-left: 18px; }
+  .tag { display: inline-block; margin-bottom: 8px; padding: 1px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 13px; font-weight: 700; }
+  .steps { counter-reset: step; display: grid; gap: 12px; padding: 0; list-style: none; }
+  .steps li { position: relative; padding: 14px 16px 14px 62px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 16px; top: 14px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; }
+  .steps strong { display: block; }
+  .steps span { color: var(--ink-2); font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-size: 16px; }
+  th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 700; }
+  tr:last-child td { border-bottom: 0; }
+  .table-scroll { overflow-x: auto; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .flow span { padding: 4px 12px; border-radius: 10px; background: var(--surface-2); font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+  .flow i { color: var(--ink-3); font-style: normal; }
+  .note { padding: 14px 16px; border-radius: 14px; background: var(--warn-bg); color: var(--warn-ink); font-size: 16px; }
+  .ok { color: var(--ok); font-weight: 700; }
+  code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); font-family: ui-monospace, Consolas, monospace; font-size: .88em; }
+  pre { margin: 8px 0 14px; padding: 14px 16px; overflow-x: auto; border-radius: 12px; background: #0f1530; color: #e6e9f8; font-size: 14px; line-height: 1.55; }
+  header.hero code { background: rgba(255,255,255,.18); color: #fff; }
+  pre code { padding: 0; background: none; color: inherit; font-size: inherit; }
+  .steps li pre { margin-bottom: 6px; }
+  .small-note { color: var(--ink-3); font-size: 15px; }
+  .card pre { font-size: 13px; }
+  h3 + pre, p + pre { margin-top: 6px; }
+  section > h3 { margin-top: 18px; }
+  footer { margin-top: 48px; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 15px; }
+  @media (max-width: 560px) { body { font-size: 16px; } section { padding-top: 32px; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">SEWA Hackathon · Project Idea</span>
+    <h1>LaborLink</h1>
+    <p>Fair, transparent work for India’s daily-wage skilled workers. LaborLink matches households
+      with nearby plumbers, electricians, masons and carpenters. It shows a fair price up front,
+      tracks the worker on the way, and builds every worker a record of their earnings.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#problem">Problem</a><a href="#solution">Solution</a><a href="#users">Users</a>
+    <a href="#journey">Journey</a><a href="#features">Features</a><a href="#usp">What’s different</a>
+    <a href="#how">How it works</a><a href="#impact">Impact</a><a href="#scope">Scope &amp; roadmap</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="problem">
+    <h2>The problem</h2>
+    <p class="lead">Skilled daily-wage workers mostly find work at labour chowks, through middlemen
+      and by word of mouth. This informal market is inefficient for both sides.</p>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Employers</span>
+        <h3>“What’s wrong, who do I call, and what should it cost?”</h3>
+        <ul>
+          <li>It’s hard to describe a technical problem precisely.</li>
+          <li>There’s no reference for a fair price, so they overpay or haggle.</li>
+          <li>They can’t easily find a trusted worker nearby.</li>
+          <li>They don’t know when the worker will actually arrive.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Workers</span>
+        <h3>“Will I get work today, and will I be paid fairly?”</h3>
+        <ul>
+          <li>Income is unpredictable and depends on middlemen.</li>
+          <li>They haggle with no reference point and are often underpaid.</li>
+          <li>There’s no verifiable record of the work they’ve done.</li>
+          <li>Without that record, they stay out of formal credit and welfare schemes.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="solution">
+    <h2>Our solution</h2>
+    <p class="lead">LaborLink is a mobile-first app with two sides, one for employers and one for
+      workers. It makes every job clear, fairly priced and recorded, from the first photo to the
+      final payment.</p>
+    <div class="grid">
+      <div class="card"><span class="tag">Describe</span><h3>Photo + voice intake</h3><p>The employer snaps a photo and speaks the problem in English, Hindi or Hinglish. No forms, and it works for users with low literacy.</p></div>
+      <div class="card"><span class="tag">Understand</span><h3>Structured work order</h3><p>The request becomes a clear job card with the trade, problem, likely tools and materials, duration, complexity, and questions to ask.</p></div>
+      <div class="card"><span class="tag">Price</span><h3>FairRate</h3><p>An explainable price range for labour plus travel. Every rate, multiplier and assumption is shown.</p></div>
+      <div class="card"><span class="tag">Match</span><h3>Nearby workers &amp; fair offers</h3><p>Matching workers in range see the job. Each one accepts the suggested pay or counter-offers within fair limits.</p></div>
+      <div class="card"><span class="tag">Track</span><h3>Live trip tracking</h3><p>After booking, the employer sees the worker on a live map: “Arriving in 8 min”, a journey bar and the road route.</p></div>
+      <div class="card"><span class="tag">Record</span><h3>Kamai Passbook</h3><p>Photo-verified, employer-confirmed jobs and earnings build a digital work history for each worker.</p></div>
+    </div>
+  </section>
+
+  <section id="users">
+    <h2>Who it’s for</h2>
+    <div class="grid">
+      <div class="card"><h3>Households</h3><p>Families who need a repair done today and want a fair price and a reliable worker.</p></div>
+      <div class="card"><h3>Small businesses &amp; contractors</h3><p>Shops, offices and site supervisors hiring skilled labour job by job.</p></div>
+      <div class="card"><h3>Skilled daily-wage workers</h3><p>Plumbers, electricians, masons and carpenters looking for steady nearby work and proof of their earnings.</p></div>
+      <div class="card"><h3>Partner organisations</h3><p>Groups such as SEWA that support informal workers could later use passbook data, with consent, to connect them to schemes and credit.</p></div>
+    </div>
+  </section>
+
+  <section id="journey">
+    <h2>The user journey</h2>
+    <ol class="steps">
+      <li><strong>Describe the problem</strong><span>The employer adds a photo, then speaks or types what’s wrong and picks the urgency.</span></li>
+      <li><strong>Get a work order and a fair price</strong><span>LaborLink shows the structured job card and a FairRate range, with “How we worked it out”.</span></li>
+      <li><strong>Workers make offers</strong><span>Nearby matching workers accept the suggested pay or counter-offer within the allowed range.</span></li>
+      <li><strong>Book a worker</strong><span>The employer compares offers by amount, distance and experience, and books one with a tap.</span></li>
+      <li><strong>Watch them arrive</strong><span>The worker starts the trip. The employer sees a moving arrow on the map, the ETA and “At your door”.</span></li>
+      <li><strong>Do the work</strong><span>The worker swipes to start the job, then uploads before and after photos when it’s done.</span></li>
+      <li><strong>Confirm and pay</strong><span>The employer reviews the photos and confirms, or reports a problem. Payment is simulated in the prototype.</span></li>
+      <li><strong>Grow the passbook</strong><span>The job and its earnings appear in the worker’s Kamai Passbook.</span></li>
+    </ol>
+  </section>
+
+  <section id="features">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">Employer app</span>
+        <ul>
+          <li>Onboarding in English or Hindi, with location permission</li>
+          <li>Photo upload and voice-to-text job description</li>
+          <li>Work order and FairRate price card</li>
+          <li>Live offers list with one-tap booking</li>
+          <li>Full-screen live tracking with ETA, journey progress and worker details</li>
+          <li>“Worker on the way” banner on the home screen</li>
+          <li>Completion review of before/after photos, then confirm or dispute</li>
+          <li>Simulated payment and job history</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Worker app</span>
+        <ul>
+          <li>Profile with trades, experience, area, service radius and availability</li>
+          <li>Find work: nearby matching jobs with the suggested pay</li>
+          <li>Accept or counter-offer</li>
+          <li>Trip screen with live GPS sharing (or a demo trip), Google Maps navigation and swipe-to-start</li>
+          <li>Before/after photo evidence</li>
+          <li>Kamai Passbook: jobs, earnings and payment status</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Platform</span>
+        <ul>
+          <li>REST API with OpenAPI docs</li>
+          <li>Rule-based work-order engine that runs offline, with an optional Claude vision model</li>
+          <li>Configurable rate card and offer limits</li>
+          <li>Job lifecycle with strict state transitions</li>
+          <li>Location-based matching (haversine distance within the service radius)</li>
+          <li>259 automated backend tests</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="usp">
+    <h2>What makes it different</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Principle</th><th>What it means in LaborLink</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Explainable pricing</strong></td><td>Every estimate lists its rate source, multipliers, assumptions and warnings. Rates are labelled as illustrative, never as official or legal wages.</td></tr>
+          <tr><td><strong>Fair bargaining</strong></td><td>Counter-offers must stay within a floor and ceiling around the fair range, which protects workers from undercutting and employers from gouging.</td></tr>
+          <tr><td><strong>Honest uncertainty</strong></td><td>Missing details and follow-up questions are shown rather than guessed. Observations from photos are never presented as confirmed facts.</td></tr>
+          <tr><td><strong>Built for low literacy</strong></td><td>Voice input, icons, Hindi labels, large touch targets and a simple step-by-step flow.</td></tr>
+          <tr><td><strong>Trust through visibility</strong></td><td>Live trip tracking, photo evidence and employer confirmation before any payment.</td></tr>
+          <tr><td><strong>Worker-owned record</strong></td><td>The Kamai Passbook turns informal gigs into a verifiable work and earnings history.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <p class="lead">A Next.js web app, styled as a phone, talks to a FastAPI backend over a REST API.
+      Data is stored in SQLite.</p>
+    <div class="grid">
+      <div class="card"><h3>Frontend</h3><p>Next.js 14, React and TypeScript. Leaflet draws the OpenStreetMap map, and road routes come from OSRM. Voice uses the browser’s speech recognition, and location uses the browser’s GPS.</p></div>
+      <div class="card"><h3>Backend</h3><p>FastAPI, Pydantic and SQLAlchemy. Services cover work orders, pricing, matching, offers, booking, tracking, completion, settlement and the passbook.</p></div>
+      <div class="card"><h3>Data</h3><p>A SQLite file for the prototype. Uploaded photos are stored on disk, and the rate card is a JSON file.</p></div>
+    </div>
+    <h3 style="margin-top:22px">Job lifecycle</h3>
+    <div class="flow">
+      <span>needs_information</span><i>or</i><span>estimated</span><i>→</i><span>booked</span><i>→</i>
+      <span>in_progress</span><i>→</i><span>awaiting_confirmation</span><i>→</i><span>completed</span><i>/</i><span>disputed</span>
+    </div>
+  </section>
+
+  <section id="impact">
+    <h2>Expected impact</h2>
+    <div class="grid">
+      <div class="card"><h3>For workers</h3><p>Steadier nearby work, fairer pay, less dependence on middlemen, and a record that can support access to credit and social security.</p></div>
+      <div class="card"><h3>For employers</h3><p>Faster hiring, prices they can trust, and less anxiety about who is coming and when.</p></div>
+      <div class="card"><h3>For the ecosystem</h3><p>Anonymised data on skills demand and fair rates that could inform skilling and policy.</p></div>
+    </div>
+  </section>
+
+  <section id="scope">
+    <h2>Scope &amp; roadmap</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Phase</th><th>Scope</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Phase 1</td><td>Job intake, structured work orders, FairRate pricing, persistence</td><td class="ok">Done</td></tr>
+          <tr><td>Phase 2</td><td>Worker profiles, matching, job discovery, offers and counter-offers, booking</td><td class="ok">Done</td></tr>
+          <tr><td>Phase 3</td><td>Start job, completion evidence, confirm or dispute, simulated settlement, Kamai Passbook</td><td class="ok">Done</td></tr>
+          <tr><td>App &amp; tracking</td><td>Phone-style employer and worker apps, live trip tracking</td><td class="ok">Done</td></tr>
+          <tr><td>Next</td><td>Login with phone OTP, ratings, notifications, Hindi speech on the server, dispute resolution, deployment</td><td>Planned</td></tr>
+          <tr><td>Later</td><td>Real payments (UPI) with escrow, verified identity, consent-based passbook sharing with partners</td><td>Vision</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:16px"><strong>Prototype boundaries:</strong> payments are
+      simulated, and there is no login or identity verification. The rates are illustrative, and
+      the maps use free public services. See <a href="FACILITIES_REQUIRED.html">Facilities Required</a>
+      for what a real launch needs.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    LaborLink · SEWA Hackathon · See also <a href="FACILITIES_REQUIRED.html">Facilities Required</a>
+    and <a href="CONTRIBUTING.html">Contributor Guide</a>.
+  </div>
+</footer>
+</body>
+</html>
