@@ -14,5 +14,6 @@
   "travel_allowance": 50,
   "rounding_step": 10,
   "wage_floors": {},
-  "wage_floor_source": null
+  "wage_floor_source": null,
+  "offer_limits": {"floor_ratio": 1.0, "ceiling_ratio": 1.25}
 }

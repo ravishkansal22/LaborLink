@@ -34,7 +34,9 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
-        init_db(engine)
+        created = init_db(engine)
+        if created:
+            logging.getLogger("laborlink").info("Schema additions: %s", ", ".join(created))
         settings.upload_path.mkdir(parents=True, exist_ok=True)
         yield
         engine.dispose()
@@ -57,7 +59,7 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "PATCH"],
         allow_headers=["*"],
     )
     register_error_handlers(app)

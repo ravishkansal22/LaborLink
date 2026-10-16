@@ -138,6 +138,10 @@ Not executed: any call to the live Anthropic API (no credentials; tests never ma
   concurrency.
 
 ### Exact next steps for Phase 2
+
+> Outcome (see Phase 2 below): steps 2–6 were implemented (bids are called *offers*; the
+> `estimated` status serves as "open"). Steps 1 (Alembic), 7 (distance-based travel) and 8
+> (authentication) were deferred; the schema change was kept additive so no migration was needed.
 1. Add Alembic and an initial migration matching the Phase 1 schema.
 2. `workers` table (name, trades, skills, home lat/lng, service radius, availability) with
    create/get endpoints and seed data for demos.
@@ -150,3 +154,292 @@ Not executed: any call to the live Anthropic API (no credentials; tests never ma
    new `JobStatus` values and transition checks.
 7. Replace the flat travel allowance with a distance-based component once worker locations exist.
 8. Minimal authentication (e.g. per-role tokens) before any shared/demo deployment.
+
+---
+
+## Phase 2 — Pre-implementation assessment (2026-10-16)
+
+### Baseline (verified before any Phase 2 edit)
+- Git: `main` at `899c429 backend foundation implemented`, clean working tree (Phase 1 committed by the team; no uncommitted work to preserve).
+- `python -m pytest`: **87 passed**. `python -m ruff check .`: clean.
+- `frontend/` still contains only `.gitkeep` — no frontend API expectations to honour.
+
+### Schema changes needed
+- **New tables only:** `workers`, `offers`, `bookings`. No column is added to or removed from the
+  Phase 1 tables, so the existing `create_all` initialisation is a safe, additive upgrade: it
+  creates missing tables and never drops or alters existing ones. Existing jobs, work orders,
+  estimates and uploads are untouched.
+- `jobs.status` is a plain string column; the new `booked` status needs no schema change.
+- Constraints: `bookings.job_id` UNIQUE (one booking per job); partial unique index on
+  `offers(job_id, worker_id) WHERE status = 'pending'` (one active offer per worker per job);
+  foreign keys from offers/bookings to jobs/workers; positive-amount CHECKs.
+
+### Plan
+- Lifecycle: `needs_information` (not discoverable) → `estimated` (= open for matching and
+  offers) → `booked`. `in_progress`/`completed` are reserved for Phase 3 and not implemented.
+  Phase 1 recalculation is blocked once a job is booked (it previously reset status to `estimated`).
+- Offer limits come from a new `offer_limits` block in the existing rate card and are applied to
+  the job's **current FairRate estimate**; no second pricing formula.
+- Matching: haversine distance, filters on trade / availability / service radius, transparent
+  score from distance and experience (never price), deterministic tie-breaks.
+- Booking: one transaction with a conditional `UPDATE jobs … WHERE status='estimated'` plus the
+  unique booking constraint, so only one of two concurrent bookings can succeed.
+
+## Phase 2 — Status: COMPLETE (2026-10-16)
+
+Phase 1 functionality (above) is unchanged except for one deliberate rule: recalculating the
+estimate of a `booked` job now returns `409 job_not_open`.
+
+### Completed functionality (Phase 2 only)
+- **Worker profiles** — create, retrieve, partial update (including availability); validated
+  trades, coordinates, radius (0–50 km), experience (0–60 years); always `unverified`.
+- **Matching** — `GET /jobs/{id}/matches`: trade + availability + haversine distance within the
+  worker's service radius; transparent 0–100 score (distance ≤ 60, experience ≤ 40, never price);
+  deterministic tie-breaks; excluded-worker counts; explicit `distance_matching: "unavailable"`
+  when the job has no coordinates.
+- **Job discovery** — `GET /workers/{id}/jobs`: open jobs for the worker's trades and area,
+  nearest first, offer terms included, employer address hidden; polling only.
+- **Offers** — accept the suggested amount or counter within rate-card `offer_limits` applied to
+  the job's current FairRate estimate (`pricing.offer_terms`, no second formula); eligibility,
+  estimate validity and duplicate checks; employer comparison view (oldest first, with distance,
+  match score, difference from suggested); worker's own offer list.
+- **Booking** — one transaction: conditional `estimated → booked` update, booking row (UNIQUE
+  `job_id`), selected offer `accepted`, competing offers `rejected` (`another_offer_booked`).
+- **Lifecycle** — `needs_information`, `estimated` (open), `booked`; transitions validated in
+  `services/lifecycle.py`.
+
+### API endpoints added
+`POST /api/v1/workers`, `GET /api/v1/workers/{worker_id}`, `PATCH /api/v1/workers/{worker_id}`,
+`GET /api/v1/workers/{worker_id}/jobs`, `GET /api/v1/workers/{worker_id}/offers`,
+`GET /api/v1/jobs/{job_id}/matches`, `POST /api/v1/jobs/{job_id}/offers`,
+`GET /api/v1/jobs/{job_id}/offers`, `POST /api/v1/jobs/{job_id}/bookings`,
+`GET /api/v1/jobs/{job_id}/booking` — see [API.md](./API.md#phase-2--workers-matching-offers-and-booking).
+
+### Database changes
+New tables `workers`, `offers`, `bookings` (FKs to `jobs`, `workers`, `price_estimates`,
+`offers`; CHECK constraints; `bookings.job_id` and `bookings.offer_id` UNIQUE; partial unique
+index `uq_offers_active_worker_job`). No Phase 1 table or column changed. Existing databases are
+upgraded in place by `python -m app.init_db` or server start (additive `create_all`).
+
+### Files added / changed in Phase 2
+- Added: `app/api/v1/workers.py`, `app/api/v1/marketplace.py`, `app/schemas/workers.py`,
+  `app/schemas/marketplace.py`, `app/services/{lifecycle,workers,matching,discovery,offers,bookings}.py`,
+  `tests/test_{workers,matching,offers,bookings,schema_upgrade}.py`.
+- Changed: `app/models.py` (new models), `app/schemas/common.py` (new enums, `booked`),
+  `app/schemas/pricing.py` + `app/data/rate_card.json` (`offer_limits`, `OfferTerms`),
+  `app/services/pricing.py` (`offer_terms`), `app/services/jobs.py` (recalculation guard),
+  `app/services/db_guard.py` (optional integrity-error mapping), `app/db.py` + `app/init_db.py`
+  (report created tables), `app/main.py` (CORS PATCH, log created tables),
+  `app/api/v1/__init__.py` (routers), `tests/conftest.py` (helper fixtures only).
+- Phase 1 test files: unchanged. `frontend/`: unchanged.
+
+### Tests and checks actually executed (2026-10-16)
+
+| Check | Result |
+|---|---|
+| Baseline before any change | `pytest`: 87 passed; `ruff`: clean |
+| `python -m pytest` after Phase 2 | **165 passed** — Phase 1: test_app 5, test_images 7, test_jobs_api 25, test_pricing 11, test_providers 17, test_work_order 22 (87, unchanged); Phase 2: test_workers 26, test_matching 16, test_offers 24, test_bookings 11, test_schema_upgrade 1 (78) |
+| Concurrency tests repeated 25× | 25/25 passed (after fixing the error code returned to the losing request) |
+| `python -m ruff check .` | All checks passed |
+| `python -m app.init_db` + `uvicorn app.main:app` (scratch DB) | Tables created; health 200; worker and job creation 201; OpenAPI lists all 15 routes |
+
+Coverage highlights: profile validation (15 invalid cases), availability/partial updates, CORS
+PATCH preflight; haversine, score formula, eligibility rules, missing coordinates, deterministic
+tie-breaks, empty results; offer terms arithmetic and configurability, range bounds, payload
+rules, unknown job/worker, duplicate (API and DB index), ineligible worker (3 reasons), missing
+and corrupt estimates, listings; valid booking, reference errors, mismatch, offer not pending,
+worker no longer eligible, amount re-validation after recalculation, second booking, threaded race,
+stale read, DB UNIQUE guard, failed commit leaving no partial state; in-place upgrade of a
+Phase 1-only database.
+
+The team's development database (`backend/var/laborlink.db`) was not opened or modified during
+verification; it will gain the three new tables the next time the server or `init_db` runs.
+
+### Known limitations (Phase 2)
+- **No authentication/authorisation** — any caller can act as any worker or employer. Demo only.
+- Profiles and experience are self-declared and unverified; no ratings (no rating records exist).
+- Matching scans all workers in Python — fine for a demo, not for large datasets.
+- Travel remains a flat allowance; distance is used for eligibility and ranking only.
+- Offers cannot be edited or withdrawn; bookings cannot be cancelled.
+- A `needs_information` job can never become open (no job-editing endpoint).
+- No notifications; clients poll.
+- Worker coordinates are returned by `GET /workers/{id}` to anyone with the id.
+- Schema upgrades rely on additive `create_all`; Alembic is still needed before altering tables.
+
+### Intentionally not implemented (Phase 3)
+Job start/in-progress, completion evidence, completion confirmation, payment settlement or
+escrow, Kamai Passbook, earnings records.
+
+### Next steps for Phase 3
+
+> Outcome (see Phase 3 below): steps 2–6 were implemented. Step 1 (Alembic) was not needed
+> because the change stayed additive (new tables + one nullable column via `ADD COLUMN`); step 7
+> (authentication) remains deferred.
+1. Add Alembic and a baseline migration of the current schema before any table change.
+2. Extend `JobStatus`/`BookingStatus` with `in_progress` and `completed`, plus transitions in
+   `services/lifecycle.py` (`booked → in_progress → completed`).
+3. Completion evidence: reuse the image-upload pipeline; `completion_evidence` table linked to
+   `bookings`.
+4. Employer confirmation endpoint that moves the booking/job to `completed`.
+5. Simulated settlement record (clearly labelled as simulated) for the agreed amount.
+6. Kamai Passbook: append-only earnings entries per worker, read endpoint and summary.
+7. Before any shared deployment: minimal authentication and ownership checks.
+
+---
+
+## Phase 3 — Pre-implementation assessment (2026-10-16)
+
+### Baseline (verified before any Phase 3 edit)
+- Git: `main` at `72bac46 worker related backend changes`, clean working tree (Phase 2 committed
+  by the team; no uncommitted work to preserve). `frontend/` still contains only `.gitkeep`.
+- `python -m pytest`: **165 passed**. `python -m ruff check .`: clean. SQLite 3.39.4.
+
+### Gap found: no employer identity
+Jobs have no employer reference, so "only the job's employer may confirm" cannot be expressed.
+Decision: add an optional, self-asserted `employer_id` (stored as `jobs.employer_ref`). It can be
+given when the job is created (`POST /jobs`) or, for jobs created without one, when the booking is
+confirmed (`POST /jobs/{id}/bookings`). Both fields are optional, so Phase 1/2 requests remain
+valid. Like `worker_id`, it is an **unverified label, not authentication**.
+
+### Schema changes
+- One nullable column on an existing table: `jobs.employer_ref`. Added by an explicit, idempotent
+  `ALTER TABLE jobs ADD COLUMN employer_ref …` step in `init_db` (SQLite supports this without
+  rewriting the table or touching existing rows). `create_all` cannot add columns.
+- New tables only otherwise: `job_executions` (start), `completion_evidence` +
+  `completion_evidence_images` (FKs to `image_uploads`), `completion_reviews` (confirm/dispute,
+  UNIQUE job), `settlements` (UNIQUE job and UNIQUE booking, status CHECK).
+
+### Plan
+- Lifecycle: `booked → in_progress → awaiting_confirmation → completed | disputed`, transitions
+  centralised in `services/lifecycle.py` and applied with conditional `UPDATE … WHERE status=…`.
+  `disputed` is terminal in Phase 3 (resolution deferred).
+- Actors: `worker_id` must equal the booking's worker (start, evidence); `employer_id` must equal
+  the job's recorded employer (confirm/dispute, settle) — otherwise `403 actor_mismatch`.
+- Evidence: one immutable submission per job, referencing images already uploaded through
+  `POST /images` (no new storage code); at least one "after" photo.
+- Confirmation creates the review and a `simulated_pending` settlement for the booking's agreed
+  total in the same transaction; a dispute creates no settlement. `POST /settlement` moves it to
+  `simulated_settled` once (conditional update). No amount is ever accepted from the client.
+- Kamai Passbook computed on each request from bookings, reviews and settlements (no stored
+  running totals).
+
+## Phase 3 — Status: COMPLETE (2026-10-16)
+
+Marked complete after the full suite (233 tests) and Ruff passed and the documented demo was run
+against a live server (details below). Phase 1 and Phase 2 behaviour is unchanged apart from
+additive fields (`employer_id` on jobs and booking requests).
+
+### Completed functionality (Phase 3 only)
+- **Execution lifecycle** — `booked → in_progress → awaiting_confirmation → completed | disputed`,
+  defined once in `services/lifecycle.py` and applied with conditional updates.
+- **Actor checks (prototype)** — booked worker for start/evidence; the job's recorded employer for
+  confirm/dispute/settle; `403 actor_mismatch` otherwise. Self-asserted labels, not authentication.
+- **Completion evidence** — before (0–5) and after (1–5) photos referencing existing uploads from
+  `POST /images`, optional note; one immutable submission per job; retrieval endpoint.
+- **Employer review** — confirm (records agreed amounts, job `completed`, creates a
+  `simulated_pending` settlement) or dispute (reason recorded, job `disputed`, no settlement).
+  One final decision per job.
+- **Simulated settlement** — amount copied from the booking; client amounts rejected;
+  `simulated_pending → simulated_settled` exactly once; disputed/unconfirmed jobs refused.
+- **Kamai Passbook** — per-worker entries and summary computed from bookings, reviews and
+  settlements on each request.
+
+### API endpoints added
+`POST /api/v1/jobs/{job_id}/start`, `POST|GET /api/v1/jobs/{job_id}/completion-evidence`,
+`POST /api/v1/jobs/{job_id}/completion-confirmation`, `POST|GET /api/v1/jobs/{job_id}/settlement`,
+`GET /api/v1/workers/{worker_id}/passbook` — see
+[API.md](./API.md#phase-3--job-completion-simulated-settlement-and-kamai-passbook).
+Additive changes to existing endpoints: optional `employer_id` in `POST /jobs` and
+`POST /jobs/{id}/bookings`; `employer_id` in `JobResponse`.
+
+**Design decision:** settlement is split across two calls. Confirmation creates the
+`simulated_pending` record in its own transaction (so the job is eligible and the amount is fixed
+from the booking at that moment); `POST /settlement` records the simulated payout. This lets the
+demo show pending → settled while guaranteeing a settlement can never exist without confirmation.
+
+### Database changes
+- New tables: `job_executions`, `completion_evidence`, `completion_evidence_images`,
+  `completion_reviews`, `settlements` (UNIQUE job/booking constraints, CHECK constraints on
+  decision, dispute reason, status, amount and `settled_at`).
+- New nullable column `jobs.employer_ref` (+ index), added to existing databases by the new
+  `ADDITIVE_COLUMNS` step in `init_db` via `ALTER TABLE … ADD COLUMN`. Existing rows are kept.
+
+### Files added / changed in Phase 3
+- Added: `app/api/v1/completion.py`, `app/schemas/completion.py`,
+  `app/services/{actors,execution,settlements,passbook}.py`,
+  `tests/test_{execution,completion_review,settlement,passbook}.py`.
+- Changed: `app/models.py` (5 models + `Job.employer_ref`), `app/db.py` (additive column step),
+  `app/init_db.py` + `app/main.py` (report schema additions), `app/schemas/common.py` (statuses,
+  `ReviewDecision`, `SettlementStatus`), `app/services/lifecycle.py` (transitions,
+  `apply_transition`, `BOOKED_STATUSES`), `app/schemas/jobs.py` + `app/services/jobs.py`
+  (`employer_id`), `app/schemas/marketplace.py` + `app/services/bookings.py` (optional
+  `employer_id` at booking; already-booked check covers all post-booking states),
+  `app/api/v1/{__init__,workers}.py` (routers, passbook route), `tests/conftest.py` (fixtures),
+  `tests/test_schema_upgrade.py` (expected table list extended to Phase 3; two upgrade tests added).
+- `frontend/`: unchanged.
+
+### Tests and checks actually executed (2026-10-16)
+
+| Check | Result |
+|---|---|
+| Baseline before any change | `pytest`: 165 passed; `ruff`: clean |
+| `python -m pytest` after Phase 3 | **233 passed** — Phases 1–2: 165 (unchanged except the extended upgrade-test table list); Phase 3: test_execution 22, test_completion_review 23, test_settlement 14, test_passbook 7, 2 new upgrade tests (68) |
+| Concurrency tests (booking race, booking stale read, settlement race) repeated 15× | 15/15 passed |
+| `python -m ruff check .` | All checks passed |
+| `python -m app.init_db` twice on a fresh scratch DB | All 12 tables created, then `none (schema already current)` |
+| Documented PowerShell demo (EXECUTION_GUIDE) against `uvicorn` on a scratch DB | All 10 steps succeeded; settlement `simulated_settled 430 INR`; passbook completed=1, settled=430 |
+| OpenAPI | 22 routes (15 existing + 7 new) |
+| Search for payment-provider code/dependencies | None present |
+
+The team's development database (`backend/var/laborlink.db`) was not opened or modified; it will
+receive the Phase 3 tables and `jobs.employer_ref` the next time the server or `init_db` runs.
+
+### Known limitations (Phase 3)
+- **No authentication** — `worker_id`/`employer_id` are self-asserted; anyone with the ids can act.
+- **Settlements are simulated** — no payment gateway, escrow, bank, wallet or lender integration.
+- Disputes are terminal: no resolution, re-submission or cancellation flow.
+- Evidence cannot be replaced once submitted; photos are not analysed and prove nothing about
+  quality.
+- Jobs created before Phase 3 (or without `employer_id`) need `employer_id` at booking time;
+  already-booked legacy jobs without an employer cannot be confirmed (no endpoint sets it later).
+  Reviewed in the follow-up below: intentional; a guarded manual operator path is documented.
+- Passbook is single-currency (INR in the demo) and computed per request (fine at demo scale).
+- Schema upgrades are additive only; Alembic is still needed for non-additive changes.
+
+### Intentionally not implemented
+Real payments/escrow/banking, identity verification, dispute resolution, ratings, notifications,
+credit scoring or loan eligibility from the passbook.
+
+---
+
+## Follow-up — Employer-reference review (2026-10-16)
+
+**Question:** jobs booked before Phase 3 may lack an employer reference, blocking confirmation or
+dispute. Is a code fix needed?
+
+**Verification before any change:** `main` at `b1b9fe1`, clean tree, 233 tests passing, Ruff
+clean. Inspection of `jobs.employer_ref` writers, `services/bookings.py`, `services/actors.py`
+and `services/settlements.py` showed the required behaviour was already in place:
+
+- new bookings record `employer_id` only when the job has none, in the same conditional update
+  that claims the job;
+- a different `employer_id` is rejected with `403 actor_mismatch` before any write;
+- booked jobs cannot be re-booked, so their employer cannot be set or changed via the API;
+- confirm, dispute and settle require the recorded employer (`409 employer_not_recorded` if none,
+  `403 actor_mismatch` if different).
+
+**Outcome:** no production code change was necessary. The only gap is historical jobs that were
+already booked without an employer; per the brief, no API workaround was invented. The limitation
+and a guarded manual SQL path are documented in BACKEND_ARCHITECTURE.md (*Employer-reference rules
+and historical jobs*), API.md and EXECUTION_GUIDE.md.
+
+**Regression tests added** (`tests/test_employer_reference.py`, 9 tests): booking establishes the
+reference; a creation-time reference is kept (booking with no id / the same id); a different id
+cannot replace it (job stays `estimated`, offer `pending`); a losing concurrent booking cannot
+overwrite it; the booking-recorded employer can confirm and can dispute while other ids get 403; a
+real Phase 2-shaped database with a job booked without an employer is upgraded with its data
+intact and confirm/dispute/settle/re-booking are all refused with nothing written; the documented
+manual SQL fills only an empty reference and then enables the verified employer.
+
+**Results:** `python -m pytest` 242 passed (233 existing, unchanged, + 9 new);
+`python -m ruff check .` clean. `frontend/` unchanged.

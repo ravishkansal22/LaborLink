@@ -28,10 +28,49 @@ class Complexity(str, Enum):
 
 
 class JobStatus(str, Enum):
-    """Phase 1 statuses. Phase 2+ will add e.g. `open`, `booked`, `completed`."""
+    """Job lifecycle (see app/services/lifecycle.py and docs/BACKEND_ARCHITECTURE.md)."""
 
-    estimated = "estimated"  # work order + price estimate available
-    needs_information = "needs_information"  # trade could not be determined; no estimate yet
+    needs_information = "needs_information"  # trade unknown; no estimate, not discoverable
+    estimated = "estimated"  # work order + estimate available; open for matching and offers
+    booked = "booked"  # a booking is confirmed; closed to new offers
+    in_progress = "in_progress"  # the booked worker has started
+    awaiting_confirmation = "awaiting_confirmation"  # evidence submitted; employer to review
+    completed = "completed"  # employer confirmed; eligible for simulated settlement
+    disputed = "disputed"  # employer disputed; never settled (resolution not implemented)
+
+
+class Availability(str, Enum):
+    available = "available"
+    unavailable = "unavailable"
+
+
+class OfferKind(str, Enum):
+    accept_suggested = "accept_suggested"  # worker accepts the suggested labour amount
+    counter = "counter"  # worker proposes a different amount within the permitted range
+
+
+class OfferStatus(str, Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
+class BookingStatus(str, Enum):
+    """The booking record itself stays `confirmed`; execution progress lives on the job status."""
+
+    confirmed = "confirmed"
+
+
+class ReviewDecision(str, Enum):
+    confirmed = "confirmed"
+    disputed = "disputed"
+
+
+class SettlementStatus(str, Enum):
+    """Simulated states only — LaborLink never moves real money."""
+
+    simulated_pending = "simulated_pending"
+    simulated_settled = "simulated_settled"
 
 
 class ErrorDetail(BaseModel):

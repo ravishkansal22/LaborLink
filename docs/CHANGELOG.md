@@ -49,3 +49,49 @@ When submitting changes, please append an entry following this format:
 - **Execution & Testing**:
   - `cd backend`, `python -m pip install -r requirements.txt`, `python -m uvicorn app.main:app --reload`, open `/docs`.
   - `python -m pytest` (87 passed) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Phase 2 backend: workers, matching, offers, booking
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | docs
+- **Type**: Feature
+- **Description**:
+  - Worker profiles (`POST/GET/PATCH /api/v1/workers`), self-declared and marked unverified.
+  - Matching (`GET /jobs/{id}/matches`): trade, availability, haversine distance vs service radius; transparent score from distance and experience, never price; explicit handling of jobs without coordinates.
+  - Worker job discovery (`GET /workers/{id}/jobs`) without employer address.
+  - Offers (`POST/GET /jobs/{id}/offers`, `GET /workers/{id}/offers`): accept suggested amount or counter within rate-card `offer_limits` applied to the current FairRate estimate; one pending offer per worker per job (DB-enforced).
+  - Booking (`POST /jobs/{id}/bookings`, `GET /jobs/{id}/booking`): single transaction, conditional job update + UNIQUE(job_id) prevent double booking; competing offers closed.
+  - Lifecycle: new `booked` status; recalculating a booked job now returns 409 `job_not_open`. CORS now allows PATCH.
+  - Schema: new tables `workers`, `offers`, `bookings` only; existing databases upgrade in place via `python -m app.init_db` or startup.
+  - Docs updated: API, BACKEND_ARCHITECTURE, IMPLEMENTATION_PROGRESS, PROJECT_OVERVIEW, EXECUTION_GUIDE. `frontend/` untouched. Phase 3 not started.
+- **Execution & Testing**:
+  - `cd backend`, `python -m app.init_db`, `python -m uvicorn app.main:app --reload`, follow the Phase 2 walkthrough in EXECUTION_GUIDE.
+  - `python -m pytest` (165 passed: 87 Phase 1 unchanged + 78 Phase 2) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Phase 3 backend: completion, simulated settlement, Kamai Passbook
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | docs
+- **Type**: Feature
+- **Description**:
+  - Job execution: `POST /jobs/{id}/start` (booked worker only); lifecycle `booked -> in_progress -> awaiting_confirmation -> completed | disputed`, centralised in `services/lifecycle.py`.
+  - Completion evidence: `POST/GET /jobs/{id}/completion-evidence` with before/after photos referencing existing `/images` uploads; one immutable submission per job.
+  - Employer review: `POST /jobs/{id}/completion-confirmation` (confirm or dispute with reason); one final decision per job; disputes are never settled.
+  - Simulated settlement: `POST/GET /jobs/{id}/settlement`; amount always taken from the booking; `simulated_pending -> simulated_settled` once; UNIQUE per booking. No real payments, escrow or banking.
+  - Kamai Passbook: `GET /workers/{id}/passbook`, computed from persisted bookings, reviews and settlements.
+  - Optional self-asserted `employer_id` on `POST /jobs` and `POST /jobs/{id}/bookings` (prototype actor check, not authentication).
+  - Schema: new tables `job_executions`, `completion_evidence`, `completion_evidence_images`, `completion_reviews`, `settlements`; new nullable column `jobs.employer_ref` added in place by `init_db` (`ALTER TABLE ... ADD COLUMN`).
+  - Docs updated: API, BACKEND_ARCHITECTURE, IMPLEMENTATION_PROGRESS, PROJECT_OVERVIEW, EXECUTION_GUIDE (10-step demo). `frontend/` untouched.
+- **Execution & Testing**:
+  - `cd backend`, `python -m app.init_db`, `python -m uvicorn app.main:app --reload`, then run the end-to-end demo in EXECUTION_GUIDE.
+  - `python -m pytest` (233 passed: 165 Phases 1-2 + 68 Phase 3) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Employer-reference review (no code change)
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend tests | docs
+- **Type**: Chore (verification + documentation)
+- **Description**:
+  - Verified that bookings record `employer_id` only when none exists, never overwrite a recorded employer (403 on mismatch), and that only the recorded employer can confirm, dispute or settle. No production code change was needed.
+  - Documented the remaining limitation: jobs already booked without an employer (e.g. under Phase 2) cannot be confirmed/disputed/settled via the API; added a guarded manual operator path (`UPDATE ... WHERE employer_ref IS NULL`) and the future authenticated path.
+  - Added `backend/tests/test_employer_reference.py` (9 regression tests, including a Phase 2-shaped database upgrade).
+  - Docs updated: API, BACKEND_ARCHITECTURE, EXECUTION_GUIDE, IMPLEMENTATION_PROGRESS. `frontend/` untouched.
+- **Execution & Testing**:
+  - `cd backend`, `python -m pytest` (242 passed) and `python -m ruff check .` (clean).
