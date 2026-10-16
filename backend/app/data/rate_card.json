@@ -1,0 +1,18 @@
+{
+  "version": "demo-2026-10-v1",
+  "currency": "INR",
+  "region": "Illustrative demo rates (not tied to a specific city or state)",
+  "disclaimer": "Illustrative rates for the LaborLink hackathon prototype. They are not official market rates and not statutory minimum wages.",
+  "trades": {
+    "plumber": {"hourly_rate": 250, "minimum_charge": 300},
+    "electrician": {"hourly_rate": 280, "minimum_charge": 300},
+    "mason": {"hourly_rate": 220, "minimum_charge": 400},
+    "carpenter": {"hourly_rate": 260, "minimum_charge": 350}
+  },
+  "complexity_multipliers": {"low": 0.9, "medium": 1.0, "high": 1.3},
+  "urgency_multipliers": {"flexible": 0.95, "normal": 1.0, "urgent": 1.25},
+  "travel_allowance": 50,
+  "rounding_step": 10,
+  "wage_floors": {},
+  "wage_floor_source": null
+}
