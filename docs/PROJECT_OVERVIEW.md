@@ -46,7 +46,7 @@ LaborLink connects employers with nearby skilled workers and makes each job tran
 | Database | SQLite (local file) |
 | Work-order generation | Deterministic rule-based provider (default); optional Claude vision-language provider via configuration |
 | Tests / quality | pytest, ruff |
-| Frontend | `frontend/` — not yet implemented in this repository |
+| Frontend | Next.js 14 phone-style web app in `frontend/` (employer and worker apps, Leaflet/OpenStreetMap live tracking) |
 
 ## User flow (target product)
 
@@ -62,8 +62,8 @@ LaborLink connects employers with nearby skilled workers and makes each job tran
 
 ## Full vision vs. hackathon prototype
 
-The prototype implements steps 2–4 above as a backend API (the frontend is not built yet).
-Speech recognition, real image understanding (unless an API key is configured), user accounts and
+The prototype implements steps 1–4 above as a FastAPI backend and a Next.js web app; voice input uses the browser's speech recognition.
+Server-side speech recognition, real image understanding (unless an API key is configured), user accounts and
 authentication, verified worker identities, ratings, notifications, dispute resolution, **real
 payments or escrow**, and any lending or credit use of the passbook are part of the wider vision
 but **not** of the current prototype. Settlements are simulated records only.
