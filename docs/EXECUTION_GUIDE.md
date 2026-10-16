@@ -59,8 +59,10 @@ This document outlines how project changes are run, tested, and validated locall
    `ALTER TABLE … ADD COLUMN`; existing rows keep their data and get `NULL`). Nothing is dropped
    or rewritten. Running it again prints `Schema additions: none (schema already current)`.
    Back up `backend/var/laborlink.db` first if its data matters to you. Jobs created before
-   Phase 3 have no employer recorded: pass `employer_id` when booking them, or they cannot be
-   confirmed/settled.
+   Phase 3 have no employer recorded: if they are not booked yet, pass `employer_id` when booking
+   them; if they were already booked, they cannot be confirmed/disputed/settled through the API
+   (see the manual path in BACKEND_ARCHITECTURE.md → *Employer-reference rules and historical
+   jobs*).
 5. Start the development server:
    ```powershell
    python -m uvicorn app.main:app --reload
@@ -209,8 +211,11 @@ All are optional. Set them in `backend/.env` (git-ignored) or the shell. See `ba
   This deletes all jobs, workers, offers and bookings.
 - **`409 job_already_booked` / `job_not_open` while testing** — the job was already booked;
   create a new job to try another booking flow.
-- **`409 employer_not_recorded`** — the job was created without `employer_id` (e.g. before
-  Phase 3). Pass `employer_id` when confirming the booking, or create a new job with it.
+- **`409 employer_not_recorded`** — the job has no recorded employer. If it is not booked yet,
+  pass `employer_id` when confirming the booking. If it was already booked without one (e.g.
+  under Phase 2), the API will not let anyone claim it; for demo data an operator can back up the
+  database and run the guarded `UPDATE … WHERE employer_ref IS NULL` statement documented in
+  BACKEND_ARCHITECTURE.md, or simply create a new job with `employer_id`.
 - **`403 actor_mismatch`** — the `worker_id`/`employer_id` sent is not the booked worker or the
   job's employer. These are demo labels, not logins.
 - **`curl.exe` not found in PowerShell** — Windows 10+ ships `curl.exe`; on older systems use the

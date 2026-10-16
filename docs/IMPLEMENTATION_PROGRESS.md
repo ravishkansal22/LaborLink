@@ -402,9 +402,44 @@ receive the Phase 3 tables and `jobs.employer_ref` the next time the server or `
   quality.
 - Jobs created before Phase 3 (or without `employer_id`) need `employer_id` at booking time;
   already-booked legacy jobs without an employer cannot be confirmed (no endpoint sets it later).
+  Reviewed in the follow-up below: intentional; a guarded manual operator path is documented.
 - Passbook is single-currency (INR in the demo) and computed per request (fine at demo scale).
 - Schema upgrades are additive only; Alembic is still needed for non-additive changes.
 
 ### Intentionally not implemented
 Real payments/escrow/banking, identity verification, dispute resolution, ratings, notifications,
 credit scoring or loan eligibility from the passbook.
+
+---
+
+## Follow-up — Employer-reference review (2026-10-16)
+
+**Question:** jobs booked before Phase 3 may lack an employer reference, blocking confirmation or
+dispute. Is a code fix needed?
+
+**Verification before any change:** `main` at `b1b9fe1`, clean tree, 233 tests passing, Ruff
+clean. Inspection of `jobs.employer_ref` writers, `services/bookings.py`, `services/actors.py`
+and `services/settlements.py` showed the required behaviour was already in place:
+
+- new bookings record `employer_id` only when the job has none, in the same conditional update
+  that claims the job;
+- a different `employer_id` is rejected with `403 actor_mismatch` before any write;
+- booked jobs cannot be re-booked, so their employer cannot be set or changed via the API;
+- confirm, dispute and settle require the recorded employer (`409 employer_not_recorded` if none,
+  `403 actor_mismatch` if different).
+
+**Outcome:** no production code change was necessary. The only gap is historical jobs that were
+already booked without an employer; per the brief, no API workaround was invented. The limitation
+and a guarded manual SQL path are documented in BACKEND_ARCHITECTURE.md (*Employer-reference rules
+and historical jobs*), API.md and EXECUTION_GUIDE.md.
+
+**Regression tests added** (`tests/test_employer_reference.py`, 9 tests): booking establishes the
+reference; a creation-time reference is kept (booking with no id / the same id); a different id
+cannot replace it (job stays `estimated`, offer `pending`); a losing concurrent booking cannot
+overwrite it; the booking-recorded employer can confirm and can dispute while other ids get 403; a
+real Phase 2-shaped database with a job booked without an employer is upgraded with its data
+intact and confirm/dispute/settle/re-booking are all refused with nothing written; the documented
+manual SQL fills only an empty reference and then enables the verified employer.
+
+**Results:** `python -m pytest` 242 passed (233 existing, unchanged, + 9 new);
+`python -m ruff check .` clean. `frontend/` unchanged.

@@ -83,3 +83,15 @@ When submitting changes, please append an entry following this format:
 - **Execution & Testing**:
   - `cd backend`, `python -m app.init_db`, `python -m uvicorn app.main:app --reload`, then run the end-to-end demo in EXECUTION_GUIDE.
   - `python -m pytest` (233 passed: 165 Phases 1-2 + 68 Phase 3) and `python -m ruff check .` (clean).
+
+### [2026-10-16] - Employer-reference review (no code change)
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend tests | docs
+- **Type**: Chore (verification + documentation)
+- **Description**:
+  - Verified that bookings record `employer_id` only when none exists, never overwrite a recorded employer (403 on mismatch), and that only the recorded employer can confirm, dispute or settle. No production code change was needed.
+  - Documented the remaining limitation: jobs already booked without an employer (e.g. under Phase 2) cannot be confirmed/disputed/settled via the API; added a guarded manual operator path (`UPDATE ... WHERE employer_ref IS NULL`) and the future authenticated path.
+  - Added `backend/tests/test_employer_reference.py` (9 regression tests, including a Phase 2-shaped database upgrade).
+  - Docs updated: API, BACKEND_ARCHITECTURE, EXECUTION_GUIDE, IMPLEMENTATION_PROGRESS. `frontend/` untouched.
+- **Execution & Testing**:
+  - `cd backend`, `python -m pytest` (242 passed) and `python -m ruff check .` (clean).

@@ -633,8 +633,22 @@ still send them. A mismatch returns **403 `actor_mismatch`**.
 
 `employer_id` (1–64 chars of `A-Z a-z 0-9 _ . : @ -`) is recorded either when the job is created
 (`POST /jobs`) or, for jobs created without one, when the booking is confirmed
-(`POST /jobs/{id}/bookings` with `employer_id`). If a job has no recorded employer, confirmation and
-settlement return **409 `employer_not_recorded`**.
+(`POST /jobs/{id}/bookings` with `employer_id`). If a job has no recorded employer, confirmation,
+dispute and settlement return **409 `employer_not_recorded`**.
+
+Employer-reference rules:
+
+- A booking stores `employer_id` **only if the job has none yet**. Sending the same id again is
+  accepted; sending a different id returns `403 actor_mismatch` and nothing is booked or changed.
+  Omitting it keeps the existing reference.
+- Once a job is booked, no endpoint can set or change its employer: a later booking request returns
+  `409 job_already_booked` before `employer_id` is considered, so knowing a job id is not enough to
+  claim it.
+- **Historical limitation:** a job that was already booked without an employer (e.g. booked under
+  Phase 2) cannot be confirmed, disputed or settled through the API. The worker can still start it
+  and submit evidence. See
+  [BACKEND_ARCHITECTURE.md](./BACKEND_ARCHITECTURE.md#employer-reference-rules-and-historical-jobs)
+  for the manual operator path.
 
 ## Lifecycle after booking
 

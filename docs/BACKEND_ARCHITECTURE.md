@@ -222,6 +222,41 @@ the booking's worker (start, evidence) and `employer_id` with `jobs.employer_ref
 settlement), returning `403 actor_mismatch`. `employer_ref` is set from `employer_id` on job
 creation or, if still empty, on booking confirmation.
 
+### Employer-reference rules and historical jobs
+
+`jobs.employer_ref` has exactly two writers, both covered by `tests/test_employer_reference.py`:
+
+1. `POST /jobs` stores the optional `employer_id`.
+2. `POST /jobs/{id}/bookings` stores `employer_id` only when the job has no reference yet; a
+   different id is rejected (`403`) before the transaction starts. The value is written by the same
+   conditional `UPDATE … WHERE status='estimated'` that claims the job, so a booking that loses a
+   race can never write its `employer_id`.
+
+There is no other way to set or change it: booked jobs reject further booking requests
+(`409 job_already_booked`) before `employer_id` is read, and no employer identity is ever inferred
+from knowing a job id. Review, dispute and settlement require a recorded reference
+(`409 employer_not_recorded` otherwise).
+
+**Remaining limitation — historical bookings.** Jobs booked before Phase 3 (or booked without an
+`employer_id`) have `employer_ref = NULL` after the schema upgrade. The worker can still start them
+and submit evidence, but they cannot be confirmed, disputed or settled, and their passbook entry
+stays `in_progress`. This is deliberate: without authentication there is no safe way for the API to
+decide who the employer was.
+
+Safe manual path (operator with database access, for demo data only):
+
+```sql
+-- Back up backend/var/laborlink.db first. Run only after confirming the employer out of band.
+UPDATE jobs SET employer_ref = '<employer-id>'
+WHERE id = '<job-id>' AND employer_ref IS NULL;   -- never overwrites an existing reference
+```
+
+The `employer_ref IS NULL` guard makes it a no-op on jobs that already have an employer; the
+recorded employer can then confirm or dispute normally (this exact statement is exercised by
+`test_documented_manual_backfill_enables_the_verified_employer`). Future path: once real employer
+accounts and authentication exist, replace this with an authenticated, admin-reviewed claim step;
+do not add an unauthenticated "claim job" endpoint.
+
 **Start** (`execution.start_job`): booking must exist → worker matches → transition
 `booked → in_progress` and insert `job_executions` in one transaction.
 
