@@ -123,6 +123,7 @@ total  min / max = labour rounded down / up to rounding_step + travel_allowance
 | `completion_evidence_images` *(P3)* | `evidence_id` (FK), `image_id` (FK → `image_uploads`), `role` (`before`/`after`, CHECK), `position` | UNIQUE (`evidence_id`, `image_id`); photos stay in the Phase 1 upload store |
 | `completion_reviews` *(P3)* | `job_id` (UNIQUE), `booking_id` (UNIQUE), `evidence_id`, `employer_ref`, `decision` (CHECK), `dispute_reason` (CHECK: required when disputed), agreed amounts, `reviewed_at` | One final decision per job |
 | `settlements` *(P3)* | `job_id`, `booking_id`, `review_id` (all UNIQUE), `worker_id`, `employer_ref`, `labour_amount`, `travel_allowance`, `amount` (CHECK > 0), `currency`, `status` (CHECK `simulated_pending`/`simulated_settled`), `created_at`, `settled_at` (CHECK: set iff settled) | Simulated ledger; never deleted |
+| `worker_locations` | `job_id` (PK, FK), `worker_id`, `latitude`, `longitude` (CHECK ranges), `accuracy_m`, `recorded_at` | Latest shared position only; overwritten on each update |
 
 Timestamps are stored as UTC and returned as timezone-aware ISO-8601 (`...Z`).
 
@@ -283,6 +284,20 @@ settlement per booking (UNIQUE constraints); CHECK constraints on decision, stat
 (tested by forcing commit failures). Settlement rows are never updated except
 pending → settled and never deleted, so they form the audit record. **No money moves** — there is
 no payment gateway, escrow, bank or wallet integration.
+
+## Live worker location
+
+`services/tracking.py`: while a job is `booked` or `in_progress`, the booked worker posts their
+position (`POST /jobs/{id}/worker-location`) and the job's employer reads it
+(`GET …?employer_id=`). Same prototype actor checks as Phase 3. One `worker_locations` row per job
+is upserted, so no route history is kept. The view adds the job's coordinates, the haversine
+distance, an approximate ETA (distance × 1.3 at 20 km/h, rounded up; 0 when within 150 m or the job
+is in progress) and a `stale` flag after 2 minutes without updates. The app draws it on an
+OpenStreetMap map (Leaflet, no API key) and links to Google Maps for directions. The frontend's
+trip screens also fetch a road route from the public OSRM server, directly from the browser, to
+draw the path and refine the ETA. This sends the worker's start point and the job's coordinates to
+that third-party server; if it can't be reached, the frontend uses the straight-line estimate
+instead. The backend's own ETA stays distance-based.
 
 ## Kamai Passbook data flow
 

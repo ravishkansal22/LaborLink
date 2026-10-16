@@ -9,6 +9,7 @@ import {
   AppBar, Avatar, BottomNav, Chip, Empty, ErrorNote, JobSteps, Loading, Note, Photo, PhotoPicker, SettingRow, StatusChip,
   stepLabels, stepsFor, type PickedPhoto,
 } from '../components/ui';
+import { TrackBanner } from './tracking';
 import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, type Trade, type Urgency } from '../lib/api';
 import { useLoad, useSpeech, type Session } from '../lib/session';
 
@@ -54,9 +55,12 @@ function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
 
 /* ------------------------------------------------------------------ home */
 
-export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob }: { session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void }) {
+export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }: {
+  session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
+}) {
   const jobs = useMyJobs(session, 10000);
   const active = (jobs.data ?? []).filter((j) => !finished(j));
+  const onTheWay = active.filter((j) => j.status === 'booked' || j.status === 'in_progress');
   const employer = session.employer!;
   return (
     <main className="screen has-nav">
@@ -67,6 +71,10 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob }: { sessi
         </div>
         <button type="button" onClick={go.profile} aria-label="Profile" className="plain"><Avatar name={employer.name} size={36} /></button>
       </header>
+
+      {onTheWay.map((j) => (
+        <div key={j.id} className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={() => onTrack(j.id)} /></div>
+      ))}
 
       <h1 className="h1 mt-12">Namaste, {employer.name.split(' ')[0]}</h1>
       <p className="body mt-2">What needs fixing today?</p>
@@ -197,7 +205,9 @@ export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { ses
 
 /* ------------------------------------------------------------------ one job, driven by its live status */
 
-export function EmployerJobScreen({ session, jobId, onBack, onNewJob }: { session: Session; jobId: string; onBack: () => void; onNewJob: () => void }) {
+export function EmployerJobScreen({ session, jobId, onBack, onNewJob, onTrack }: {
+  session: Session; jobId: string; onBack: () => void; onNewJob: () => void; onTrack: () => void;
+}) {
   const employer = session.employer!;
   const job = useLoad(() => api.getJob(jobId), [jobId], 5000);
   if (!job.data) {
@@ -243,7 +253,10 @@ export function EmployerJobScreen({ session, jobId, onBack, onNewJob }: { sessio
         </section>
       )}
 
-      {j.status === 'estimated' && <OffersSection jobId={j.id} employerId={employer.employerId} onBooked={refresh} />}
+      {j.status === 'estimated' && <OffersSection jobId={j.id} employerId={employer.employerId} onBooked={onTrack} />}
+      {(j.status === 'booked' || j.status === 'in_progress') && (
+        <div className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={onTrack} /></div>
+      )}
       {['booked', 'in_progress', 'awaiting_confirmation', 'completed', 'disputed'].includes(j.status) && <BookingCard jobId={j.id} status={j.status} />}
       {j.status === 'awaiting_confirmation' && <ReviewSection jobId={j.id} employerId={employer.employerId} onDone={refresh} />}
       {j.status === 'completed' && <SettlementSection jobId={j.id} employerId={employer.employerId} />}

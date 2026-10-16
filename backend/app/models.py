@@ -307,3 +307,24 @@ class Settlement(Base):
     status: Mapped[str] = mapped_column(String(24), index=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     settled_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+
+
+# --- Live tracking ----------------------------------------------------------------------------
+
+
+class WorkerLocation(Base):
+    """Latest position shared by the booked worker for a job. One row per job, overwritten on
+    every update, so no movement history is stored."""
+
+    __tablename__ = "worker_locations"
+    __table_args__ = (
+        CheckConstraint("latitude BETWEEN -90 AND 90", name="ck_worker_locations_latitude"),
+        CheckConstraint("longitude BETWEEN -180 AND 180", name="ck_worker_locations_longitude"),
+    )
+
+    job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), primary_key=True)
+    worker_id: Mapped[str] = mapped_column(ForeignKey("workers.id"), index=True)
+    latitude: Mapped[float] = mapped_column(Float)
+    longitude: Mapped[float] = mapped_column(Float)
+    accuracy_m: Mapped[float | None] = mapped_column(Float)
+    recorded_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

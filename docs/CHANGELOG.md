@@ -109,3 +109,34 @@ When submitting changes, please append an entry following this format:
 - **Execution & Testing**:
   - Backend: `cd backend`, `python -m uvicorn app.main:app --reload`; `python -m pytest` (244 passed), `python -m ruff check .`.
   - Frontend: `cd frontend`, `npm run dev`, open http://localhost:3000; `npx tsc --noEmit`, `npx eslint app`.
+
+### [2026-10-16] - Ride-style trip tracking
+- **Author**: Claude Code (AI assistant)
+- **Component**: frontend | docs
+- **Type**: Feature
+- **Description**:
+  - New full-screen tracking screens:
+    - Employer: a moving arrow on the road route, a bottom sheet with “Arriving in N min”, a journey
+      bar and the worker card.
+    - Worker: a trip screen with automatic GPS sharing or a demo trip, Google Maps navigation and
+      swipe-to-start.
+  - New “on the way” banner on the employer's home and job pages.
+  - Tracking opens automatically after booking.
+  - Road routes come from the public OSRM server, with a straight-line fallback.
+  - Replaced the old in-page tracking/share cards.
+  - `next.config.mjs` gains an optional `NEXT_DIST_DIR`.
+  - No backend changes.
+- **Execution & Testing**:
+  - `npx tsc --noEmit`, `npx eslint app`.
+  - Manual two-tab run against a scratch backend.
+
+### [2026-10-16] - Live worker location on a map
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | frontend | docs
+- **Type**: Feature
+- **Description**:
+  - Backend: `worker_locations` table and `POST`/`GET /api/v1/jobs/{job_id}/worker-location` (booked worker shares; job's employer views distance and approximate ETA). 15 new tests.
+  - Frontend: Leaflet/OpenStreetMap live map (`app/components/live-map.tsx`); worker can share GPS or run a labelled demo trip; employer sees the worker moving, ETA and a Google Maps route link. New dependency: `leaflet` 1.9.4 (+ `@types/leaflet`).
+  - Docs: API, BACKEND_ARCHITECTURE, EXECUTION_GUIDE, IMPLEMENTATION_PROGRESS.
+- **Execution & Testing**:
+  - `python -m pytest` (259 passed), `python -m ruff check .`; frontend `npx tsc --noEmit`, `npx eslint app`.

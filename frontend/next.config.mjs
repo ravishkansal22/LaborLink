@@ -5,6 +5,8 @@ const backendUrl = process.env.LABORLINK_API_URL ?? 'http://127.0.0.1:8000';
 
 const nextConfig = {
   reactStrictMode: true,
+  // Lets a second dev server run from the same folder without sharing build output.
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   async rewrites() {
     return [{ source: '/api/v1/:path*', destination: `${backendUrl}/api/v1/:path*` }];
   },

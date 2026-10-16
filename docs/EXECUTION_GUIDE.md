@@ -254,8 +254,16 @@ the backend first (section 2, port 8000).
 3. Profile → **Switch to worker mode** → create a worker with the same trade in an area within the
    chosen radius (e.g. Karol Bagh is ~3.4 km from Connaught Place).
 4. Worker home / Find work → open the job → Accept or Counter offer.
-5. Worker Profile → **Switch to hiring mode** → open the job → **Book**.
-6. Switch to worker → open the job → **I’ve arrived — start job** → add photos → **Send for confirmation**.
+5. Worker Profile → **Switch to hiring mode** → open the job → **Book**. The full-screen tracking
+   map opens straight away (“Waiting for … to set off”); a “… is on the way” banner also appears on
+   the home screen and the job page.
+6. Switch to worker → open the job → **Start trip to customer**. The trip screen shares GPS
+   automatically; if location is blocked (common on a laptop) tap **Run a demo trip instead**, which
+   drives along the road route in about 75 s. The employer’s map shows the arrow moving, “Arriving
+   in N min” and the journey bar, then “At your door”. On the worker’s trip screen **swipe to start
+   the job** → add photos → **Send for confirmation**.
+   Tip: to film both sides at once, open the employer’s job page in one browser tab, then in a
+   second tab switch to worker mode — each tab keeps the role it was loaded with.
 7. Switch to employer → **Work is done — confirm** (or report a problem) → **Pay (demo)**.
 8. Switch to worker → **Passbook** shows the job and the demo payment.
 

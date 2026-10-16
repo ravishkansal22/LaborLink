@@ -27,6 +27,7 @@ pnpm-debug.log*
 dist/
 build/
 .next/
+.next-preview/
 out/
 
 # ===============================

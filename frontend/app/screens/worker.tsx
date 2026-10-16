@@ -297,7 +297,9 @@ export function CounterOfferScreen({ workerId, opportunity, onBack, onSent }: { 
 
 /* ------------------------------------------------------------------ a booked job */
 
-export function WorkerJobScreen({ workerId, jobId, onBack, onPassbook }: { workerId: string; jobId: string; onBack: () => void; onPassbook: () => void }) {
+export function WorkerJobScreen({ workerId, jobId, onBack, onPassbook, onTrip }: {
+  workerId: string; jobId: string; onBack: () => void; onPassbook: () => void; onTrip: () => void;
+}) {
   const data = useLoad(async () => {
     const [job, booking] = await Promise.all([api.getJob(jobId), api.booking(jobId)]);
     return { job, booking };
@@ -349,9 +351,10 @@ export function WorkerJobScreen({ workerId, jobId, onBack, onPassbook }: { worke
 
       {mine && job.status === 'booked' && (
         <div className="push-bottom">
-          <Note>Start the job when you reach the customer.</Note>
-          <button className="btn btn-primary mt-12" type="button" disabled={saving} onClick={() => void act(() => api.startJob(jobId, workerId))}>
-            {saving ? 'Starting…' : <>I’ve arrived — start job <ArrowRight size={18} /></>}
+          <Note>Start the trip so the customer can see you coming on the map.</Note>
+          <button className="btn btn-primary mt-12" type="button" onClick={onTrip}><Navigation size={18} />Start trip to customer</button>
+          <button className="btn btn-secondary mt-10" type="button" disabled={saving} onClick={() => void act(() => api.startJob(jobId, workerId))}>
+            {saving ? 'Starting…' : <>Already there? Start the job <ArrowRight size={18} /></>}
           </button>
         </div>
       )}
