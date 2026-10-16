@@ -293,7 +293,11 @@ position (`POST /jobs/{id}/worker-location`) and the job's employer reads it
 is upserted, so no route history is kept. The view adds the job's coordinates, the haversine
 distance, an approximate ETA (distance × 1.3 at 20 km/h, rounded up; 0 when within 150 m or the job
 is in progress) and a `stale` flag after 2 minutes without updates. The app draws it on an
-OpenStreetMap map (Leaflet, no API key) and links to Google Maps for directions.
+OpenStreetMap map (Leaflet, no API key) and links to Google Maps for directions. The frontend's
+trip screens also fetch a road route from the public OSRM server, directly from the browser, to
+draw the path and refine the ETA. This sends the worker's start point and the job's coordinates to
+that third-party server; if it can't be reached, the frontend uses the straight-line estimate
+instead. The backend's own ETA stays distance-based.
 
 ## Kamai Passbook data flow
 

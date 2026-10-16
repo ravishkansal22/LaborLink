@@ -7,6 +7,7 @@ import { useSession, type Role } from './lib/session';
 import {
   EmployerHomeScreen, EmployerJobScreen, EmployerJobsScreen, EmployerProfileScreen, NewJobScreen, type EmployerGo,
 } from './screens/employer';
+import { EmployerTrackScreen, WorkerTripScreen } from './screens/tracking';
 import { AccountScreen, PermissionsScreen, ProfileSetupScreen, WelcomeScreen } from './screens/onboarding';
 import {
   CounterOfferScreen, FindWorkScreen, OpportunityScreen, PassbookScreen, WorkerHomeScreen, WorkerJobScreen, WorkerProfileScreen,
@@ -15,8 +16,8 @@ import {
 
 type Screen =
   | 'welcome' | 'account' | 'permissions' | 'setup'
-  | 'home' | 'newJob' | 'employerJob' | 'jobs' | 'profile'
-  | 'workerHome' | 'findWork' | 'opportunity' | 'counter' | 'workerJob' | 'passbook' | 'workerProfile';
+  | 'home' | 'newJob' | 'employerJob' | 'track' | 'jobs' | 'profile'
+  | 'workerHome' | 'findWork' | 'opportunity' | 'counter' | 'workerJob' | 'trip' | 'passbook' | 'workerProfile';
 interface Route { screen: Screen; jobId?: string; opportunity?: Opportunity; trade?: Trade; role?: Role }
 
 const employerTabs: Screen[] = ['home', 'jobs', 'profile', 'newJob'];
@@ -84,7 +85,8 @@ export default function App() {
       );
 
     case 'home':
-      return <EmployerHomeScreen session={session} go={employerGo} onNewJob={(trade) => push({ screen: 'newJob', trade })} onOpenJob={openEmployerJob} />;
+      return <EmployerHomeScreen session={session} go={employerGo} onNewJob={(trade) => push({ screen: 'newJob', trade })} onOpenJob={openEmployerJob}
+        onTrack={(jobId) => push({ screen: 'track', jobId })} />;
     case 'newJob':
       return (
         <NewJobScreen session={session} initialTrade={route.trade} onBack={back}
@@ -94,7 +96,10 @@ export default function App() {
           }} />
       );
     case 'employerJob':
-      return <EmployerJobScreen session={session} jobId={route.jobId!} onBack={back} onNewJob={() => replace({ screen: 'newJob' })} />;
+      return <EmployerJobScreen session={session} jobId={route.jobId!} onBack={back} onNewJob={() => replace({ screen: 'newJob' })}
+        onTrack={() => push({ screen: 'track', jobId: route.jobId })} />;
+    case 'track':
+      return <EmployerTrackScreen jobId={route.jobId!} employerId={session.employer!.employerId} onBack={back} />;
     case 'jobs':
       return <EmployerJobsScreen session={session} go={employerGo} onOpenJob={openEmployerJob} onNewJob={() => push({ screen: 'newJob' })} />;
     case 'profile':
@@ -112,7 +117,10 @@ export default function App() {
     case 'counter':
       return <CounterOfferScreen workerId={session.workerId!} opportunity={route.opportunity!} onBack={back} onSent={() => reset({ screen: 'workerHome' })} />;
     case 'workerJob':
-      return <WorkerJobScreen workerId={session.workerId!} jobId={route.jobId!} onBack={back} onPassbook={() => reset({ screen: 'passbook' })} />;
+      return <WorkerJobScreen workerId={session.workerId!} jobId={route.jobId!} onBack={back} onPassbook={() => reset({ screen: 'passbook' })}
+        onTrip={() => push({ screen: 'trip', jobId: route.jobId })} />;
+    case 'trip':
+      return <WorkerTripScreen workerId={session.workerId!} jobId={route.jobId!} onBack={back} onStarted={back} />;
     case 'passbook':
       return <PassbookScreen workerId={session.workerId!} go={workerGo} onOpenJob={openWorkerJob} />;
     case 'workerProfile':

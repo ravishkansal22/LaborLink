@@ -509,3 +509,54 @@ manual SQL fills only an empty reference and then enables the verified employer.
 - Real GPS needs a phone (or a laptop with location on) and HTTPS/localhost; the demo trip is for recordings.
 - No authentication: anyone with the job id and employer id can read the location (demo only).
 - Public OpenStreetMap tiles are fine for a demo but not for heavy production traffic.
+
+## Ride-style trip tracking (2026-10-16)
+
+**Done** (frontend only; the backend endpoints above are unchanged)
+- `app/screens/tracking.tsx`:
+  - `EmployerTrackScreen`: a full-screen map with a floating back button and status pill, plus a
+    bottom sheet showing “Arriving in N min”, distance, time since the last update, a journey
+    progress bar, the worker card with the agreed amount, the job and address, “Job details” and a
+    Google Maps link. It polls every 4 s.
+  - `WorkerTripScreen`: starts GPS sharing automatically (at most one update every 4 s) and offers
+    a demo trip along the road route if location is blocked. It also has “Navigate in Google Maps”
+    and a swipe-to-start-job control.
+  - `TrackBanner`: a navy “… is on the way · Arriving in N min” banner on the employer's home and
+    job pages.
+- Booking a worker now opens the tracking screen straight away. The worker's booked job offers
+  **Start trip to customer**, or **Already there? Start the job**.
+- `app/lib/route.ts`:
+  - Fetches the road route from the public OSRM server. If that fails it falls back to a straight
+    line × 1.3.
+  - Works out the remaining distance along the route and the ETA at 20 km/h.
+  - Provides the bearing used by the arrow and `pointAlong`, which drives the demo trip.
+- `app/components/live-map.tsx` (rewritten):
+  - The worker is shown as an arrow that glides between updates and turns to face the direction of
+    travel. The route is drawn as a blue line with a white outline.
+  - The map follows the worker and their destination, keeping both above the bottom sheet. Dragging
+    the map pauses this; a re-center button turns it back on.
+  - Animations are skipped while the tab is hidden.
+- `app/components/swipe.tsx`: the swipe-to-confirm button. It handles the phone frame's CSS zoom,
+  and Enter or Space also confirms.
+- `next.config.mjs`: an optional `NEXT_DIST_DIR` setting, so a second dev server can run from the
+  same folder; `.next-preview/` is git-ignored.
+
+**Verified**
+- `npx tsc --noEmit` and `npx eslint app` pass with no errors.
+- In the browser against a scratch backend (port 8010; the dev database was not touched):
+  1. Booking opened the tracking screen.
+  2. The worker's trip screen showed the road route (4.8 km, 15 min).
+  3. During the demo trip, the employer saw “Arriving in 9 min · 2.9 km” with the progress bar
+     moving, and then “At your door”.
+  4. The home banner showed “Ramesh has arrived”.
+  5. Swiping started the job, and the employer's screen switched to “Ramesh is working on it”.
+
+**Limitations**
+- The app sends the worker's start point and the job's coordinates to the public OSRM demo server
+  (`router.project-osrm.org`) to get the route. That server is fine for a demo, but it is not
+  suitable for production or for private data; self-host OSRM, or use a paid routing API, before
+  real use.
+- The road route is fetched once, from the worker's first position. If the worker leaves that
+  route, the remaining distance is measured from the nearest point on it.
+- ETA assumes a constant 20 km/h and ignores traffic.
+- CARTO basemap tiles now require an API key, so the map stays on the standard OpenStreetMap tiles.

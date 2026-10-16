@@ -9,7 +9,7 @@ import {
   AppBar, Avatar, BottomNav, Chip, Empty, ErrorNote, JobSteps, Loading, Note, Photo, PhotoPicker, SettingRow, StatusChip,
   stepLabels, stepsFor, type PickedPhoto,
 } from '../components/ui';
-import { LiveMap, googleMapsUrl } from '../components/live-map';
+import { TrackBanner } from './tracking';
 import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, type Trade, type Urgency } from '../lib/api';
 import { useLoad, useSpeech, type Session } from '../lib/session';
 
@@ -55,9 +55,12 @@ function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
 
 /* ------------------------------------------------------------------ home */
 
-export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob }: { session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void }) {
+export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }: {
+  session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
+}) {
   const jobs = useMyJobs(session, 10000);
   const active = (jobs.data ?? []).filter((j) => !finished(j));
+  const onTheWay = active.filter((j) => j.status === 'booked' || j.status === 'in_progress');
   const employer = session.employer!;
   return (
     <main className="screen has-nav">
@@ -68,6 +71,10 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob }: { sessi
         </div>
         <button type="button" onClick={go.profile} aria-label="Profile" className="plain"><Avatar name={employer.name} size={36} /></button>
       </header>
+
+      {onTheWay.map((j) => (
+        <div key={j.id} className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={() => onTrack(j.id)} /></div>
+      ))}
 
       <h1 className="h1 mt-12">Namaste, {employer.name.split(' ')[0]}</h1>
       <p className="body mt-2">What needs fixing today?</p>
@@ -198,7 +205,9 @@ export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { ses
 
 /* ------------------------------------------------------------------ one job, driven by its live status */
 
-export function EmployerJobScreen({ session, jobId, onBack, onNewJob }: { session: Session; jobId: string; onBack: () => void; onNewJob: () => void }) {
+export function EmployerJobScreen({ session, jobId, onBack, onNewJob, onTrack }: {
+  session: Session; jobId: string; onBack: () => void; onNewJob: () => void; onTrack: () => void;
+}) {
   const employer = session.employer!;
   const job = useLoad(() => api.getJob(jobId), [jobId], 5000);
   if (!job.data) {
@@ -244,9 +253,11 @@ export function EmployerJobScreen({ session, jobId, onBack, onNewJob }: { sessio
         </section>
       )}
 
-      {j.status === 'estimated' && <OffersSection jobId={j.id} employerId={employer.employerId} onBooked={refresh} />}
+      {j.status === 'estimated' && <OffersSection jobId={j.id} employerId={employer.employerId} onBooked={onTrack} />}
+      {(j.status === 'booked' || j.status === 'in_progress') && (
+        <div className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={onTrack} /></div>
+      )}
       {['booked', 'in_progress', 'awaiting_confirmation', 'completed', 'disputed'].includes(j.status) && <BookingCard jobId={j.id} status={j.status} />}
-      {(j.status === 'booked' || j.status === 'in_progress') && <TrackingCard jobId={j.id} employerId={employer.employerId} />}
       {j.status === 'awaiting_confirmation' && <ReviewSection jobId={j.id} employerId={employer.employerId} onDone={refresh} />}
       {j.status === 'completed' && <SettlementSection jobId={j.id} employerId={employer.employerId} />}
       {j.status === 'disputed' && (
@@ -505,47 +516,5 @@ export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut }: 
       <p className="small center">Employer ID {e.employerId}</p>
       {employerNav('profile', go)}
     </main>
-  );
-}
-
-/* ------------------------------------------------------------------ live location of the booked worker */
-
-function ago(seconds: number): string {
-  if (seconds < 10) return 'just now';
-  if (seconds < 60) return `${seconds} s ago`;
-  return `${Math.round(seconds / 60)} min ago`;
-}
-
-function TrackingCard({ jobId, employerId }: { jobId: string; employerId: string }) {
-  const tracking = useLoad(() => api.tracking(jobId, employerId), [jobId], 5000);
-  if (tracking.error) return <div className="mt-12"><ErrorNote error={tracking.error} onRetry={() => void tracking.reload()} /></div>;
-  if (!tracking.data) return <Loading />;
-  const t = tracking.data;
-  const first = t.worker_name.split(' ')[0];
-  const here = t.worker_location;
-  const label = t.worker_name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase();
-  return (
-    <section className="card mt-12">
-      <div className="row spread">
-        <h2 className="h4 with-icon"><Navigation size={16} />Live location</h2>
-        {t.arrived ? <Chip tone="green" icon={<CircleCheck size={12} />}>Arrived</Chip>
-          : !here ? <Chip>Not shared yet</Chip>
-            : here.stale ? <Chip tone="red">Last seen {ago(here.age_seconds)}</Chip>
-              : <Chip tone="orange" icon={<span className="dot" />}>Live</Chip>}
-      </div>
-      {!here && !t.arrived && <p className="small mt-6">Waiting for {first} to share their location. It shows up here as soon as they set off.</p>}
-      <div className="mt-10">
-        <LiveMap worker={here} destination={t.destination} workerLabel={label} />
-      </div>
-      {t.arrived ? (
-        <p className="eta-row mt-10"><strong>{first} is here</strong></p>
-      ) : here && t.eta_minutes != null ? (
-        <p className="eta-row mt-10"><strong>{t.eta_minutes} min</strong><span className="small">away · {t.distance_km} km · updated {ago(here.age_seconds)}</span></p>
-      ) : null}
-      {t.destination && here && !t.arrived && (
-        <a className="map-link mt-6" href={googleMapsUrl(t.destination, here)} target="_blank" rel="noreferrer"><MapPin size={14} />Open route in Google Maps</a>
-      )}
-      <p className="small mt-6">{t.eta_basis}</p>
-    </section>
   );
 }
