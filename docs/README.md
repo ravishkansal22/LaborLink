@@ -9,6 +9,8 @@ Welcome to the documentation repository for the project. This folder is dedicate
 
 ## Directory Index
 
+- [../README.md](../README.md): Start here — project idea, features, and setup from `pip install` to running the frontend and backend.
+
 - [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md): Problem, solution, users, features, stack, user flow and the three-phase roadmap.
 - [BACKEND_ARCHITECTURE.md](./BACKEND_ARCHITECTURE.md): Backend modules, processing flow, FairRate formula, data model, errors and security boundary.
 - [API.md](./API.md): Every implemented endpoint with request/response schemas, status codes and examples.
