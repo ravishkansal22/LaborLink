@@ -1,217 +1,980 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
-  Bolt,
+  BookOpen,
+  BrickWall,
   BriefcaseBusiness,
-  ClipboardCheck,
-  FileText,
-  RefreshCw,
-  SlidersHorizontal,
-  UserCog,
-  CheckCircle2,
-  Gavel,
-  Info,
-  Quote,
   Camera,
   Check,
   ChevronDown,
-  CircleUserRound,
-  Clock3,
-  FileLock2,
+  ChevronRight,
+  CircleCheck,
+  CircleHelp,
+  Clock,
+  Droplets,
+  FileText,
   Hammer,
+  House,
+  Image as ImageIcon,
+  Info,
   Languages,
-  LockKeyhole,
+  ListChecks,
+  Lock,
+  LogOut,
   MapPin,
-  MessageSquareText,
+  MessageCircle,
   Mic,
   Navigation,
+  Pause,
   Phone,
-  Shield,
+  Play,
+  RefreshCw,
+  Send,
   ShieldCheck,
+  SlidersHorizontal,
+  Star,
+  TriangleAlert,
   UserRound,
-  WalletCards,
   Wrench,
+  Zap,
 } from 'lucide-react';
 
 type Language = 'en' | 'hi';
-type Screen = 'welcome' | 'account' | 'phone' | 'permissions' | 'home' | 'jobs' | 'profile' | 'workerJobs' | 'jobDetail' | 'counter' | 'voice' | 'price' | 'offers' | 'tracker' | 'confirm';
+type Screen =
+  | 'welcome' | 'account' | 'phone' | 'permissions' | 'home' | 'jobs' | 'profile' | 'workerJobs'
+  | 'jobDetail' | 'counter' | 'voice' | 'price' | 'offers' | 'tracker' | 'confirm';
 type Role = 'employer' | 'worker';
 
-const workerImage =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCa7vgEk6DrfISbpbgT-mzJIk3y9j0Q3R1QRR5eTZBkhfYP4-sOCYgROmnUaTwcbgWZoMpc7sA1W1OwhUglx3Mmaheje4xfra3kEu090KmbFEiRjtIcZvvoFVAJLVweLFsuCvkk_WfCy6TwvQdXX7tcMuGvUXPwClpy4V0GlCdoLORyhKsja15VQ-CzsFyEtrcgA3b3y3t1MJOHu6T0zZTwcY8OCU4uccgv6VH1ImA';
+const previousScreen: Record<Screen, Screen> = {
+  welcome: 'welcome', account: 'welcome', phone: 'account', permissions: 'phone', home: 'permissions',
+  jobs: 'home', profile: 'home', workerJobs: 'profile', jobDetail: 'workerJobs', counter: 'jobDetail',
+  voice: 'home', price: 'voice', offers: 'price', tracker: 'offers', confirm: 'tracker',
+};
 
 const languages: Array<{ id: Language; badge: string; title: string; subtitle: string }> = [
-  { id: 'en', badge: 'En', title: 'English', subtitle: 'Contractor & Household Mode' },
-  { id: 'hi', badge: 'हिं', title: 'हिंदी (Hindi)', subtitle: 'कारीगर और ठेकेदार मोड' },
+  { id: 'en', badge: 'En', title: 'English', subtitle: 'For households and contractors' },
+  { id: 'hi', badge: 'हिं', title: 'हिंदी', subtitle: 'कारीगर और ठेकेदार के लिए' },
 ];
+
+/* Real photos can be dropped into frontend/public/photos/ with these names; until then a
+   neutral placeholder is shown instead of a stock or AI-generated image. */
+const photos = {
+  burntSwitch: '/photos/burnt-switch.jpg',
+  starterBox: '/photos/starter-box.jpg',
+  before: '/photos/before.jpg',
+  after: '/photos/after.jpg',
+};
 
 function App() {
   const [screen, setScreen] = useState<Screen>('welcome');
   const [language, setLanguage] = useState<Language>('en');
   const [role, setRole] = useState<Role>('employer');
   const [phone, setPhone] = useState('9810123456');
-  const [otp, setOtp] = useState('4821');
+  const [otp, setOtp] = useState('482109');
   const [locationGranted, setLocationGranted] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [photoEnabled, setPhotoEnabled] = useState(false);
 
-  const goBack = (): void => {
-    const previous: Record<Screen, Screen> = {
-      welcome: 'welcome', account: 'welcome', phone: 'account', permissions: 'phone', home: 'permissions', jobs: 'home', profile: 'home', workerJobs: 'profile', jobDetail: 'workerJobs', counter: 'jobDetail', voice: 'home', price: 'voice', offers: 'price', tracker: 'offers', confirm: 'tracker',
-    };
-    setScreen(previous[screen]);
-  };
+  // Open a screen directly with ?screen=offers etc. (handy for re-recording one part of a demo video).
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('screen');
+    if (requested && requested in previousScreen) setScreen(requested as Screen);
+  }, []);
 
-  if (screen === 'welcome') {
-    return <WelcomeScreen language={language} setLanguage={setLanguage} onContinue={() => setScreen('account')} />;
+  // Each screen starts at the top, like a new page in a native app.
+  useEffect(() => {
+    document.getElementById('device-scroll')?.scrollTo({ top: 0 });
+  }, [screen]);
+
+  const goBack = () => setScreen(previousScreen[screen]);
+
+  switch (screen) {
+    case 'welcome':
+      return <WelcomeScreen language={language} setLanguage={setLanguage} onContinue={() => setScreen('account')} />;
+    case 'account':
+      return <AccountScreen role={role} setRole={setRole} onBack={goBack} onContinue={() => setScreen('phone')} />;
+    case 'phone':
+      return <PhoneScreen phone={phone} setPhone={setPhone} otp={otp} setOtp={setOtp} onBack={goBack} onContinue={() => setScreen('permissions')} />;
+    case 'permissions':
+      return (
+        <PermissionsScreen
+          locationGranted={locationGranted} setLocationGranted={setLocationGranted}
+          voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled}
+          photoEnabled={photoEnabled} setPhotoEnabled={setPhotoEnabled}
+          onBack={goBack} onContinue={() => setScreen('home')}
+        />
+      );
+    case 'jobs': return <JobsScreen onHome={() => setScreen('home')} onProfile={() => setScreen('profile')} onTracker={() => setScreen('tracker')} />;
+    case 'profile': return <ProfileScreen onHome={() => setScreen('home')} onJobs={() => setScreen('jobs')} onWorkerMode={() => setScreen('workerJobs')} />;
+    case 'workerJobs': return <WorkerJobsScreen onProfile={goBack} onDetails={() => setScreen('jobDetail')} />;
+    case 'jobDetail': return <JobDetailScreen onBack={goBack} onCounter={() => setScreen('counter')} />;
+    case 'counter': return <CounterOfferScreen onBack={goBack} />;
+    case 'voice': return <VoiceScreen onBack={goBack} onContinue={() => setScreen('price')} />;
+    case 'price': return <PriceScreen onBack={goBack} onContinue={() => setScreen('offers')} />;
+    case 'offers': return <OffersScreen onBack={goBack} onContinue={() => setScreen('tracker')} />;
+    case 'tracker': return <TrackerScreen onBack={goBack} onContinue={() => setScreen('confirm')} />;
+    case 'confirm': return <ConfirmScreen onBack={goBack} />;
+    default:
+      return <HomeScreen onStart={() => setScreen('voice')} onJobs={() => setScreen('jobs')} onProfile={() => setScreen('profile')} onTracker={() => setScreen('tracker')} />;
   }
-  if (screen === 'account') {
-    return <AccountScreen role={role} setRole={setRole} onContinue={() => setScreen('phone')} />;
-  }
-  if (screen === 'phone') {
-    return <PhoneScreen phone={phone} setPhone={setPhone} otp={otp} setOtp={setOtp} onBack={goBack} onContinue={() => setScreen('permissions')} />;
-  }
-  if (screen === 'permissions') {
-    return <PermissionsScreen locationGranted={locationGranted} setLocationGranted={setLocationGranted} voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled} photoEnabled={photoEnabled} setPhotoEnabled={setPhotoEnabled} onBack={goBack} onContinue={() => setScreen('home')} />;
-  }
-  if (screen === 'jobs') return <JobsScreen onBack={goBack} onTracker={() => setScreen('tracker')} />;
-  if (screen === 'profile') return <ProfileScreen onBack={goBack} onWorkerMode={() => setScreen('workerJobs')} />;
-  if (screen === 'workerJobs') return <WorkerJobsScreen onBack={goBack} onDetails={() => setScreen('jobDetail')} />;
-  if (screen === 'jobDetail') return <JobDetailScreen onBack={goBack} onCounter={() => setScreen('counter')} />;
-  if (screen === 'counter') return <CounterOfferScreen onBack={goBack} />;
-  if (screen === 'voice') return <VoiceScreen onBack={goBack} onContinue={() => setScreen('price')} />;
-  if (screen === 'price') return <PriceScreen onBack={goBack} onContinue={() => setScreen('offers')} />;
-  if (screen === 'offers') return <OffersScreen onBack={goBack} onContinue={() => setScreen('tracker')} />;
-  if (screen === 'tracker') return <TrackerScreen onBack={goBack} onContinue={() => setScreen('confirm')} />;
-  if (screen === 'confirm') return <ConfirmScreen onBack={goBack} />;
-  return <HomeScreen onStart={() => setScreen('voice')} onJobs={() => setScreen('jobs')} onProfile={() => setScreen('profile')} />;
 }
+
+/* ------------------------------------------------------------------ shared pieces */
+
+function AppBar({ title, subtitle, onBack, right }: { title?: string; subtitle?: string; onBack?: () => void; right?: ReactNode }) {
+  return (
+    <header className="appbar">
+      {onBack ? (
+        <button className="icon-btn" type="button" onClick={onBack} aria-label="Go back"><ArrowLeft size={20} /></button>
+      ) : <span className="appbar-spacer" />}
+      <div className="appbar-title">
+        {title && <h1>{title}</h1>}
+        {subtitle && <span>{subtitle}</span>}
+      </div>
+      {right ?? <span className="appbar-spacer" />}
+    </header>
+  );
+}
+
+function Steps({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="steps" aria-label={`Step ${current} of ${total}`}>
+      {Array.from({ length: total }, (_, i) => <span key={i} className={i < current ? 'on' : ''} />)}
+    </div>
+  );
+}
+
+function Chip({ children, tone = 'plain', icon }: { children: ReactNode; tone?: 'plain' | 'green' | 'orange' | 'red'; icon?: ReactNode }) {
+  return <span className={`chip chip-${tone}`}>{icon}{children}</span>;
+}
+
+const avatarColors = ['#1e5b46', '#8a4b2a', '#3b5b8c', '#6b4e8c', '#7a6a2e'];
+function Avatar({ name, size = 44 }: { name: string; size?: number }) {
+  const initials = name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+  const hash = [...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const color = avatarColors[hash % avatarColors.length];
+  return (
+    <span className="avatar" style={{ width: size, height: size, background: color, fontSize: size * 0.36 }} aria-hidden="true">
+      {initials}
+    </span>
+  );
+}
+
+function Photo({ src, label, tag }: { src?: string; label: string; tag?: string }) {
+  // The placeholder is always underneath; the real photo is shown on top only once it has loaded.
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <figure className="photo">
+      <div className="photo-empty"><ImageIcon size={22} /><span>{label}</span></div>
+      {src && (
+        <img src={src} alt={label} className={loaded ? 'loaded' : ''}
+          ref={(el) => { if (el?.complete && el.naturalWidth > 0) setLoaded(true); }}
+          onLoad={() => setLoaded(true)} />
+      )}
+      {tag && <figcaption>{tag}</figcaption>}
+    </figure>
+  );
+}
+
+function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`toggle ${on ? 'on' : ''}`} onClick={onChange}>
+      <span />
+    </button>
+  );
+}
+
+function Stars({ value, size = 14 }: { value: number; size?: number }) {
+  return <span className="stars">{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={size} className={n <= value ? 'filled' : ''} />)}</span>;
+}
+
+function JobSteps({ labels, current }: { labels: string[]; current: number }) {
+  return (
+    <ol className="job-steps">
+      {labels.map((label, i) => (
+        <li key={label} className={i < current ? 'done' : i === current ? 'current' : ''}>
+          <span>{i < current ? <Check size={12} strokeWidth={3} /> : null}</span>
+          <small>{label}</small>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function BottomNav({ items }: { items: Array<{ label: string; icon: ReactNode; active?: boolean; onClick?: () => void }> }) {
+  return (
+    <nav className="bottom-nav">
+      {items.map((item) => (
+        <button key={item.label} type="button" className={item.active ? 'active' : ''} onClick={item.onClick}>
+          {item.icon}<span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function employerNav(active: 'home' | 'jobs' | 'profile', go: { home?: () => void; jobs?: () => void; profile?: () => void }) {
+  return (
+    <BottomNav items={[
+      { label: 'Home', icon: <House size={22} />, active: active === 'home', onClick: go.home },
+      { label: 'My jobs', icon: <BriefcaseBusiness size={22} />, active: active === 'jobs', onClick: go.jobs },
+      { label: 'Profile', icon: <UserRound size={22} />, active: active === 'profile', onClick: go.profile },
+    ]} />
+  );
+}
+
+/* ------------------------------------------------------------------ onboarding */
 
 function WelcomeScreen({ language, setLanguage, onContinue }: { language: Language; setLanguage: (language: Language) => void; onContinue: () => void }) {
   return (
-    <main className="app-shell">
-      <div className="blueprint" aria-hidden="true" /><div className="blue-glow blue-glow-top" aria-hidden="true" /><div className="blue-glow blue-glow-bottom" aria-hidden="true" />
-      <section className="welcome-content">
-        <header className="status-row"><div className="status-pill live-pill"><span className="live-dot" /><span>LIVE · DELHI NCR NETWORK</span></div><div className="status-pill escrow-pill"><ShieldCheck size={18} /><span>ESCROW PROTECTED</span></div></header>
-        <div className="brand-block"><div className="brand-mark-wrap"><div className="brand-mark"><Hammer size={45} /><span className="mark-baseline" /></div><span className="mark-shield"><ShieldCheck size={16} /></span></div><h1>Labor<span>Link</span></h1><p>Direct Trade Work &amp; Fair Wage Escrow</p><div className="location-pill"><MapPin size={17} /><span>दिल्ली · NOIDA · GURUGRAM</span></div></div>
-        <div className="workers-banner"><div className="workers-photo" style={{ backgroundImage: `url(${workerImage})` }} /><div className="workers-overlay" /><div className="banner-content"><div className="booking-count"><Bolt size={18} fill="currentColor" /><span>14,200+ Active Daily Bookings</span></div><span className="payout-tag">Daily Payouts</span></div></div>
-        <section className="language-card" aria-labelledby="language-heading"><div className="language-heading"><h2 id="language-heading">Select Language</h2><span>भाषा चुनें</span></div><div className="language-options">{languages.map((item) => { const active = language === item.id; return <button className={`language-option ${active ? 'active' : ''}`} key={item.id} type="button" onClick={() => setLanguage(item.id)} aria-pressed={active}><span className={`language-badge ${active ? 'selected' : ''}`}>{item.badge}</span><span className="language-copy"><strong>{item.title}</strong><small>{item.subtitle}</small></span><span className={`radio ${active ? 'checked' : ''}`}><span /></span></button>; })}</div><div className="dialect-note"><Languages size={17} /><span>You can switch regional dialect anytime</span></div></section>
-        <div className="action-area"><div className="trust-pill"><LockKeyhole size={16} /><span>Aadhaar Verified · 0% Platform Commission</span></div><button className="continue-button" type="button" onClick={onContinue}><span>Continue / आगे बढ़ें</span><ArrowRight size={26} /></button><nav className="footer-links"><a href="#terms">Terms of Labor</a><i /><a href="#wage">Wage Guarantee</a><i /><a href="#support">24x7 Sahayata</a></nav></div>
+    <main className="screen welcome">
+      <div className="welcome-brand">
+        <span className="logo"><Hammer size={30} /></span>
+        <h1 className="wordmark">LaborLink</h1>
+        <p>Skilled workers nearby, at a fair price.</p>
+        <p className="hindi">पास के कारीगर, सही दाम पर।</p>
+      </div>
+
+      <ul className="welcome-points">
+        <li><Zap size={18} /><span>Electricians, plumbers, masons and carpenters near you</span></li>
+        <li><ShieldCheck size={18} /><span>See a fair price range before you book</span></li>
+        <li><BookOpen size={18} /><span>Workers keep a record of every job and payment</span></li>
+      </ul>
+
+      <section className="card language-card" aria-labelledby="language-heading">
+        <div className="row spread">
+          <h2 id="language-heading" className="h3">Choose language</h2>
+          <span className="small">भाषा चुनें</span>
+        </div>
+        <div className="stack-sm">
+          {languages.map((item) => {
+            const active = language === item.id;
+            return (
+              <button className={`option ${active ? 'selected' : ''}`} key={item.id} type="button" onClick={() => setLanguage(item.id)} aria-pressed={active}>
+                <span className="option-badge">{item.badge}</span>
+                <span className="option-text"><strong>{item.title}</strong><small>{item.subtitle}</small></span>
+                <span className="radio" />
+              </button>
+            );
+          })}
+        </div>
+        <p className="small with-icon"><Languages size={15} />You can change this later in Profile.</p>
       </section>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" type="button" onClick={onContinue}>Continue · आगे बढ़ें <ArrowRight size={18} /></button>
+        <nav className="footer-links"><a href="#terms">Terms</a><a href="#privacy">Privacy</a><a href="#help">Help</a></nav>
+      </div>
     </main>
   );
 }
 
-function FlowHeader({ step, onBack, dark = false }: { step: number; onBack: () => void; dark?: boolean }) {
-  return <header className={`flow-header ${dark ? 'dark-header' : ''}`}><button className="round-icon-button" onClick={onBack} type="button" aria-label="Go back"><ArrowLeft size={28} /></button><span className="step-pill"><span className="step-dot" />STEP {step} OF 3</span><div className="round-icon-button quiet"><Shield size={25} /></div></header>;
+function AccountScreen({ role, setRole, onBack, onContinue }: { role: Role; setRole: (role: Role) => void; onBack: () => void; onContinue: () => void }) {
+  return (
+    <main className="screen">
+      <AppBar onBack={onBack} right={<span className="step-count">1 of 3</span>} />
+      <Steps current={1} total={3} />
+      <h1 className="h1 mt-20">How will you use LaborLink?</h1>
+      <p className="body mt-6">You can switch between hiring and working from your profile.</p>
+
+      <div className="stack mt-20">
+        <RoleCard
+          active={role === 'employer'} onClick={() => setRole('employer')}
+          icon={<BriefcaseBusiness size={22} />} title="I need work done" hindi="मुझे काम करवाना है"
+          description="Describe the job with a photo or voice note. Get a price range and offers from workers nearby."
+        />
+        <RoleCard
+          active={role === 'worker'} onClick={() => setRole('worker')}
+          icon={<Hammer size={22} />} title="I want work" hindi="मुझे काम चाहिए"
+          description="See jobs near you for your trade, send your price, and keep a record of what you earn."
+        />
+      </div>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" onClick={onContinue} type="button">
+          Continue as {role === 'employer' ? 'employer' : 'worker'} <ArrowRight size={18} />
+        </button>
+        <p className="small center mt-10">By continuing you agree to the <a href="#terms">Terms</a>.</p>
+      </div>
+    </main>
+  );
 }
 
-function AccountScreen({ role, setRole, onContinue }: { role: Role; setRole: (role: Role) => void; onContinue: () => void }) {
-  return <main className="flow-shell account-screen"><div className="account-top"><div className="top-brand"><span className="top-brand-mark" /><strong>LaborLink</strong></div><span className="progress-step">STEP 1 OF 3</span><div className="progress-line"><span /></div><p className="eyebrow"><Languages size={20} /> अपना खाता चुनें · SELECT ACCOUNT TYPE</p></div><section className="flow-content account-content"><h1>How will you use<br />LaborLink?</h1><p className="flow-subtitle">You can switch roles anytime from your profile settings.</p><div className="role-options"><RoleCard active={role === 'employer'} icon={<BriefcaseBusiness />} label="FOR HOMEOWNERS & CONTRACTORS" title="I need work done" hindi="मुझे काम करवाना है" description="Hire verified local trade professionals with transparent FairRate pricing & guaranteed demo escrow safety." footer={<><ShieldCheck size={19} />Escrow Protection · Background Checked</>} onClick={() => setRole('employer')} /><RoleCard active={role === 'worker'} icon={<Hammer />} label="FOR ELECTRICIANS, PLUMBERS, CARPENTERS" title="I want work" hindi="मुझे काम चाहिए" description="Find nearby trade jobs in Delhi NCR, receive direct daily payouts, and build a verified digital work record." footer={<><WalletCards size={19} />Same-Day UPI Payouts · Zero Commission</>} onClick={() => setRole('worker')} /></div><div className="profile-note"><span><ShieldCheck size={21} /></span><div><strong>Unified Single Profile</strong><small>Switch between hiring &amp; working whenever you need.</small></div></div><button className="flow-button" onClick={onContinue} type="button">CONTINUE AS {role === 'employer' ? 'EMPLOYER' : 'WORKER'} <ArrowRight /></button><p className="terms-note">By continuing, you agree to FairWage terms &amp; conditions.</p></section></main>;
-}
-
-function RoleCard({ active, icon, label, title, hindi, description, footer, onClick }: { active: boolean; icon: React.ReactNode; label: string; title: string; hindi: string; description: string; footer: React.ReactNode; onClick: () => void }) {
-  return <button className={`role-card ${active ? 'active-role' : ''}`} onClick={onClick} type="button"><div className="role-icon">{icon}</div><div className="role-body"><span className="role-label">{label}</span><h2>{title}</h2><strong>{hindi}</strong><p>{description}</p><span className="role-footer">{footer}</span></div>{active && <span className="role-check"><Check size={19} /></span>}</button>;
+function RoleCard({ active, icon, title, hindi, description, onClick }: { active: boolean; icon: ReactNode; title: string; hindi: string; description: string; onClick: () => void }) {
+  return (
+    <button className={`role-card ${active ? 'selected' : ''}`} onClick={onClick} type="button" aria-pressed={active}>
+      <span className="role-icon">{icon}</span>
+      <span className="role-text">
+        <strong>{title}</strong>
+        <em>{hindi}</em>
+        <small>{description}</small>
+      </span>
+      <span className="radio" />
+    </button>
+  );
 }
 
 function PhoneScreen({ phone, setPhone, otp, setOtp, onBack, onContinue }: { phone: string; setPhone: (value: string) => void; otp: string; setOtp: (value: string) => void; onBack: () => void; onContinue: () => void }) {
-  return <main className="flow-shell phone-screen"><FlowHeader step={2} onBack={onBack} /><div className="phone-hero"><span className="eyebrow dark-eyebrow"><span className="signal-dot" />Direct SMS Gateway</span><h1>Enter your phone number</h1><p>We will send a 6-digit demo verification code via SMS<br />to secure your daily wage account.</p></div><section className="flow-content phone-content"><div className="guarantee-card"><img src={workerImage} alt="Verified worker" /><div><strong>Instant Wage Guarantee</strong><span>OTP binds identity directly to fast escrow ...</span></div><ShieldCheck size={31} /></div><div className="form-card"><label>REGISTERED MOBILE</label><div className="phone-input"><span className="country-code">🇮🇳 &nbsp;+91 <ChevronDown size={18} /></span><input aria-label="Phone number" inputMode="numeric" value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))} /><Check size={24} /></div><div className="linked-row"><span>Worker / Contractor ID linked</span><button type="button">Change</button></div></div><div className="form-card otp-card"><div className="otp-heading"><label>SMS PASSCODE</label><span>Demo: 482109</span></div><div className="otp-boxes">{[0, 1, 2, 3, 4, 5].map((index) => <input key={index} aria-label={`OTP digit ${index + 1}`} inputMode="numeric" maxLength={1} value={otp[index] ?? ''} onChange={(event) => { const value = event.target.value.replace(/\D/g, ''); setOtp(`${otp.slice(0, index)}${value}${otp.slice(index + 1)}`); }} className={index === 4 ? 'current-otp' : ''} />)}</div><div className="resend-row"><span><Clock3 size={22} />Resend code in <strong>Ready</strong></span><button type="button"><MessageSquareText size={22} />Try via WhatsApp</button></div></div><div className="security-note"><LockKeyhole size={21} />Phone verified account security · No spam calls</div><button className="flow-button" onClick={onContinue} type="button">Verify &amp; Continue <ArrowRight /></button><p className="terms-note">By continuing, you agree to <a href="#terms">LaborLink Terms of Service</a> and<br /> privacy protection guidelines.</p></section></main>;
+  return (
+    <main className="screen">
+      <AppBar onBack={onBack} right={<span className="step-count">2 of 3</span>} />
+      <Steps current={2} total={3} />
+      <h1 className="h1 mt-20">Your phone number</h1>
+      <p className="body mt-6">We’ll send a 6-digit code to confirm it’s you.</p>
+
+      <label className="field-label mt-20" htmlFor="phone">Mobile number</label>
+      <div className="phone-field">
+        <span className="country">+91 <ChevronDown size={14} /></span>
+        <input id="phone" inputMode="numeric" autoComplete="tel-national" value={phone}
+          onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))} />
+        {phone.length === 10 && <CircleCheck size={20} className="ok" />}
+      </div>
+
+      <div className="row spread mt-20">
+        <span className="field-label">Code sent by SMS</span>
+        <Chip>Demo code 482109</Chip>
+      </div>
+      <div className="otp">
+        {[0, 1, 2, 3, 4, 5].map((index) => (
+          <input key={index} aria-label={`Digit ${index + 1}`} inputMode="numeric" maxLength={1} value={otp[index] ?? ''}
+            onChange={(event) => {
+              const value = event.target.value.replace(/\D/g, '');
+              setOtp(`${otp.slice(0, index)}${value}${otp.slice(index + 1)}`.slice(0, 6));
+            }} />
+        ))}
+      </div>
+      <div className="row spread mt-12">
+        <span className="small with-icon"><Clock size={14} />Resend in 0:24</span>
+        <button className="link-btn" type="button"><MessageCircle size={15} />Get it on WhatsApp</button>
+      </div>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" onClick={onContinue} type="button">Verify and continue <ArrowRight size={18} /></button>
+        <p className="small center mt-10 with-icon centered"><Lock size={13} />We never share your number.</p>
+      </div>
+    </main>
+  );
 }
 
-function PermissionsScreen({ locationGranted, setLocationGranted, voiceEnabled, setVoiceEnabled, photoEnabled, setPhotoEnabled, onBack, onContinue }: { locationGranted: boolean; setLocationGranted: (value: boolean) => void; voiceEnabled: boolean; setVoiceEnabled: (value: boolean) => void; photoEnabled: boolean; setPhotoEnabled: (value: boolean) => void; onBack: () => void; onContinue: () => void }) {
-  return <main className="flow-shell permissions-screen"><FlowHeader step={3} onBack={onBack} /><section className="flow-content permissions-content"><span className="eyebrow privacy-eyebrow"><FileLock2 size={20} /> PRIVACY FIRST · ENCRYPTED</span><h1>Enable essential<br />permissions</h1><p className="flow-subtitle">LaborLink uses device features to match nearby<br />workers and verify work orders in real time.</p><div className="permission-list"><PermissionCard icon={<Navigation />} title="Location (Delhi NCR)" badge="REQUIRED" description="To find nearby verified trade professionals within 2km–10km and estimate arrival times." footer={<><Navigation size={19} />Radius: 2km - 10km live radar</>} enabled={locationGranted} actionLabel={locationGranted ? 'Granted' : 'Enable'} onToggle={() => setLocationGranted(!locationGranted)} /><PermissionCard icon={<Mic />} title="Voice Work Order" badge="OPTIONAL" description="To record quick bilingual voice notes (Hindi/English) and auto-generate trade job scopes." footer={<><Languages size={19} />Hindi / Hinglish AI transcription</>} enabled={voiceEnabled} actionLabel={voiceEnabled ? 'Enabled' : 'Enable'} onToggle={() => setVoiceEnabled(!voiceEnabled)} /><PermissionCard icon={<Camera />} title="Photo Inspection & Verification" badge="OPTIONAL" description="To capture photos of the broken issue and verify completed before/after work." footer={<><ShieldCheck size={19} />Job completion escrow release</>} enabled={photoEnabled} actionLabel={photoEnabled ? 'Enabled' : 'Enable'} onToggle={() => setPhotoEnabled(!photoEnabled)} /></div><div className="privacy-note"><LockKeyhole size={22} />Permissions are strictly activated during active jobs.<br />Never shared with unverified 3rd parties.</div><button className="flow-button" onClick={onContinue} type="button">Allow &amp; Continue to Home <ArrowRight /></button><button className="later-button" onClick={onContinue} type="button">Customize permissions later</button></section></main>;
+function PermissionsScreen(props: {
+  locationGranted: boolean; setLocationGranted: (value: boolean) => void;
+  voiceEnabled: boolean; setVoiceEnabled: (value: boolean) => void;
+  photoEnabled: boolean; setPhotoEnabled: (value: boolean) => void;
+  onBack: () => void; onContinue: () => void;
+}) {
+  return (
+    <main className="screen">
+      <AppBar onBack={props.onBack} right={<span className="step-count">3 of 3</span>} />
+      <Steps current={3} total={3} />
+      <h1 className="h1 mt-20">A few permissions</h1>
+      <p className="body mt-6">Only used while you’re posting or doing a job.</p>
+
+      <div className="list mt-20">
+        <PermissionRow icon={<Navigation size={20} />} title="Location" tag="Needed"
+          description="To show workers within 2–10 km and how far away they are."
+          on={props.locationGranted} onChange={() => props.setLocationGranted(!props.locationGranted)} />
+        <PermissionRow icon={<Mic size={20} />} title="Microphone" tag="Optional"
+          description="To describe the job by voice, in Hindi or English."
+          on={props.voiceEnabled} onChange={() => props.setVoiceEnabled(!props.voiceEnabled)} />
+        <PermissionRow icon={<Camera size={20} />} title="Camera" tag="Optional"
+          description="To send photos of the problem and of the finished work."
+          on={props.photoEnabled} onChange={() => props.setPhotoEnabled(!props.photoEnabled)} />
+      </div>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" onClick={props.onContinue} type="button">Continue <ArrowRight size={18} /></button>
+        <button className="btn btn-ghost mt-6" onClick={props.onContinue} type="button">Not now</button>
+      </div>
+    </main>
+  );
 }
 
-function PermissionCard({ icon, title, badge, description, footer, enabled, actionLabel, onToggle }: { icon: React.ReactNode; title: string; badge: string; description: string; footer: React.ReactNode; enabled: boolean; actionLabel: string; onToggle: () => void }) {
-  return <article className="permission-card"><span className={`permission-icon ${enabled ? 'permission-enabled' : ''}`}>{icon}</span><div className="permission-body"><div className="permission-title"><h2>{title}</h2><span>{badge}</span></div><p>{description}</p><div className="permission-footer"><span>{footer}</span><button onClick={onToggle} type="button" className={enabled ? 'enabled-text' : ''}>{actionLabel}</button></div></div></article>;
+function PermissionRow({ icon, title, tag, description, on, onChange }: { icon: ReactNode; title: string; tag: string; description: string; on: boolean; onChange: () => void }) {
+  return (
+    <div className="list-row align-start">
+      <span className="tile-icon">{icon}</span>
+      <div className="grow">
+        <div className="row gap-6"><strong className="h4">{title}</strong><span className="tiny-tag">{tag}</span></div>
+        <p className="small mt-2">{description}</p>
+      </div>
+      <Toggle on={on} onChange={onChange} label={title} />
+    </div>
+  );
 }
 
-function HomeScreen({ onStart, onJobs, onProfile }: { onStart: () => void; onJobs: () => void; onProfile: () => void }) {
-  return <main className="flow-shell home-screen"><header className="home-topbar"><div className="home-location"><MapPin size={21} /><span>LOCATION<strong>Connaught Place, New Delhi</strong></span></div><div className="home-actions"><button type="button">अ EN | अ</button><button type="button"><CircleUserRound size={22} /></button></div></header><section className="flow-content home-content"><div className="balance-card"><div><small>GOOD MORNING</small><h1>Namaste, Arvind</h1><span className="home-place"><Navigation size={15} />Connaught Place, New ...</span></div><div className="balance-value"><small>Demo Balance</small><strong>₹1,840</strong></div></div><div className="fix-card"><div className="card-title"><Wrench size={25} /><h2>What needs fixing?</h2><span>AI Match</span></div><p>Describe your issue instantly via camera or voice note. We match verified nearby trades in 2 minutes.</p><div className="fix-actions"><button type="button" onClick={onStart}><Camera size={22} />Take / Upload<br />Photo</button><button type="button" onClick={onStart}><Mic size={22} />Hold to Speak<small>HINDI / ENG</small></button></div></div><div className="section-heading"><h2>Available Trades</h2><span>Instant dispatch</span></div><div className="trade-pills"><button className="selected-trade" type="button"><Bolt size={18} />Electrician <small>9 nearby</small></button><button type="button"><Wrench size={17} />Plumber <small>14 nearby</small></button></div><div className="section-heading service-heading"><h2>Active Service</h2><span>Live Tracking</span></div><div className="service-card"><div className="service-status"><span>● IN PROGRESS</span><span><Clock3 size={16} /> Est. 45 min left</span></div><h2>Submersible Pump Wiring &amp; MCB Trip Fix</h2><p>Electrical Emergency Service · Task #8921</p><div className="worker-row"><img src={workerImage} alt="Rahul Sharma" /><div><strong>Rahul Sharma <small>☆ 4.8</small></strong><span>312 jobs completed</span></div><button type="button"><Phone size={20} /></button></div><div className="verification-pills"><span><ShieldCheck size={14} /> Phone verified</span><span><BadgeCheck size={14} /> ID verification: Coming soon</span></div><div className="timeline"><span className="done"><Check /></span><i /><span className="done"><Check /></span><i /><span className="done"><Check /></span><i /><span className="current" /><div className="timeline-labels"><small>Booked</small><small>On way</small><small>Arrived</small><small>In progress</small></div></div><div className="completion-otp"><LockKeyhole size={19} /><span>Completion OTP<small>Share only when work is finished</small></span><strong>4821</strong></div></div></section><nav className="bottom-nav"><button className="active" type="button"><span>⌂</span>Home</button><button type="button" onClick={onJobs}><BriefcaseBusiness />Jobs</button><button type="button" onClick={onProfile}><UserRound />Profile</button></nav></main>;
+/* ------------------------------------------------------------------ employer */
+
+function HomeScreen({ onStart, onJobs, onProfile, onTracker }: { onStart: () => void; onJobs: () => void; onProfile: () => void; onTracker: () => void }) {
+  const trades = [
+    { name: 'Electrician', icon: <Zap size={20} />, nearby: 9 },
+    { name: 'Plumber', icon: <Droplets size={20} />, nearby: 14 },
+    { name: 'Mason', icon: <BrickWall size={20} />, nearby: 6 },
+    { name: 'Carpenter', icon: <Hammer size={20} />, nearby: 4 },
+  ];
+  return (
+    <main className="screen has-nav">
+      <header className="home-head">
+        <button className="location-btn" type="button">
+          <MapPin size={16} />
+          <span><small>Your location</small><strong>Connaught Place, New Delhi <ChevronDown size={14} /></strong></span>
+        </button>
+        <button className="lang-btn" type="button" aria-label="Change language">हिं</button>
+        <button type="button" onClick={onProfile} aria-label="Profile" className="plain"><Avatar name="Arvind Sharma" size={36} /></button>
+      </header>
+
+      <h1 className="h1 mt-12">Namaste, Arvind</h1>
+      <p className="body mt-2">What needs fixing today?</p>
+
+      <section className="card mt-16">
+        <h2 className="h3">Describe the problem</h2>
+        <p className="small mt-2">Send a photo or say it in your own words. We’ll turn it into a clear job and a price range.</p>
+        <div className="grid-2 mt-12">
+          <button type="button" className="big-action" onClick={onStart}><Camera size={22} /><span>Add photo</span></button>
+          <button type="button" className="big-action primary" onClick={onStart}><Mic size={22} /><span>Speak<small>Hindi / English</small></span></button>
+        </div>
+      </section>
+
+      <div className="section-head"><h2 className="h3">Workers near you</h2></div>
+      <div className="grid-2">
+        {trades.map((trade) => (
+          <button key={trade.name} type="button" className="trade-tile" onClick={onStart}>
+            <span className="tile-icon">{trade.icon}</span>
+            <span><strong>{trade.name}</strong><small>{trade.nearby} nearby</small></span>
+          </button>
+        ))}
+      </div>
+
+      <div className="section-head"><h2 className="h3">Ongoing job</h2><button className="link-btn" type="button" onClick={onTracker}>Track <ChevronRight size={15} /></button></div>
+      <article className="card">
+        <div className="row spread"><Chip tone="orange" icon={<span className="dot" />}>In progress</Chip><span className="small">Started 10:15 am</span></div>
+        <h3 className="h4 mt-10">Pump wiring and MCB trip fix</h3>
+        <p className="small">Electrician · Job #8921</p>
+        <div className="person mt-12">
+          <Avatar name="Manoj Kumar" />
+          <div className="grow"><strong>Manoj Kumar</strong><span className="row gap-4"><Stars value={5} size={12} /> 4.9 · 184 jobs</span></div>
+          <a className="icon-btn green" href="tel:+910000000000" aria-label="Call Manoj"><Phone size={18} /></a>
+        </div>
+        <JobSteps labels={['Booked', 'Started', 'Photos sent', 'Confirmed']} current={1} />
+      </article>
+
+      {employerNav('home', { jobs: onJobs, profile: onProfile })}
+    </main>
+  );
 }
 
-function AppTopbar({ active, onJobs, onProfile }: { active: 'jobs' | 'profile' | 'worker'; onJobs?: () => void; onProfile?: () => void }) {
-  return <header className={`app-topbar ${active}`}><div className="top-location"><MapPin size={21} /><span>LOCATION<strong>Connaught Place, New Delhi</strong></span></div><div className="top-actions"><button type="button" onClick={onJobs}>अ EN | अ</button><button type="button" onClick={onProfile}><UserRound size={21} /></button></div></header>;
+function JobsScreen({ onHome, onProfile, onTracker }: { onHome: () => void; onProfile: () => void; onTracker: () => void }) {
+  return (
+    <main className="screen has-nav">
+      <AppBar title="My jobs" right={<span className="appbar-spacer" />} />
+      <div className="segmented"><span className="on">Ongoing (1)</span><span>Completed (8)</span></div>
+
+      <article className="card mt-16">
+        <div className="row spread"><Chip tone="orange" icon={<span className="dot" />}>In progress</Chip><strong className="amount">₹640</strong></div>
+        <h3 className="h4 mt-10">Pump wiring and MCB trip fix</h3>
+        <p className="small">Job #LL-8942 · Connaught Place</p>
+        <div className="person mt-12">
+          <Avatar name="Manoj Kumar" />
+          <div className="grow"><strong>Manoj Kumar</strong><span>Phone verified</span></div>
+          <span className="row gap-4 small"><Star size={13} className="filled" />4.9</span>
+        </div>
+        <div className="row spread mt-12 small"><span>Worker is on site</span><span>About 15 min left</span></div>
+        <div className="progress mt-6"><span style={{ width: '70%' }} /></div>
+        <button className="btn btn-secondary mt-12" type="button" onClick={onTracker}>Open job tracker</button>
+      </article>
+
+      <div className="section-head"><h2 className="h3">Completed</h2><span className="small">8 jobs</span></div>
+      <div className="stack">
+        <PastJob icon={<Droplets size={18} />} trade="Plumbing" date="12 Oct" title="Kitchen tap pipe leak" worker="Ramesh Yadav" amount="₹450" />
+        <PastJob icon={<Zap size={18} />} trade="Electrical" date="28 Sep" title="Ceiling fan rewiring" worker="Suresh Kumar" amount="₹380" />
+      </div>
+
+      {employerNav('jobs', { home: onHome, profile: onProfile })}
+    </main>
+  );
 }
 
-function SectionBottomNav({ active, onJobs, onProfile }: { active: 'jobs' | 'profile' | 'worker'; onJobs?: () => void; onProfile?: () => void }) {
-  return <nav className="bottom-nav"><button type="button" onClick={onJobs} className={active === 'jobs' ? 'active' : ''}><span>⌂</span>{active === 'worker' ? 'Jobs' : 'Home'}</button><button type="button" className={active === 'jobs' ? 'active' : ''} onClick={onJobs}><BriefcaseBusiness />{active === 'worker' ? 'My Work' : 'Jobs'}</button><button type="button" className={active === 'profile' ? 'active' : ''} onClick={onProfile}><UserRound />Profile</button></nav>;
+function PastJob({ icon, trade, date, title, worker, amount }: { icon: ReactNode; trade: string; date: string; title: string; worker: string; amount: string }) {
+  return (
+    <article className="card">
+      <div className="row align-start">
+        <span className="tile-icon">{icon}</span>
+        <div className="grow">
+          <p className="small">{trade} · {date}</p>
+          <h3 className="h4">{title}</h3>
+          <span className="row gap-6 small mt-6"><Avatar name={worker} size={22} />{worker}</span>
+        </div>
+        <div className="right">
+          <Chip tone="green">Done</Chip>
+          <strong className="amount mt-6">{amount}</strong>
+        </div>
+      </div>
+      <div className="grid-2 mt-12">
+        <button className="btn btn-small btn-secondary" type="button"><FileText size={15} />Receipt</button>
+        <button className="btn btn-small btn-secondary" type="button"><RefreshCw size={15} />Book again</button>
+      </div>
+    </article>
+  );
 }
 
-function JobsScreen({ onBack, onTracker }: { onBack: () => void; onTracker: () => void }) {
-  return <main className="flow-shell dashboard-screen"><AppTopbar active="jobs" /><section className="dashboard-content"><div className="dashboard-title"><div><small>DASHBOARD</small><h1>My Job Orders</h1></div><button type="button"><ClipboardCheck /></button></div><div className="dashboard-tabs"><span>● Active (1)</span><span>Past Completed (8)</span></div><div className="dispatch-heading"><strong>LIVE DISPATCH</strong><span>↻ Auto-refreshing</span></div><article className="active-job-card"><div className="active-job-top"><span>↝ IN PROGRESS</span><b>₹640</b></div><h2>Submersible Pump Wiring &amp; MCB<br />Trip Fix</h2><p>Order ID: #LL-8942-ND · Industrial Single Phase</p><div className="active-worker"><img src={workerImage} alt="Manoj Kumar" /><div><strong>Manoj Kumar</strong><span>♢ Phone &amp; KYC Verified</span></div><b>★ 4.9</b></div><div className="job-progress-label"><span>Arrived on site</span><b>Est. 15 min left</b></div><div className="job-progress"><span /></div><button className="tracker-button" onClick={onTracker} type="button">◉ &nbsp;Open Live Tracker</button></article><div className="past-heading"><strong>PAST COMPLETED JOBS</strong><span>8 Completed</span></div><PastJob icon={<Wrench />} date="12 Oct, 2026" title="Kitchen Tap CPVC Pipe Leak Repair" worker="Ramesh Mistri" amount="₹450" /><PastJob icon={<Bolt />} date="28 Sep, 2026" title="Living Room Ceiling Fan Rewiring" worker="Suresh Kumar" amount="₹380" /><div className="guarantee-footer"><BadgeCheck size={20} />All past jobs backed by LaborLink Escrow Guarantee</div></section><SectionBottomNav active="jobs" onJobs={onBack} /></main>;
+function ProfileScreen({ onHome, onJobs, onWorkerMode }: { onHome: () => void; onJobs: () => void; onWorkerMode: () => void }) {
+  return (
+    <main className="screen has-nav">
+      <AppBar title="Profile" right={<span className="appbar-spacer" />} />
+      <section className="profile-head">
+        <Avatar name="Arvind Sharma" size={64} />
+        <div>
+          <h2 className="h2">Arvind Sharma</h2>
+          <p className="small">Employer · +91 98101 23456</p>
+          <span className="row gap-4 small mt-2"><BadgeCheck size={14} className="green-text" />Phone verified</span>
+        </div>
+      </section>
+
+      <section className="card mt-16">
+        <div className="row spread"><h3 className="h4">Ongoing job</h3><Chip tone="orange">1 active</Chip></div>
+        <div className="row mt-10">
+          <span className="tile-icon"><Wrench size={18} /></span>
+          <div className="grow"><strong>Pump wiring and MCB fix</strong><p className="small">Manoj Kumar · agreed ₹640</p></div>
+        </div>
+      </section>
+
+      <p className="list-title">Settings</p>
+      <div className="list">
+        <SettingRow icon={<Languages size={18} />} title="Language · भाषा" detail="English" />
+        <SettingRow icon={<MapPin size={18} />} title="Saved addresses" detail="Flat 402, Connaught Place" />
+        <SettingRow icon={<Clock size={18} />} title="Usual urgency" detail="Within 2 hours" />
+        <SettingRow icon={<RefreshCw size={18} />} title="Switch to worker mode" detail="Find work near you" onClick={onWorkerMode} />
+        <SettingRow icon={<CircleHelp size={18} />} title="Help" detail="Call or chat with us" />
+      </div>
+
+      <button className="btn btn-ghost danger mt-16" type="button"><LogOut size={17} />Sign out</button>
+      <p className="small center">LaborLink prototype · v0.3</p>
+
+      {employerNav('profile', { home: onHome, jobs: onJobs })}
+    </main>
+  );
 }
 
-function PastJob({ icon, date, title, worker, amount }: { icon: React.ReactNode; date: string; title: string; worker: string; amount: string }) {
-  return <article className="past-job"><div className="past-job-icon">{icon}</div><div className="past-job-copy"><small>Plumbing · {date}</small><h2>{title}</h2><div><span className="initial-avatar">{worker.slice(0, 2)}</span>{worker}</div></div><span className="done-badge">DONE</span><b className="paid-amount">Paid {amount}</b><div className="past-actions"><button type="button"><FileText size={17} />Invoice</button><button type="button"><RefreshCw size={16} />Book Again</button></div></article>;
+function SettingRow({ icon, title, detail, onClick }: { icon: ReactNode; title: string; detail: string; onClick?: () => void }) {
+  return (
+    <button type="button" className="list-row" onClick={onClick}>
+      <span className="tile-icon small-tile">{icon}</span>
+      <span className="grow"><strong className="h4">{title}</strong><small className="small block">{detail}</small></span>
+      <ChevronRight size={18} className="muted" />
+    </button>
+  );
 }
 
-function ProfileScreen({ onBack, onWorkerMode }: { onBack: () => void; onWorkerMode: () => void }) {
-  return <main className="flow-shell profile-screen"><AppTopbar active="profile" /><section className="profile-hero"><div className="profile-avatar">A<span>✓</span></div><div><h1>Arvind Sharma</h1><p>Registered Employer / Household Manager</p><strong><MapPin size={15} /> Connaught Place, New Delhi</strong></div><div className="profile-contact"><span>● ☎ +91 98101 23456 &nbsp;⚙</span><span>◯ ID verification: Coming soon</span></div></section><section className="profile-content"><div className="balance-panel"><div><span>♧ DEMO ESCROW BALANCE</span><b>₹1,840 <small>INR</small></b></div><strong>SANDBOX MODE</strong><p><Info size={18} /> Simulated sandbox balance for demonstration purposes. Locks automatically during ongoing trade engagements.</p><button type="button"><RefreshCw size={16} /> Reset Demo Balance</button></div><div className="deployments"><div><h2>Active Deployments</h2><b>1 Trade Live</b></div><span><Wrench size={19} /><strong>Master Plumber<small>Connaught Place · ₹650 Escrowed</small></strong><b>OTP #4812</b></span></div><h3 className="preferences-title">SYSTEM PREFERENCES &amp; ACCOUNT</h3><div className="preference-list"><Preference icon={<Languages />} title="Language / भाषा" detail="English (Bilingual Hinglish mode)" /><Preference icon={<MapPin />} title="Saved Service Addresses" detail="Connaught Place Flat 402" /><Preference icon={<Bolt />} title="Default Trade Urgency" detail="Standard (Within 2 Hours)" /><button type="button" onClick={onWorkerMode}><Preference icon={<UserCog />} title="Role Switch" detail={'Switch to Worker Mode ("I want work")'} badge="DUAL" /></button><Preference icon={<MessageSquareText />} title="Help & Support" detail="24x7 Trade Helpline (Toll-Free)" /></div><button className="sign-out" type="button">↪ Sign Out of Arvind’s Workspace</button><small className="version-note">LaborLink Employer v2.4.0 · Build 8941</small></section><SectionBottomNav active="profile" onJobs={onBack} /></main>;
+/* ------------------------------------------------------------------ worker */
+
+function WorkerJobsScreen({ onProfile, onDetails }: { onProfile: () => void; onDetails: () => void }) {
+  const [radius, setRadius] = useState(5);
+  const [online, setOnline] = useState(true);
+  return (
+    <main className="screen has-nav">
+      <header className="home-head">
+        <div className="grow">
+          <h1 className="h2">Jobs near you</h1>
+          <p className="small with-icon"><MapPin size={13} />Lajpat Nagar · Electrician</p>
+        </div>
+        <span className={`online ${online ? 'on' : ''}`}>{online ? 'Online' : 'Offline'}</span>
+        <Toggle on={online} onChange={() => setOnline(!online)} label="Available for work" />
+      </header>
+
+      <div className="row gap-6 mt-12">
+        {[2, 5, 10].map((km) => (
+          <button key={km} type="button" className={`seg-btn ${radius === km ? 'on' : ''}`} onClick={() => setRadius(km)}>{km} km</button>
+        ))}
+        <button type="button" className="seg-btn icon" aria-label="Filters"><SlidersHorizontal size={16} /></button>
+      </div>
+
+      <div className="section-head"><h2 className="h3">3 new jobs</h2><span className="small">Updated just now</span></div>
+      <div className="stack">
+        <WorkerLead urgent onDetails={onDetails} title="Pump wiring and MCB trip fix" client="Arvind S." area="Connaught Place" distance="1.8 km" range="₹480 – ₹620" suggested="₹550" />
+        <WorkerLead title="Meter board rewiring" client="DLF office" area="Saket" distance="3.2 km" range="₹750 – ₹920" suggested="₹840" />
+        <WorkerLead title="Kitchen exhaust wiring" client="Sweet Corner Cafe" area="Defence Colony" distance="4.1 km" range="₹380 – ₹450" suggested="₹420" />
+      </div>
+
+      <div className="note mt-16">
+        <Info size={18} />
+        <p><strong>FairRate</strong> Offers must stay within each job’s price range, so nobody can undercut your rate.</p>
+      </div>
+
+      <BottomNav items={[
+        { label: 'Jobs', icon: <BriefcaseBusiness size={22} />, active: true },
+        { label: 'Passbook', icon: <BookOpen size={22} /> },
+        { label: 'Profile', icon: <UserRound size={22} />, onClick: onProfile },
+      ]} />
+    </main>
+  );
 }
 
-function Preference({ icon, title, detail, badge }: { icon: React.ReactNode; title: string; detail: string; badge?: string }) {
-  return <span className="preference"><i>{icon}</i><span><strong>{title} {badge && <b>{badge}</b>}</strong><small>{detail}</small></span><em>›</em></span>;
-}
-
-function WorkerJobsScreen({ onBack, onDetails }: { onBack: () => void; onDetails: () => void }) {
-  return <main className="flow-shell worker-screen"><header className="worker-top"><strong>Labor<span>Link</span></strong><span>● ONLINE</span><small>⌖ Connaught Place / Lajpat Nag...</small><b>EN | अ &nbsp;●</b></header><section className="worker-content"><div className="radar-card"><strong>● ONLINE · BROADCASTING</strong><span>♟ DELHI NCR</span><small>MATCH RADAR SCOPE</small><h2>Electrician (Grade A)</h2><b>♧ Aadhaar Active</b><div className="range-pills"><span>2 km</span><span>5 km</span><span>10 km</span><span><SlidersHorizontal size={15} /></span></div></div><div className="escrow-bar"><LockKeyhole size={19} /><span><strong>100% Guaranteed Escrow</strong><small>Money secured before dispatch</small></span><b>ACTIVE</b></div><div className="leads-title"><h2>Nearby Trade Leads <span>3 Live</span></h2><b>↻ Live Sync</b></div><WorkerLead urgent onDetails={onDetails} title="Submersible Pump Wiring & MCB Trip Fix" client="Arvind S." wage="₹480 – ₹620" /> <WorkerLead title="3-Phase Meter Board Rewiring & Neutral Check" client="DLF Corporate Arcade" wage="₹750 – ₹920" /><WorkerLead title="Kitchen Exhaust Heavy Duty Wiring" client="Sweet Corner Cafe" wage="₹380 – ₹450" /><div className="fairrate-note"><Gavel size={20} /><span><strong>FAIRWAGE GUARANTEE</strong><small>All work orders strictly enforce Delhi NCR minimum artisan wages. Demo payment secured in escrow upon booking.</small></span></div></section><SectionBottomNav active="worker" onProfile={onBack} /></main>;
-}
-
-function WorkerLead({ urgent = false, onDetails, title, client, wage }: { urgent?: boolean; onDetails?: () => void; title: string; client: string; wage: string }) {
-  return <article className="worker-lead"><div className="lead-meta"><span>{urgent ? '◉ URGENT (2h)' : '▣ Scheduled'}</span><span>Residential</span><b>⌖ {urgent ? '1.8' : '3.2'} km</b></div><h2>{title}</h2><p>{client} • Connaught Place Block D</p>{urgent && <img src={workerImage} alt="Site photo attached" />}<div className="wage-band"><small>PROTECTED WAGE BAND</small><strong>{wage}</strong><span>Statutory Floor<br />Disbursed by Escrow</span></div><div className="lead-actions"><button type="button">♬ Listen / सुनिए</button><button type="button" onClick={onDetails}>View Details &amp; Offer <ArrowRight size={18} /></button></div></article>;
+function WorkerLead({ urgent = false, onDetails, title, client, area, distance, range, suggested }: { urgent?: boolean; onDetails?: () => void; title: string; client: string; area: string; distance: string; range: string; suggested: string }) {
+  return (
+    <article className="card">
+      <div className="row spread">
+        {urgent ? <Chip tone="red" icon={<Clock size={13} />}>Today, within 2 h</Chip> : <Chip>Scheduled</Chip>}
+        <span className="small with-icon"><Navigation size={13} />{distance}</span>
+      </div>
+      <h3 className="h4 mt-10">{title}</h3>
+      <p className="small">{client} · {area}</p>
+      {urgent && <div className="grid-2 mt-10"><Photo src={photos.burntSwitch} label="Burnt switch" /><Photo src={photos.starterBox} label="Starter box" /></div>}
+      <div className="price-row mt-12">
+        <div><small>Price range</small><strong>{range}</strong></div>
+        <div className="right"><small>Suggested</small><strong>{suggested}</strong></div>
+      </div>
+      <div className="grid-2 mt-12">
+        <button className="btn btn-small btn-secondary" type="button"><Play size={15} />Listen</button>
+        <button className="btn btn-small btn-primary" type="button" onClick={onDetails}>View job</button>
+      </div>
+    </article>
+  );
 }
 
 function JobDetailScreen({ onBack, onCounter }: { onBack: () => void; onCounter: () => void }) {
-  return <main className="flow-shell detail-screen"><WorkHeader title="Job Detail" onBack={onBack} /><section className="detail-content"><div className="detail-status"><span>● OPEN FOR OFFERS · CLOSES IN 12M</span><b>ϟ Urgent Response</b></div><div className="detail-title-card"><span>ELECTRICAL EMERGENCY • Residential</span><h1>Submersible Pump Wiring &amp; MCB Trip Fix</h1><p><MapPin size={15} /> Connaught Place, Central Delhi (2.4 km away)</p></div><div className="client-photos"><div><strong>▣ VERIFIED CLIENT PHOTOS</strong><span>2 Uploads</span></div><div><img src={workerImage} alt="Burned switch" /><img src={workerImage} alt="Motor starter box" /></div></div><div className="voice-note"><div><span>▶</span><p>Employer Voice Note<small>Hindi · 0:14s Duration</small></p><b>♬ 0:00 / 0:14</b></div><div className="mini-wave">▮▮▮▮▮▮▮▮▮▮</div><em>“Bathroom pump switch on karte hi MCB trip hoti hai. Subah se paani supply band hai. Jaldi aao.”</em></div><div className="kit-card"><div><strong>⚒ Required Trade Kit</strong><span>3 Mandatory Items</span></div><KitRow title="Digital Multimeter / Voltage Tester" detail="Diagnose phase-neutral continuity & ground short circuit" /><KitRow title="32A Miniature Circuit Breaker (C..." detail="Replacement module; material cost billable extra if supplied" /><KitRow title="Heavy Duty Copper Wire & Ins..." detail="4 sq mm heat-resistant wiring roll & fireproof PVC tape" /></div><div className="worker-rate-card"><div><strong>⚒ LABORLINK FAIRRATE™ PROTOCOL</strong><span>♧ Escrow Protected</span></div><small>Allowed Offer Band</small><h2>₹480 – ₹620 <small>/ completed job</small></h2><p>♢ ₹450 Delhi NCR mandated floor. Offers below ₹450 are automatically blocked by the system.</p><small>◉ Instant Demo Escrow release upon completion OTP validation.</small></div><div className="job-poster"><small>JOB POSTER VERIFICATION</small><strong>AS Arvind Sharma <span>Client</span></strong><p>Connaught Place, Flat 402 · Delhi 18 jobs posted</p><div><span>▯ Phone Verified<br />+91 98110 ••••</span><span>♙ Govt ID Check<br />Coming soon</span></div></div><div className="detail-actions"><button type="button">QUICK ACCEPT<br /><b>₹520 Instant</b></button><button type="button" onClick={onCounter}>▣ Counter Offer<br /><b>Custom ₹ / Scope</b></button></div></section></main>;
-}
+  return (
+    <main className="screen">
+      <AppBar title="Job details" onBack={onBack} />
+      <div className="row gap-6"><Chip tone="red" icon={<Clock size={13} />}>Urgent</Chip><Chip>Offers close in 12 min</Chip></div>
+      <h1 className="h1 mt-12">Pump wiring and MCB trip fix</h1>
+      <p className="small with-icon mt-6"><MapPin size={13} />Connaught Place · 2.4 km away</p>
 
-function KitRow({ title, detail }: { title: string; detail: string }) {
-  return <div className="kit-row"><b>✓</b><span><strong>{title}</strong><small>{detail}</small></span></div>;
+      <section className="card mt-16">
+        <div className="row spread"><h2 className="h4">Photos from customer</h2><span className="small">2</span></div>
+        <div className="grid-2 mt-10"><Photo src={photos.burntSwitch} label="Burnt switch" /><Photo src={photos.starterBox} label="Starter box" /></div>
+      </section>
+
+      <section className="card mt-12">
+        <div className="row">
+          <button className="play-btn" type="button" aria-label="Play voice note"><Play size={16} /></button>
+          <div className="grow"><strong className="h4">Voice note</strong><p className="small">Hindi · 0:14</p></div>
+          <span className="small">0:00 / 0:14</span>
+        </div>
+        <blockquote className="quote mt-10">“Bathroom pump switch on karte hi MCB trip hoti hai. Subah se paani band hai. Jaldi aao.”</blockquote>
+      </section>
+
+      <section className="card mt-12">
+        <h2 className="h4">You’ll likely need</h2>
+        <ul className="checklist mt-10">
+          <li><Check size={16} /><span><strong>Multimeter or voltage tester</strong><small>To find the short circuit</small></span></li>
+          <li><Check size={16} /><span><strong>32A MCB</strong><small>Replacement part, billed separately</small></span></li>
+          <li><Check size={16} /><span><strong>4 sq mm copper wire and tape</strong><small>If the old wire is burnt</small></span></li>
+        </ul>
+      </section>
+
+      <section className="card price-card mt-12">
+        <p className="small">FairRate price range</p>
+        <strong className="big-amount">₹480 – ₹620</strong>
+        <p className="small mt-6">Offers can’t go below ₹480, so the work is never under-priced.</p>
+      </section>
+
+      <section className="card mt-12">
+        <p className="small">Posted by</p>
+        <div className="person mt-6">
+          <Avatar name="Arvind Sharma" size={38} />
+          <div className="grow"><strong>Arvind Sharma</strong><span>18 jobs posted · phone verified</span></div>
+        </div>
+      </section>
+
+      <div className="grid-2 mt-20 sticky-actions">
+        <button className="btn btn-secondary" type="button" onClick={onCounter}>Counter offer</button>
+        <button className="btn btn-primary" type="button" onClick={() => window.alert('Offer of ₹550 sent (demo).')}>Accept ₹550</button>
+      </div>
+    </main>
+  );
 }
 
 function CounterOfferScreen({ onBack }: { onBack: () => void }) {
-  return <main className="flow-shell counter-screen"><WorkHeader title="Counter Offer" onBack={onBack} /><section className="counter-content"><div className="original-spec"><small>ORIGINAL JOB SPEC <b>ID: #CP-8842</b></small><h2>Submersible Pump Wiring &amp; MCB Fix</h2><p>⌖ Connaught Place, Inner Circle Block B</p></div><div className="counter-sheet"><h1>Submit Counter-<br />Offer <span>♢ Verified Labor Floor</span></h1><p>For Submersible Pump Wiring &amp; MCB Trip Fix (Connaught Place)</p><div className="counter-price"><small>PROPOSED WAGE FLOOR<br />OFFER</small><b>₹560</b><span>Original client baseline: <s>₹480</s> · Fair adjustment range</span></div><div className="price-scale"><span>⚒ Floor: ₹480</span><b>Sweet Spot: ₹560</b><span>Cap: ₹680</span></div><div className="scale-bar"><i /></div><div className="blocked-note">◉ Offers below ₹480 are blocked by statutory wage rules to protect worker earnings.</div><div className="breakdown"><div><strong>LIVE PAYOUT BREAKDOWN</strong><b>100% Escrow Backed</b></div><p>⚒ Labor &amp; Rapid Diagnostic <strong>₹440</strong></p><p>♧ Transit &amp; Immediate Arrival <strong>₹60</strong></p><p>▣ Material / Spare 32A MCB Box <strong>₹60</strong></p><div className="net-total"><span>Net Demo Escrow Release<small>0% platform commission on daily trades</small></span><b>₹560</b></div></div><div className="message-tags"><div><strong>WORKER MESSAGE TO CLIENT</strong><span>Tap to attach</span></div><button type="button">ϟ Arrive in 20 mins ✓</button><button type="button">⌕ Carrying spare 32A MCB ✓</button><button type="button">⚒ 8+ yrs master wiring ＋</button></div><button className="send-offer" type="button" onClick={() => window.alert('Counter-offer sent in demo mode.')}>Send Counter-Offer (₹560) <ArrowRight /></button><p className="lock-note"><LockKeyhole size={18} /> Locked into Demo Escrow upon employer acceptance.</p></div></section></main>;
+  const [amount, setAmount] = useState(560);
+  const min = 480;
+  const max = 680;
+  const tags = ['Can arrive in 20 min', 'Carrying a spare 32A MCB', '8 years experience'];
+  const [chosen, setChosen] = useState<string[]>(tags.slice(0, 2));
+  const toggle = (tag: string) => setChosen(chosen.includes(tag) ? chosen.filter((t) => t !== tag) : [...chosen, tag]);
+  return (
+    <main className="screen">
+      <AppBar title="Your offer" subtitle="Pump wiring and MCB fix" onBack={onBack} />
+
+      <section className="card center">
+        <p className="small">Your price</p>
+        <strong className="huge-amount">₹{amount}</strong>
+        <p className="small">Customer’s range ₹480 – ₹620</p>
+        <input className="slider mt-16" type="range" min={min} max={max} step={10} value={amount}
+          onChange={(event) => setAmount(Number(event.target.value))} aria-label="Offer amount" />
+        <div className="row spread small"><span>₹{min}</span><span>₹{max}</span></div>
+      </section>
+
+      <div className="note mt-12"><Info size={18} /><p>Offers below ₹{min} aren’t allowed. This keeps pay fair for everyone.</p></div>
+
+      <section className="card mt-12">
+        <h2 className="h4">How your price adds up</h2>
+        <div className="lines mt-10">
+          <p><span>Labour and fault finding</span><strong>₹{amount - 120}</strong></p>
+          <p><span>Travel</span><strong>₹60</strong></p>
+          <p><span>32A MCB (part)</span><strong>₹60</strong></p>
+          <p className="total"><span>Total</span><strong>₹{amount}</strong></p>
+        </div>
+      </section>
+
+      <section className="mt-16">
+        <h2 className="h4">Add a note for the customer</h2>
+        <div className="tag-row mt-10">
+          {tags.map((tag) => (
+            <button key={tag} type="button" className={`tag ${chosen.includes(tag) ? 'on' : ''}`} onClick={() => toggle(tag)}>
+              {chosen.includes(tag) && <Check size={14} />}{tag}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" type="button" onClick={() => window.alert(`Offer of ₹${amount} sent (demo).`)}><Send size={17} />Send offer · ₹{amount}</button>
+      </div>
+    </main>
+  );
 }
 
-function WorkHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  return <header className="work-header"><button className="work-back" onClick={onBack} type="button"><ArrowLeft /></button><div><h1>{title}</h1><span>WORK ORDER SETUP</span></div><span className="work-user"><UserRound size={21} /></span></header>;
-}
+/* ------------------------------------------------------------------ job request flow */
 
 function VoiceScreen({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
-  return <main className="flow-shell work-screen"><WorkHeader title="Voice Step" onBack={onBack} /><section className="work-content"><div className="work-kicker"><span>● STEP 2 OF 3: VOICE NOTE</span><strong>Auto-Parsing Active</strong></div><h2>Describe the work in your words</h2><p className="work-intro">Speak in Hindi, English, or Hinglish. AI converts speech to<br />a structured work order.</p><div className="recording-card"><div className="recording-top"><span><i /> LIVE INPUT</span><strong>♬ &nbsp;00:21</strong></div><div className="waveform">{[18, 36, 55, 29, 72, 45, 31, 61, 40, 18, 54, 32].map((height, index) => <i key={index} style={{ height }} />)}</div><div className="recording-line" /></div><div className="mic-state"><span><Mic size={42} /></span><strong>Tap to Pause Recording</strong><small>High quality audio stream active</small></div><div className="transcript-card"><div className="transcript-top"><span>文 &nbsp;Hindi / Hinglish Auto-detect</span><strong><CheckCircle2 size={18} /> Transcribing</strong></div><blockquote>“Bathroom ka submersible pump switch on karte hi MCB trip ho rahi hai. Wire jalne ki smell aa rahi hai. Urgent fix chahiye aaj shaam tak.”</blockquote><div className="detected">Detected Trade: <strong>Electrician (urgent)</strong><strong>Pump Circuit</strong></div></div><button className="edit-link" type="button"><MessageSquareText size={18} /> Edit text manually or type instead</button><div className="attachments"><Attachment image={workerImage} title="MCB_Box_Photo.jpg" /><Attachment image={workerImage} title="Motor_Lead.jpg" /></div><button className="work-button" onClick={onContinue} type="button">Generate Work Order Review <ArrowRight /></button></section></main>;
-}
+  const [recording, setRecording] = useState(true);
+  const bars = [10, 22, 34, 18, 40, 26, 14, 32, 24, 12, 30, 20, 36, 16, 28, 12, 22, 34, 18, 26];
+  return (
+    <main className="screen">
+      <AppBar title="New job" subtitle="Step 1 of 3 · Describe" onBack={onBack} />
+      <h1 className="h1">Tell us what’s wrong</h1>
+      <p className="body mt-6">Speak in Hindi, English or a mix. You can edit the text after.</p>
 
-function Attachment({ image, title }: { image: string; title: string }) {
-  return <div className="attachment"><img src={image} alt={title} /><span>Attached</span><strong>{title}</strong></div>;
+      <section className="recorder mt-16">
+        <div className="row spread">
+          <span className="rec-label"><span className={`rec-dot ${recording ? 'live' : ''}`} />{recording ? 'Recording' : 'Paused'}</span>
+          <span className="rec-time">0:21</span>
+        </div>
+        <div className={`wave ${recording ? 'live' : ''}`}>{bars.map((h, i) => <i key={i} style={{ height: h }} />)}</div>
+        <button className="mic-btn" type="button" onClick={() => setRecording(!recording)} aria-label={recording ? 'Pause recording' : 'Resume recording'}>
+          {recording ? <Pause size={26} /> : <Mic size={26} />}
+        </button>
+      </section>
+
+      <section className="card mt-16">
+        <div className="row spread"><span className="small">What we heard</span><button className="link-btn" type="button">Edit</button></div>
+        <p className="transcript mt-6">“Bathroom ka submersible pump switch on karte hi MCB trip ho rahi hai. Wire jalne ki smell aa rahi hai. Aaj shaam tak theek chahiye.”</p>
+        <div className="tag-row mt-10"><Chip tone="green" icon={<Zap size={13} />}>Electrician</Chip><Chip>Pump circuit</Chip><Chip tone="red">Urgent</Chip></div>
+      </section>
+
+      <div className="section-head"><h2 className="h4">Photos</h2><span className="small">2 added</span></div>
+      <div className="grid-3">
+        <Photo src={photos.burntSwitch} label="MCB box" />
+        <Photo src={photos.starterBox} label="Motor wire" />
+        <button className="photo add-photo" type="button" aria-label="Add photo"><Camera size={20} /><span>Add</span></button>
+      </div>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" onClick={onContinue} type="button">See price estimate <ArrowRight size={18} /></button>
+      </div>
+    </main>
+  );
 }
 
 function PriceScreen({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
-  return <main className="flow-shell work-screen"><WorkHeader title="Fairrate Price Screen" onBack={onBack} /><section className="work-content"><div className="work-kicker"><span className="teal-kicker">● ALGORITHMIC MATCH V3.2</span><strong>♢ FairWage Verified</strong></div><div className="price-hero"><div className="price-hero-top"><span>INDICATIVE PRICE RANGE</span><strong>⚒ Statutory Cap</strong></div><h2>₹480 – ₹620</h2><p>Estimated on-site scope (Standard Residential)</p><div className="floor-note"><Shield size={20} /> Delhi NCR Mandated Wage-Floor Protected</div><small>Calculated using base trade rate (<b>₹350/hr</b>), estimated diagnostic time (<b>1.2h</b>), and travel distance (<b>3.4km</b>).</small></div><div className="cost-card"><div className="cost-title"><span>▣</span><h2>Cost Breakdown</h2><strong>RULE 4B COMPLIANT</strong></div><CostRow icon={<UserRound />} title="Diagnostic & Labor" detail="Allocated 1.2 hrs standard" amount="₹420" /><CostRow icon={<Navigation />} title="Travel & Rapid Dispatch" detail="Radius 3.4 km transit allowance" amount="₹60" /><CostRow icon={<LockKeyhole />} title="Minimum Allowed Offer Floor" detail="Workers cannot underbid below this legal floor" amount="₹450" /><CostRow icon={<BadgeCheck />} title="Demo Escrow Protection" detail="Direct lock till job sign-off" amount="Zero Fee" /></div><div className="cluster-card"><img src={workerImage} alt="Worker cluster" /><div><strong>Sector 62 Cluster <i /> 8 Active</strong><span>Avg response time: 3 mins</span></div><button type="button">Map &nbsp;›</button></div><div className="disclaimer"><Info size={23} /> <em>“Indicative estimate only. Actual final price depends on any additional replacement parts agreed upon before work starts.”</em></div><button className="work-button" onClick={onContinue} type="button">Broadcast to Nearby Workers (Demo Escrow) <ArrowRight /></button><p className="bottom-assurance"><LockKeyhole size={18} /> Funds locked in demo escrow · Released only on OTP validation</p></section></main>;
-}
+  return (
+    <main className="screen">
+      <AppBar title="New job" subtitle="Step 2 of 3 · Price" onBack={onBack} />
 
-function CostRow({ icon, title, detail, amount }: { icon: React.ReactNode; title: string; detail: string; amount: string }) {
-  return <div className="cost-row"><span>{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><b>{amount}</b></div>;
+      <section className="card price-card">
+        <p className="small">Fair price for this job</p>
+        <strong className="huge-amount">₹480 – ₹620</strong>
+        <p className="small">Pump wiring and MCB trip fix · Electrician</p>
+      </section>
+
+      <section className="card mt-12">
+        <h2 className="h4">How we worked it out</h2>
+        <div className="lines mt-10">
+          <p><span>Labour · about 1.2 hours at ₹350/hr</span><strong>₹420</strong></p>
+          <p><span>Travel · 3.4 km</span><strong>₹60</strong></p>
+          <p><span>Urgent request</span><strong>+ up to ₹140</strong></p>
+          <p className="total"><span>Lowest offer allowed</span><strong>₹480</strong></p>
+        </div>
+        <p className="small mt-10">Parts like a new MCB are extra and agreed with the worker before work starts.</p>
+      </section>
+
+      <div className="person card mt-12">
+        <span className="tile-icon"><UserRound size={18} /></span>
+        <div className="grow"><strong>8 electricians nearby</strong><span>Usually reply in about 3 min</span></div>
+        <ChevronRight size={18} className="muted" />
+      </div>
+
+      <div className="note mt-12"><Info size={18} /><p>This is an estimate. The final price is what you and the worker agree on.</p></div>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" onClick={onContinue} type="button">Send to nearby workers <ArrowRight size={18} /></button>
+      </div>
+    </main>
+  );
 }
 
 function OffersScreen({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
-  return <main className="flow-shell work-screen"><WorkHeader title="Worker Offers Shortlist" onBack={onBack} /><section className="work-content offers-content"><div className="broadcast-strip"><span>● BROADCAST ACTIVE · 4 RESPONSES</span><strong>◷ 14m left</strong></div><h2>Worker Offers Received</h2><p className="work-intro">Compare transparent quotes. All workers are phone verified with<br />protected wage floor.</p><div className="filter-pills"><span>✥ Best Match</span><span>➤ Nearest (3.4km)</span><span>▣ Lowest Price (₹480)</span></div><div className="fairrate-strip"><ShieldCheck size={22} /><div><strong>FAIRRATE GUARANTEE</strong><small>Bids strictly adhere to local district tradesman floors</small></div><b>₹480 – ₹620/day</b></div><OfferCard featured name="Manoj Kumar" role="Electrician · 8 yrs exp" price="₹520" detail="Equipped with digital multimeter & heavy duty copper wires. Completed similar rewiring yesterday." onContinue={onContinue} /><OfferCard name="Suresh Prajapati" role="General Wireman · 5 yrs exp" price="₹480" detail="Floor Base" /><OfferCard name="Vikram Singh" role="Master Electrician · 11 yrs" price="₹550" detail="Standard" /><div className="assurance-card"><ShieldCheck size={25} /> <span><strong>LaborLink Direct Assurance</strong><small>Need a quick replacement if delayed? Instant re-dispatch available anytime.</small></span></div></section></main>;
+  const [sort, setSort] = useState('Best match');
+  return (
+    <main className="screen">
+      <AppBar title="New job" subtitle="Step 3 of 3 · Choose a worker" onBack={onBack} />
+      <div className="row spread"><h1 className="h1">3 offers</h1><span className="small with-icon"><Clock size={13} />14 min left</span></div>
+      <p className="body mt-2">All offers are within the ₹480 – ₹620 range.</p>
+
+      <div className="row gap-6 mt-12 scroll-x">
+        {['Best match', 'Nearest', 'Lowest price'].map((label) => (
+          <button key={label} type="button" className={`seg-btn ${sort === label ? 'on' : ''}`} onClick={() => setSort(label)}>{label}</button>
+        ))}
+      </div>
+
+      <div className="stack mt-12">
+        <OfferCard featured name="Manoj Kumar" role="Electrician · 8 yrs" rating={4.9} jobs={184} price="₹520" distance="1.8 km · 20 min" note="I have a multimeter and copper wire with me. Did a similar job yesterday." onContinue={onContinue} />
+        <OfferCard name="Suresh Prajapati" role="Wireman · 5 yrs" rating={4.7} jobs={92} price="₹480" distance="2.5 km" />
+        <OfferCard name="Vikram Singh" role="Electrician · 11 yrs" rating={4.8} jobs={240} price="₹550" distance="3.1 km" />
+      </div>
+    </main>
+  );
 }
 
-function OfferCard({ featured = false, name, role, price, detail, onContinue, }: { featured?: boolean; name: string; role: string; price: string; detail: string; onContinue?: () => void }) {
-  return <article className={`offer-card ${featured ? 'featured-offer' : ''}`}><div className="offer-top"><span>{featured ? '✥ TOP PICK · 98% MATCH' : 'FLOOR MINIMUM'}</span><small>{featured ? 'ϟ Ready Now' : '◷ 10m ago'}</small></div><div className="offer-person"><img src={workerImage} alt={name} /><div><h3>{name}</h3><p>{role}</p><strong>★ 4.{featured ? '9' : '7'} <small>({featured ? '184' : '92'} jobs)</small></strong></div><div className="offer-price"><b>{price}</b><small>{detail}</small></div></div><div className="offer-tags"><span>● Phone verified</span><span>◉ ID: Coming soon</span><span>⌖ {featured ? '1.8 km · 20 min' : '2.5 km away'}</span></div>{featured && <p className="offer-detail"><Quote size={18} />{detail}</p>}<button className={featured ? 'accept-offer' : 'view-offer'} onClick={onContinue} type="button">{featured ? <><LockKeyhole size={18} /> Accept &amp; Hold Demo Escrow</> : <>View Offer <ArrowRight size={18} /></>}</button>{featured && <small className="zero-charge">♧ Zero charges until work order is marked finished</small>}</article>;
+function OfferCard({ featured = false, name, role, rating, jobs, price, distance, note, onContinue }: { featured?: boolean; name: string; role: string; rating: number; jobs: number; price: string; distance: string; note?: string; onContinue?: () => void }) {
+  return (
+    <article className={`card ${featured ? 'card-featured' : ''}`}>
+      {featured && <Chip tone="green">Best match</Chip>}
+      <div className={`person ${featured ? 'mt-10' : ''}`}>
+        <Avatar name={name} size={48} />
+        <div className="grow">
+          <strong>{name}</strong>
+          <span>{role}</span>
+          <span className="row gap-4"><Star size={12} className="filled" />{rating} · {jobs} jobs · {distance}</span>
+        </div>
+        <strong className="offer-price">{price}</strong>
+      </div>
+      {note && <p className="quote mt-10">“{note}”</p>}
+      <button className={`btn btn-small mt-12 ${featured ? 'btn-primary' : 'btn-secondary'}`} type="button" onClick={onContinue}>
+        {featured ? `Book Manoj for ${price}` : 'View offer'}
+      </button>
+    </article>
+  );
 }
 
 function TrackerScreen({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
-  return <main className="flow-shell work-screen"><WorkHeader title="Live Job Tracker" onBack={onBack} /><section className="work-content tracker-content"><div className="tracker-hero"><div className="tracker-meta"><span>● LIVE SESSION</span><strong>WO #88241</strong></div><h2>Submersible Pump Wiring &amp;<br />MCB Trip Fix</h2><div className="tracker-steps"><span>✓</span><i /><span>✓</span><i /><span>✓</span><i className="active-line" /><span className="current-dot" /><i /><span className="empty-dot" /></div><div className="tracker-labels"><small>Booked</small><small>On Way</small><small>Arrived</small><small>In Work</small><small>Done</small></div><div className="tracker-time"><span>◷ &nbsp;35 mins in progress</span><b>Est. 15m left</b></div></div><div className="worker-profile"><img src={workerImage} alt="Manoj Kumar" /><div><h3>Manoj Kumar <span>♧ Phone Verified</span></h3><p>Lead Master Electrician</p><strong>★ 4.9 <small>· 218 jobs</small></strong></div><div className="profile-actions"><button type="button"><Phone size={18} />Call Worker</button><button type="button"><MessageSquareText size={18} />Voice &amp; Chat</button></div></div><div className="amendment-card"><Gavel size={24} /><div><strong>Scope Amendment <span>Approved</span></strong><p>Worker added replacement 32A MCB breaker (+₹120 demo)</p><small>Payment adjustment <b>₹120 added to invoice</b></small></div></div><div className="completion-card"><div className="completion-title"><ShieldCheck size={22} /> COMPLETION SECURITY LOCK <span>Step 4 of 5</span></div><div className="completion-otp-large"><small>DEMO OTP FOR COMPLETION</small><div><b>4</b><b>8</b><b>2</b><b>1</b></div><p>Share OTP only after testing pump and approving completed work.</p></div><ul><li><CheckCircle2 />Main power cut-off verified prior to wiring</li><li><CheckCircle2 />Copper lug terminals insulated &amp; water-sealed</li><li><span>○</span>Submersible pump water flow check at panel</li></ul></div><div className="diagnostics"><div><strong>On-Site Diagnostics &amp; Photos</strong><span>2 Uploaded</span></div><div><img src={workerImage} alt="Trip fault" /><img src={workerImage} alt="Replacement MCB" /></div></div><button className="work-button" onClick={onContinue} type="button">Inspect &amp; Confirm Completion <ArrowRight /></button><p className="release-note">Releases worker wage from secure escrow vault upon validation</p></section></main>;
+  return (
+    <main className="screen">
+      <AppBar title="Job #88241" subtitle="Pump wiring and MCB fix" onBack={onBack} />
+
+      <section className="card">
+        <div className="row spread"><Chip tone="orange" icon={<span className="dot" />}>Work in progress</Chip><span className="small">35 min so far</span></div>
+        <JobSteps labels={['Booked', 'Started', 'Photos sent', 'Confirmed']} current={2} />
+      </section>
+
+      <section className="card mt-12">
+        <div className="person">
+          <Avatar name="Manoj Kumar" size={48} />
+          <div className="grow"><strong>Manoj Kumar</strong><span>Electrician · phone verified</span><span className="row gap-4"><Star size={12} className="filled" />4.9 · 218 jobs</span></div>
+        </div>
+        <div className="grid-2 mt-12">
+          <button className="btn btn-small btn-secondary" type="button"><Phone size={15} />Call</button>
+          <button className="btn btn-small btn-secondary" type="button"><MessageCircle size={15} />Message</button>
+        </div>
+      </section>
+
+      <section className="card mt-12">
+        <div className="row align-start">
+          <span className="tile-icon"><TriangleAlert size={18} /></span>
+          <div className="grow">
+            <div className="row spread"><strong className="h4">Extra part added</strong><Chip tone="green">You approved</Chip></div>
+            <p className="small mt-2">New 32A MCB breaker · + ₹120</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="card mt-12">
+        <h2 className="h4 with-icon"><ListChecks size={17} />Work checklist</h2>
+        <ul className="checklist mt-10">
+          <li className="done"><CircleCheck size={17} /><span>Main power switched off before wiring</span></li>
+          <li className="done"><CircleCheck size={17} /><span>Wire joints insulated and sealed</span></li>
+          <li><span className="hollow" /><span>Pump water flow tested</span></li>
+        </ul>
+      </section>
+
+      <section className="card mt-12">
+        <div className="row spread"><h2 className="h4">Photos from the worker</h2><span className="small">2</span></div>
+        <div className="grid-2 mt-10"><Photo src={photos.before} label="Before" tag="Before" /><Photo src={photos.after} label="After" tag="After" /></div>
+      </section>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" onClick={onContinue} type="button">Check work and confirm <ArrowRight size={18} /></button>
+      </div>
+    </main>
+  );
 }
 
 function ConfirmScreen({ onBack }: { onBack: () => void }) {
-  return <main className="flow-shell work-screen"><WorkHeader title="Confirm Completion" onBack={onBack} /><section className="work-content confirm-content"><span className="confirm-kicker">● ESCROW MILESTONE 2 OF 2</span><h2>Confirm Work &amp; Release<br />Payment</h2><p className="work-intro">Verify work completed before releasing Demo Escrow to<br />worker.</p><div className="inspection-card"><div className="inspection-title"><strong>▣ Inspection Proof</strong><span>GPS Tagged 16:42 IST</span></div><div className="inspection-images"><div><img src={workerImage} alt="Before work" /><b>BEFORE</b><small>Burned MCB &amp; Melted Wire</small></div><div><img src={workerImage} alt="After work" /><b>AFTER</b><small>New 32A Breaker &amp; Clean Wiring</small></div></div><ul><li><CheckCircle2 />Submersible pump tested and operational</li><li><CheckCircle2 />MCB trip issue resolved under load</li><li><CheckCircle2 />Work area cleaned up</li></ul></div><div className="payout-card"><div><span><LockKeyhole size={18} /> DEMO ESCROW RELEASE</span><b>VERIFIED PAYOUT</b></div><p>Base Labor (Completed) <strong>₹520</strong></p><p>Replacement Part (32A Breaker) <strong>₹120</strong></p><hr /><h3>TOTAL DEMO AMOUNT <b>₹640</b></h3><small>♧ DEMO PAYMENT ONLY · ZERO PLATFORM FEE</small></div><div className="performance-card"><strong>Worker Performance</strong><small>Tap stars to calibrate demo trust index</small><span className="performance-avatar"><img src={workerImage} alt="Worker" /></span><div className="stars">☆ ☆ ☆ ☆ ☆</div><label>QUICK COMPLIMENTS</label><div className="compliments"><span>ϟ Punctual</span><span>✦ Clean Work</span><span>♧ Polite</span><span>⚒ Expert Trade</span></div></div><button className="work-button" type="button" onClick={() => window.alert('Demo payment released successfully.')}>Approve &amp; Release Demo Payment (₹640) <ArrowRight /></button></section></main>;
+  const [rating, setRating] = useState(0);
+  const compliments = ['On time', 'Clean work', 'Polite', 'Knew the job'];
+  const [picked, setPicked] = useState<string[]>([]);
+  return (
+    <main className="screen">
+      <AppBar title="Confirm work" onBack={onBack} />
+      <h1 className="h1">Is the job done?</h1>
+      <p className="body mt-6">Check the photos and the work before you confirm.</p>
+
+      <section className="card mt-16">
+        <div className="row spread"><h2 className="h4">Before and after</h2><span className="small">Today, 4:42 pm</span></div>
+        <div className="grid-2 mt-10">
+          <Photo src={photos.before} label="Burnt MCB" tag="Before" />
+          <Photo src={photos.after} label="New breaker" tag="After" />
+        </div>
+        <ul className="checklist mt-12">
+          <li className="done"><CircleCheck size={17} /><span>Pump tested and running</span></li>
+          <li className="done"><CircleCheck size={17} /><span>MCB no longer trips</span></li>
+          <li className="done"><CircleCheck size={17} /><span>Work area cleaned</span></li>
+        </ul>
+      </section>
+
+      <section className="card mt-12">
+        <h2 className="h4">Payment</h2>
+        <div className="lines mt-10">
+          <p><span>Labour (agreed)</span><strong>₹520</strong></p>
+          <p><span>32A breaker</span><strong>₹120</strong></p>
+          <p className="total"><span>Total</span><strong>₹640</strong></p>
+        </div>
+        <p className="small mt-10 with-icon"><Info size={13} />Demo payment — no real money is moved.</p>
+      </section>
+
+      <section className="card mt-12">
+        <div className="person">
+          <Avatar name="Manoj Kumar" size={40} />
+          <div className="grow"><strong>Rate Manoj</strong><span>Helps other customers choose</span></div>
+        </div>
+        <div className="rate-row mt-12">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star${n > 1 ? 's' : ''}`}>
+              <Star size={30} className={n <= rating ? 'filled' : ''} />
+            </button>
+          ))}
+        </div>
+        <div className="tag-row mt-12">
+          {compliments.map((c) => (
+            <button key={c} type="button" className={`tag ${picked.includes(c) ? 'on' : ''}`}
+              onClick={() => setPicked(picked.includes(c) ? picked.filter((p) => p !== c) : [...picked, c])}>{c}</button>
+          ))}
+        </div>
+      </section>
+
+      <div className="push-bottom">
+        <button className="btn btn-primary" type="button" onClick={() => window.alert('Work confirmed. Demo payment of ₹640 recorded.')}>
+          <ShieldCheck size={18} />Confirm and pay ₹640
+        </button>
+        <button className="btn btn-ghost danger mt-6" type="button" onClick={() => window.alert('Problem reported. The job will not be paid until it is sorted out.')}>
+          Something’s wrong — report a problem
+        </button>
+      </div>
+    </main>
+  );
 }
 
 export default App;
