@@ -45,14 +45,22 @@ import {
 
 type Language = 'en' | 'hi';
 type Screen =
-  | 'welcome' | 'account' | 'phone' | 'permissions' | 'home' | 'jobs' | 'profile' | 'workerJobs'
-  | 'jobDetail' | 'counter' | 'voice' | 'price' | 'offers' | 'tracker' | 'confirm';
+  // onboarding
+  | 'welcome' | 'account' | 'phone' | 'permissions'
+  // employer side
+  | 'home' | 'jobs' | 'profile' | 'voice' | 'price' | 'offers' | 'tracker' | 'confirm'
+  // worker side
+  | 'workerHome' | 'workerJobs' | 'jobDetail' | 'counter' | 'workerActive' | 'passbook' | 'workerProfile';
 type Role = 'employer' | 'worker';
+/** Progress of the worker's booked job (mirrors the backend: booked → in_progress → awaiting_confirmation). */
+type WorkStage = 'booked' | 'started' | 'submitted';
 
 const previousScreen: Record<Screen, Screen> = {
-  welcome: 'welcome', account: 'welcome', phone: 'account', permissions: 'phone', home: 'permissions',
-  jobs: 'home', profile: 'home', workerJobs: 'profile', jobDetail: 'workerJobs', counter: 'jobDetail',
+  welcome: 'welcome', account: 'welcome', phone: 'account', permissions: 'phone',
+  home: 'permissions', jobs: 'home', profile: 'home',
   voice: 'home', price: 'voice', offers: 'price', tracker: 'offers', confirm: 'tracker',
+  workerHome: 'permissions', workerJobs: 'workerHome', jobDetail: 'workerJobs', counter: 'jobDetail',
+  workerActive: 'workerHome', passbook: 'workerHome', workerProfile: 'workerHome',
 };
 
 const languages: Array<{ id: Language; badge: string; title: string; subtitle: string }> = [
@@ -78,6 +86,8 @@ function App() {
   const [locationGranted, setLocationGranted] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [photoEnabled, setPhotoEnabled] = useState(false);
+  const [online, setOnline] = useState(true);
+  const [workStage, setWorkStage] = useState<WorkStage>('booked');
 
   // Open a screen directly with ?screen=offers etc. (handy for re-recording one part of a demo video).
   useEffect(() => {
@@ -91,6 +101,12 @@ function App() {
   }, [screen]);
 
   const goBack = () => setScreen(previousScreen[screen]);
+  const workerNavGo = {
+    home: () => setScreen('workerHome'),
+    jobs: () => setScreen('workerJobs'),
+    passbook: () => setScreen('passbook'),
+    profile: () => setScreen('workerProfile'),
+  };
 
   switch (screen) {
     case 'welcome':
@@ -105,12 +121,21 @@ function App() {
           locationGranted={locationGranted} setLocationGranted={setLocationGranted}
           voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled}
           photoEnabled={photoEnabled} setPhotoEnabled={setPhotoEnabled}
-          onBack={goBack} onContinue={() => setScreen('home')}
+          onBack={goBack} onContinue={() => setScreen(role === 'worker' ? 'workerHome' : 'home')}
         />
       );
     case 'jobs': return <JobsScreen onHome={() => setScreen('home')} onProfile={() => setScreen('profile')} onTracker={() => setScreen('tracker')} />;
-    case 'profile': return <ProfileScreen onHome={() => setScreen('home')} onJobs={() => setScreen('jobs')} onWorkerMode={() => setScreen('workerJobs')} />;
-    case 'workerJobs': return <WorkerJobsScreen onProfile={goBack} onDetails={() => setScreen('jobDetail')} />;
+    case 'profile': return <ProfileScreen onHome={() => setScreen('home')} onJobs={() => setScreen('jobs')} onWorkerMode={() => setScreen('workerHome')} />;
+    case 'workerHome':
+      return <WorkerHomeScreen online={online} setOnline={setOnline} stage={workStage} go={workerNavGo}
+        onActive={() => setScreen('workerActive')} onLead={() => setScreen('jobDetail')} />;
+    case 'workerJobs':
+      return <WorkerJobsScreen online={online} setOnline={setOnline} go={workerNavGo} onDetails={() => setScreen('jobDetail')} />;
+    case 'workerActive':
+      return <WorkerActiveJobScreen stage={workStage} setStage={setWorkStage} onBack={goBack} onPassbook={() => setScreen('passbook')} />;
+    case 'passbook': return <PassbookScreen stage={workStage} go={workerNavGo} />;
+    case 'workerProfile':
+      return <WorkerProfileScreen online={online} setOnline={setOnline} go={workerNavGo} onHireMode={() => setScreen('home')} />;
     case 'jobDetail': return <JobDetailScreen onBack={goBack} onCounter={() => setScreen('counter')} />;
     case 'counter': return <CounterOfferScreen onBack={goBack} />;
     case 'voice': return <VoiceScreen onBack={goBack} onContinue={() => setScreen('price')} />;
@@ -152,7 +177,7 @@ function Chip({ children, tone = 'plain', icon }: { children: ReactNode; tone?: 
   return <span className={`chip chip-${tone}`}>{icon}{children}</span>;
 }
 
-const avatarColors = ['#1e5b46', '#8a4b2a', '#3b5b8c', '#6b4e8c', '#7a6a2e'];
+const avatarColors = ['#0758d8', '#29335b', '#08799e', '#5b4bb7', '#b4533c'];
 function Avatar({ name, size = 44 }: { name: string; size?: number }) {
   const initials = name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   const hash = [...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
@@ -192,11 +217,12 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
   return <span className="stars">{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={size} className={n <= value ? 'filled' : ''} />)}</span>;
 }
 
-function JobSteps({ labels, current }: { labels: string[]; current: number }) {
+/** `current` = number of finished steps; with `waiting`, the next step is not highlighted as active yet. */
+function JobSteps({ labels, current, waiting = false }: { labels: string[]; current: number; waiting?: boolean }) {
   return (
     <ol className="job-steps">
       {labels.map((label, i) => (
-        <li key={label} className={i < current ? 'done' : i === current ? 'current' : ''}>
+        <li key={label} className={i < current ? 'done' : i === current && !waiting ? 'current' : ''}>
           <span>{i < current ? <Check size={12} strokeWidth={3} /> : null}</span>
           <small>{label}</small>
         </li>
@@ -570,9 +596,30 @@ function SettingRow({ icon, title, detail, onClick }: { icon: ReactNode; title: 
 
 /* ------------------------------------------------------------------ worker */
 
-function WorkerJobsScreen({ onProfile, onDetails }: { onProfile: () => void; onDetails: () => void }) {
+type WorkerGo = { home: () => void; jobs: () => void; passbook: () => void; profile: () => void };
+
+function workerNav(active: 'home' | 'jobs' | 'passbook' | 'profile', go: WorkerGo) {
+  return (
+    <BottomNav items={[
+      { label: 'Home', icon: <House size={22} />, active: active === 'home', onClick: go.home },
+      { label: 'Find work', icon: <BriefcaseBusiness size={22} />, active: active === 'jobs', onClick: go.jobs },
+      { label: 'Passbook', icon: <BookOpen size={22} />, active: active === 'passbook', onClick: go.passbook },
+      { label: 'Profile', icon: <UserRound size={22} />, active: active === 'profile', onClick: go.profile },
+    ]} />
+  );
+}
+
+function OnlineSwitch({ online, setOnline }: { online: boolean; setOnline: (value: boolean) => void }) {
+  return (
+    <>
+      <span className={`online ${online ? 'on' : ''}`}>{online ? 'Online' : 'Offline'}</span>
+      <Toggle on={online} onChange={() => setOnline(!online)} label="Available for work" />
+    </>
+  );
+}
+
+function WorkerJobsScreen({ online, setOnline, go, onDetails }: { online: boolean; setOnline: (value: boolean) => void; go: WorkerGo; onDetails: () => void }) {
   const [radius, setRadius] = useState(5);
-  const [online, setOnline] = useState(true);
   return (
     <main className="screen has-nav">
       <header className="home-head">
@@ -580,9 +627,9 @@ function WorkerJobsScreen({ onProfile, onDetails }: { onProfile: () => void; onD
           <h1 className="h2">Jobs near you</h1>
           <p className="small with-icon"><MapPin size={13} />Lajpat Nagar · Electrician</p>
         </div>
-        <span className={`online ${online ? 'on' : ''}`}>{online ? 'Online' : 'Offline'}</span>
-        <Toggle on={online} onChange={() => setOnline(!online)} label="Available for work" />
+        <OnlineSwitch online={online} setOnline={setOnline} />
       </header>
+      {!online && <div className="note mt-12"><Info size={18} /><p>You’re offline, so customers can’t send you new jobs.</p></div>}
 
       <div className="row gap-6 mt-12">
         {[2, 5, 10].map((km) => (
@@ -603,11 +650,7 @@ function WorkerJobsScreen({ onProfile, onDetails }: { onProfile: () => void; onD
         <p><strong>FairRate</strong> Offers must stay within each job’s price range, so nobody can undercut your rate.</p>
       </div>
 
-      <BottomNav items={[
-        { label: 'Jobs', icon: <BriefcaseBusiness size={22} />, active: true },
-        { label: 'Passbook', icon: <BookOpen size={22} /> },
-        { label: 'Profile', icon: <UserRound size={22} />, onClick: onProfile },
-      ]} />
+      {workerNav('jobs', go)}
     </main>
   );
 }
@@ -973,6 +1016,342 @@ function ConfirmScreen({ onBack }: { onBack: () => void }) {
           Something’s wrong — report a problem
         </button>
       </div>
+    </main>
+  );
+}
+
+/* ------------------------------------------------------------------ worker dashboard */
+
+const activeJob = {
+  id: 'LL-9012',
+  title: 'Inverter wiring and 2 new sockets',
+  customer: 'Ritu Mehta',
+  area: 'Block C, Lajpat Nagar',
+  distance: '1.2 km',
+  when: 'Today, 2:00 pm',
+  labour: 550,
+  travel: 50,
+};
+const activeTotal = activeJob.labour + activeJob.travel;
+
+type PassbookStatus = 'active' | 'pending' | 'settled' | 'disputed';
+const pastWork: Array<{ title: string; customer: string; date: string; amount: number; status: PassbookStatus; note?: string }> = [
+  { title: 'Inverter connection', customer: 'R. Kapoor', date: '15 Oct', amount: 380, status: 'pending' },
+  { title: 'Kitchen exhaust wiring', customer: 'Sweet Corner Cafe', date: '14 Oct', amount: 430, status: 'settled' },
+  { title: 'Switchboard replacement', customer: 'A. Gupta', date: '11 Oct', amount: 560, status: 'settled' },
+  { title: 'Geyser wiring', customer: 'N. Bansal', date: '9 Oct', amount: 450, status: 'disputed', note: 'Customer says the geyser still trips the MCB' },
+];
+const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+const sum = (status: PassbookStatus) => pastWork.filter((w) => w.status === status).reduce((t, w) => t + w.amount, 0);
+const count = (status: PassbookStatus) => pastWork.filter((w) => w.status === status).length;
+
+const stageInfo: Record<WorkStage, { chip: string; step: number }> = {
+  booked: { chip: 'Booked', step: 1 },
+  started: { chip: 'Work in progress', step: 2 },
+  submitted: { chip: 'Waiting for customer', step: 3 },
+};
+
+function WorkerHomeScreen({ online, setOnline, stage, go, onActive, onLead }: {
+  online: boolean; setOnline: (value: boolean) => void; stage: WorkStage; go: WorkerGo; onActive: () => void; onLead: () => void;
+}) {
+  const settled = sum('settled');
+  const pending = sum('pending');
+  return (
+    <main className="screen has-nav">
+      <header className="home-head">
+        <Avatar name="Manoj Kumar" size={40} />
+        <div className="grow">
+          <p className="small">Namaste</p>
+          <h1 className="h3">Manoj Kumar</h1>
+        </div>
+        <OnlineSwitch online={online} setOnline={setOnline} />
+      </header>
+
+      <section className="earn-card mt-16">
+        <p>Earned this month</p>
+        <strong>{rupees(settled + pending)}</strong>
+        <div className="earn-split">
+          <span><small>Paid (demo)</small>{rupees(settled)}</span>
+          <span><small>Payment pending</small>{rupees(pending)}</span>
+        </div>
+        <button type="button" onClick={go.passbook}>Open Kamai Passbook <ChevronRight size={16} /></button>
+      </section>
+
+      <div className="stat-tiles mt-12">
+        <div><strong>{count('settled') + count('pending')}</strong><small>Jobs this month</small></div>
+        <div><strong className="row gap-4"><Star size={15} className="filled" />4.9</strong><small>Rating</small></div>
+        <div><strong>3 min</strong><small>Avg. reply</small></div>
+      </div>
+
+      <div className="section-head"><h2 className="h3">Today’s job</h2><span className="small">{activeJob.when}</span></div>
+      <article className="card">
+        <div className="row spread">
+          <Chip tone={stage === 'booked' ? 'green' : 'orange'} icon={stage === 'booked' ? undefined : <span className="dot" />}>{stageInfo[stage].chip}</Chip>
+          <strong className="amount">{rupees(activeTotal)}</strong>
+        </div>
+        <h3 className="h4 mt-10">{activeJob.title}</h3>
+        <p className="small with-icon"><MapPin size={13} />{activeJob.customer} · {activeJob.area} · {activeJob.distance}</p>
+        <JobSteps labels={['Booked', 'Started', 'Photos sent', 'Confirmed']} current={stageInfo[stage].step} waiting={stage === 'booked'} />
+        <button className={`btn mt-16 ${stage === 'submitted' ? 'btn-secondary' : 'btn-primary'}`} type="button" onClick={onActive}>
+          {stage === 'booked' && <>Start job <ArrowRight size={18} /></>}
+          {stage === 'started' && <><Camera size={18} />Add photos of finished work</>}
+          {stage === 'submitted' && 'View job'}
+        </button>
+      </article>
+
+      <div className="section-head"><h2 className="h3">My offers</h2><span className="small">2 this week</span></div>
+      <div className="list">
+        <div className="list-row">
+          <span className="tile-icon small-tile"><Send size={16} /></span>
+          <div className="grow"><strong className="h4">Pump wiring and MCB fix</strong><small className="small block">Arvind S. · you offered ₹550</small></div>
+          <Chip tone="orange">Waiting</Chip>
+        </div>
+        <div className="list-row">
+          <span className="tile-icon small-tile"><Send size={16} /></span>
+          <div className="grow"><strong className="h4">Meter board rewiring</strong><small className="small block">DLF office · you offered ₹840</small></div>
+          <Chip>Not chosen</Chip>
+        </div>
+      </div>
+
+      <div className="section-head"><h2 className="h3">New jobs near you</h2><button className="link-btn" type="button" onClick={go.jobs}>See all <ChevronRight size={15} /></button></div>
+      <button type="button" className="card lead-row" onClick={onLead}>
+        <span className="tile-icon"><Zap size={18} /></span>
+        <span className="grow">
+          <strong className="h4">Pump wiring and MCB trip fix</strong>
+          <small className="small block">Connaught Place · 1.8 km · urgent</small>
+        </span>
+        <span className="right"><strong className="amount">₹480–620</strong><ChevronRight size={16} className="muted" /></span>
+      </button>
+
+      {workerNav('home', go)}
+    </main>
+  );
+}
+
+function EvidenceSlot({ added, label, src, onToggle }: { added: boolean; label: string; src: string; onToggle: () => void }) {
+  return added ? (
+    <button type="button" className="evidence-slot added" onClick={onToggle} aria-label={`Remove ${label}`}>
+      <Photo src={src} label={label} tag="Added" />
+    </button>
+  ) : (
+    <button type="button" className="photo add-photo" onClick={onToggle} aria-label={`Add ${label}`}>
+      <Camera size={20} /><span>{label}</span>
+    </button>
+  );
+}
+
+function WorkerActiveJobScreen({ stage, setStage, onBack, onPassbook }: {
+  stage: WorkStage; setStage: (stage: WorkStage) => void; onBack: () => void; onPassbook: () => void;
+}) {
+  const [before, setBefore] = useState(true);
+  const [after, setAfter] = useState([false, false]);
+  const [note, setNote] = useState('Wired the inverter to the main board and fitted two 16A sockets. Tested on load.');
+  const afterCount = after.filter(Boolean).length;
+
+  return (
+    <main className="screen">
+      <AppBar title="Today’s job" subtitle={`Job #${activeJob.id}`} onBack={onBack} />
+      <Chip tone={stage === 'booked' ? 'green' : 'orange'} icon={stage === 'booked' ? undefined : <span className="dot" />}>{stageInfo[stage].chip}</Chip>
+      <h1 className="h1 mt-10">{activeJob.title}</h1>
+      <JobSteps labels={['Booked', 'Started', 'Photos sent', 'Confirmed']} current={stageInfo[stage].step} waiting={stage === 'booked'} />
+
+      <section className="card mt-16">
+        <div className="person">
+          <Avatar name={activeJob.customer} size={44} />
+          <div className="grow"><strong>{activeJob.customer}</strong><span>{activeJob.area}</span></div>
+          <a className="icon-btn green" href="tel:+910000000000" aria-label="Call customer"><Phone size={18} /></a>
+        </div>
+        <div className="grid-2 mt-12">
+          <button className="btn btn-small btn-secondary" type="button"><Navigation size={15} />Directions</button>
+          <button className="btn btn-small btn-secondary" type="button"><MessageCircle size={15} />Message</button>
+        </div>
+      </section>
+
+      <section className="card mt-12">
+        <h2 className="h4">Agreed payment</h2>
+        <div className="lines mt-6">
+          <p><span>Labour</span><strong>{rupees(activeJob.labour)}</strong></p>
+          <p><span>Travel</span><strong>{rupees(activeJob.travel)}</strong></p>
+          <p className="total"><span>You’ll get</span><strong>{rupees(activeTotal)}</strong></p>
+        </div>
+      </section>
+
+      {stage === 'booked' && (
+        <>
+          <div className="note mt-12"><Info size={18} /><p>Start the job when you reach the customer. They’ll see that you’ve arrived.</p></div>
+          <div className="push-bottom">
+            <button className="btn btn-primary" type="button" onClick={() => setStage('started')}>I’ve arrived — start job <ArrowRight size={18} /></button>
+          </div>
+        </>
+      )}
+
+      {stage === 'started' && (
+        <>
+          <section className="mt-20">
+            <div className="row spread"><h2 className="h3">Photos of your work</h2><span className="small">Started 2:05 pm</span></div>
+            <p className="small mt-2">The customer checks these before confirming the job.</p>
+            <p className="field-label mt-12">Before <span className="tiny-tag">optional</span></p>
+            <div className="grid-3">
+              <EvidenceSlot added={before} label="Before" src={photos.before} onToggle={() => setBefore(!before)} />
+            </div>
+            <p className="field-label mt-12">After <span className="tiny-tag">at least 1</span></p>
+            <div className="grid-3">
+              {after.map((isAdded, i) => (
+                <EvidenceSlot key={i} added={isAdded} label={`After ${i + 1}`} src={photos.after}
+                  onToggle={() => setAfter(after.map((v, j) => (j === i ? !v : v)))} />
+              ))}
+            </div>
+            <label className="field-label mt-12" htmlFor="work-note">Note for the customer</label>
+            <textarea id="work-note" className="text-area" rows={3} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} />
+          </section>
+          <div className="push-bottom">
+            <button className="btn btn-primary" type="button" disabled={afterCount === 0} onClick={() => setStage('submitted')}>
+              <Send size={17} />Send for confirmation
+            </button>
+            {afterCount === 0 && <p className="small center mt-6">Add at least one “after” photo to continue.</p>}
+          </div>
+        </>
+      )}
+
+      {stage === 'submitted' && (
+        <>
+          <section className="success-card mt-16">
+            <CircleCheck size={34} />
+            <h2 className="h3">Sent to {activeJob.customer.split(' ')[0]} for confirmation</h2>
+            <p>When she confirms the work, {rupees(activeTotal)} will show in your Kamai Passbook.</p>
+          </section>
+          <div className="note mt-12"><Info size={18} /><p>If the customer reports a problem, the payment is held until it’s sorted out.</p></div>
+          <div className="push-bottom">
+            <button className="btn btn-primary" type="button" onClick={onPassbook}><BookOpen size={17} />Open Kamai Passbook</button>
+            <button className="btn btn-ghost mt-6" type="button" onClick={() => setStage('booked')}>Reset demo</button>
+          </div>
+        </>
+      )}
+    </main>
+  );
+}
+
+function PassbookScreen({ stage, go }: { stage: WorkStage; go: WorkerGo }) {
+  const [filter, setFilter] = useState<'all' | PassbookStatus>('all');
+  const entries = [
+    { title: activeJob.title, customer: activeJob.customer, date: 'Today', amount: activeTotal, status: 'active' as PassbookStatus, note: undefined as string | undefined },
+    ...pastWork,
+  ];
+  const shown = filter === 'all' ? entries : entries.filter((e) => e.status === filter);
+  const settled = sum('settled');
+  const pending = sum('pending');
+  const statusChip: Record<PassbookStatus, ReactNode> = {
+    active: <Chip tone="orange">{stage === 'submitted' ? 'Awaiting confirmation' : 'In progress'}</Chip>,
+    pending: <Chip>Payment pending</Chip>,
+    settled: <Chip tone="green" icon={<Check size={12} />}>Paid (demo)</Chip>,
+    disputed: <Chip tone="red">Disputed · not paid</Chip>,
+  };
+  const filters: Array<{ id: 'all' | PassbookStatus; label: string }> = [
+    { id: 'all', label: 'All' }, { id: 'settled', label: 'Paid' }, { id: 'pending', label: 'Pending' }, { id: 'disputed', label: 'Disputed' },
+  ];
+
+  return (
+    <main className="screen has-nav">
+      <header className="home-head">
+        <div className="grow">
+          <h1 className="h2">Kamai Passbook</h1>
+          <p className="small">कमाई पासबुक · your work and earnings record</p>
+        </div>
+      </header>
+
+      <section className="earn-card mt-16">
+        <p>Confirmed earnings</p>
+        <strong>{rupees(settled + pending)}</strong>
+        <div className="earn-split">
+          <span><small>Paid (demo)</small>{rupees(settled)}</span>
+          <span><small>Pending · {count('pending')}</small>{rupees(pending)}</span>
+        </div>
+      </section>
+
+      <div className="stat-tiles mt-12">
+        <div><strong>{count('settled') + count('pending')}</strong><small>Jobs completed</small></div>
+        <div><strong>1</strong><small>In progress</small></div>
+        <div><strong className="danger">{count('disputed')}</strong><small>Disputed ({rupees(sum('disputed'))})</small></div>
+      </div>
+
+      <div className="row gap-6 mt-16 scroll-x">
+        {filters.map((f) => (
+          <button key={f.id} type="button" className={`seg-btn ${filter === f.id ? 'on' : ''}`} onClick={() => setFilter(f.id)}>{f.label}</button>
+        ))}
+      </div>
+
+      <div className="list mt-12">
+        {shown.map((entry) => (
+          <div key={entry.title} className="list-row align-start">
+            <div className="grow">
+              <strong className="h4">{entry.title}</strong>
+              <small className="small block">{entry.customer} · {entry.date}</small>
+              <div className="mt-6">{statusChip[entry.status]}</div>
+              {entry.note && <small className="small block mt-6">{entry.note}</small>}
+            </div>
+            <strong className={`amount ${entry.status === 'disputed' ? 'struck' : ''}`}>{rupees(entry.amount)}</strong>
+          </div>
+        ))}
+        {shown.length === 0 && <p className="list-row small">Nothing here yet.</p>}
+      </div>
+
+      <div className="note mt-12">
+        <Info size={18} />
+        <p>Payments are demo records — no real money moves. This passbook is a record of your work, not a bank statement or credit score.</p>
+      </div>
+
+      {workerNav('passbook', go)}
+    </main>
+  );
+}
+
+function WorkerProfileScreen({ online, setOnline, go, onHireMode }: { online: boolean; setOnline: (value: boolean) => void; go: WorkerGo; onHireMode: () => void }) {
+  return (
+    <main className="screen has-nav">
+      <AppBar title="Profile" right={<span className="appbar-spacer" />} />
+      <section className="profile-head">
+        <Avatar name="Manoj Kumar" size={64} />
+        <div>
+          <h2 className="h2">Manoj Kumar</h2>
+          <p className="small">Electrician · 8 years · +91 98110 45678</p>
+          <span className="row gap-4 small mt-2"><BadgeCheck size={14} className="green-text" />Phone verified</span>
+        </div>
+      </section>
+
+      <div className="stat-tiles mt-16">
+        <div><strong className="row gap-4"><Star size={15} className="filled" />4.9</strong><small>Rating</small></div>
+        <div><strong>184</strong><small>Jobs done</small></div>
+        <div><strong>5 km</strong><small>Work radius</small></div>
+      </div>
+
+      <section className="card mt-12">
+        <div className="row">
+          <div className="grow"><strong className="h4">Available for work</strong><p className="small">Customers nearby can send you jobs</p></div>
+          <OnlineSwitch online={online} setOnline={setOnline} />
+        </div>
+      </section>
+
+      <section className="card mt-12">
+        <h3 className="h4">Skills</h3>
+        <div className="tag-row mt-10">
+          {['House wiring', 'MCB and DB boards', 'Inverters', 'Water pumps', 'Fans and lights'].map((s) => <span key={s} className="tag on">{s}</span>)}
+        </div>
+      </section>
+
+      <p className="list-title">Settings</p>
+      <div className="list">
+        <SettingRow icon={<Wrench size={18} />} title="Trade" detail="Electrician" />
+        <SettingRow icon={<MapPin size={18} />} title="Work area" detail="Lajpat Nagar · within 5 km" />
+        <SettingRow icon={<Languages size={18} />} title="Language · भाषा" detail="हिंदी" />
+        <SettingRow icon={<FileText size={18} />} title="Payment details" detail="Add your UPI ID" />
+        <SettingRow icon={<RefreshCw size={18} />} title="Switch to hiring mode" detail="Get work done at home" onClick={onHireMode} />
+        <SettingRow icon={<CircleHelp size={18} />} title="Help" detail="Call or chat with us" />
+      </div>
+
+      <button className="btn btn-ghost danger mt-16" type="button"><LogOut size={17} />Sign out</button>
+      <p className="small center">LaborLink prototype · v0.3</p>
+
+      {workerNav('profile', go)}
     </main>
   );
 }
