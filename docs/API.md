@@ -841,6 +841,52 @@ match the booking — should never happen) · 422 `validation_error` (e.g. an `a
 **200** `SettlementResponse` (pending or settled) · **404** if there is no settlement yet — the
 message says whether completion is unconfirmed or the job is disputed.
 
+## Live worker location
+
+While a job is `booked` (worker travelling) or `in_progress` (on site), the booked worker can share
+their position and the job's employer can see it with an approximate arrival time. Only the latest
+position is stored (each update replaces the previous one), and sharing is refused once the job
+moves on (`409 tracking_not_active`).
+
+**Arrival estimate:** straight-line distance × 1.3 at 20 km/h (city two-wheeler speed), rounded up
+to whole minutes; `arrived` is true within 150 m or once the job is `in_progress`. It is not a
+routed or traffic-aware estimate, and the response says so in `eta_basis`.
+
+### POST `/api/v1/jobs/{job_id}/worker-location`
+
+Body: `{"worker_id": "...", "latitude": 28.6519, "longitude": 77.1909, "accuracy_m": 12}` —
+`accuracy_m` optional. **200** returns the tracking view below (so the worker sees their own ETA).
+
+Errors: 404 · 409 `job_not_booked` · 403 `actor_mismatch` (not the booked worker) · 409
+`tracking_not_active` · 422 `validation_error` (coordinates out of range, unknown fields).
+
+### GET `/api/v1/jobs/{job_id}/worker-location?employer_id=...`
+
+**200**:
+
+```json
+{
+  "job_id": "ec293410-359b-48dd-a358-925e44da7699",
+  "job_status": "booked",
+  "worker_id": "0e433bd0-fca7-4447-b882-62ecabcb0bec",
+  "worker_name": "Manoj Kumar",
+  "worker_location": {"latitude": 28.6403, "longitude": 77.2034, "accuracy_m": 10,
+                      "recorded_at": "2026-10-16T15:00:31Z", "age_seconds": 2, "stale": false},
+  "destination": {"latitude": 28.6315, "longitude": 77.2167, "address": "Flat 402, Block B, Connaught Place"},
+  "distance_km": 2.03,
+  "eta_minutes": 8,
+  "arrived": false,
+  "eta_basis": "Approximate: straight-line distance x 1.3 at 20 km/h city speed. It is not a routed or traffic-aware estimate."
+}
+```
+
+`worker_location` is `null` until the worker starts sharing; `stale` is true when the last update
+is older than 2 minutes. If the job has no coordinates, `destination`, `distance_km` and
+`eta_minutes` are `null`. Errors: 404 · 409 `job_not_booked` · 409 `employer_not_recorded` · 403
+`actor_mismatch` · 409 `tracking_not_active` · 422 (bad `employer_id`).
+
+---
+
 ## GET `/api/v1/workers/{worker_id}/passbook?limit=50`
 
 Kamai Passbook, computed on every request from bookings, completion reviews and settlements

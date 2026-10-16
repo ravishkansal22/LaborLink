@@ -255,7 +255,11 @@ the backend first (section 2, port 8000).
    chosen radius (e.g. Karol Bagh is ~3.4 km from Connaught Place).
 4. Worker home / Find work → open the job → Accept or Counter offer.
 5. Worker Profile → **Switch to hiring mode** → open the job → **Book**.
-6. Switch to worker → open the job → **I’ve arrived — start job** → add photos → **Send for confirmation**.
+6. Switch to worker → open the job → **Share live location** (or **Demo: simulate the trip** on a
+   laptop) → the employer’s job page shows the worker on a map with the arrival time → **I’ve
+   arrived — start job** → add photos → **Send for confirmation**.
+   Tip: to film both sides at once, open the employer’s job page in one browser tab, then in a
+   second tab switch to worker mode — each tab keeps the role it was loaded with.
 7. Switch to employer → **Work is done — confirm** (or report a problem) → **Pay (demo)**.
 8. Switch to worker → **Passbook** shows the job and the demo payment.
 

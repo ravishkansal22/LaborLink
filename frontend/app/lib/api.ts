@@ -219,6 +219,19 @@ export interface Passbook {
 
 export interface UploadedImage { id: string; content_type: string; size_bytes: number }
 
+export interface Tracking {
+  job_id: string;
+  job_status: JobStatus;
+  worker_id: string;
+  worker_name: string;
+  worker_location: { latitude: number; longitude: number; accuracy_m: number | null; recorded_at: string; age_seconds: number; stale: boolean } | null;
+  destination: { latitude: number; longitude: number; address: string | null } | null;
+  distance_km: number | null;
+  eta_minutes: number | null;
+  arrived: boolean;
+  eta_basis: string;
+}
+
 /* ------------------------------------------------------------------ transport */
 
 export class ApiError extends Error {
@@ -305,6 +318,11 @@ export const api = {
   submitEvidence: (jobId: string, body: { worker_id: string; before_image_ids: string[]; after_image_ids: string[]; note: string | null }) =>
     post<Evidence>(`/jobs/${jobId}/completion-evidence`, body),
   passbook: (workerId: string) => request<Passbook>(`/workers/${workerId}/passbook`),
+
+  shareLocation: (jobId: string, body: { worker_id: string; latitude: number; longitude: number; accuracy_m?: number | null }) =>
+    post<Tracking>(`/jobs/${jobId}/worker-location`, body),
+  tracking: (jobId: string, employerId: string) =>
+    request<Tracking>(`/jobs/${jobId}/worker-location?employer_id=${encodeURIComponent(employerId)}`),
 };
 
 export function errorText(error: unknown): string {

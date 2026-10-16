@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight, BadgeCheck, BookOpen, BriefcaseBusiness, Check, ChevronRight, CircleCheck, Clock, House, Info, LogOut, MapPin,
   Navigation, RefreshCw, Send, UserRound, Wrench,
 } from 'lucide-react';
+import { LiveMap, googleMapsUrl, type LatLng } from '../components/live-map';
 import {
   AppBar, Avatar, BottomNav, Chip, Empty, ErrorNote, JobSteps, Loading, Note, Photo, PhotoPicker, SettingRow, StatusChip,
   Toggle, stepLabels, stepsFor, type PickedPhoto, type Tone,
 } from '../components/ui';
 import {
-  allTrades, api, capitalise, hours, money, tradeNames, when, type EarningStatus, type Opportunity, type Trade, type WorkerOffer,
+  allTrades, api, capitalise, hours, money, tradeNames, when, type EarningStatus, type Opportunity, type Tracking, type Trade, type WorkerOffer,
 } from '../lib/api';
 import { useLoad } from '../lib/session';
 
@@ -299,8 +300,8 @@ export function CounterOfferScreen({ workerId, opportunity, onBack, onSent }: { 
 
 export function WorkerJobScreen({ workerId, jobId, onBack, onPassbook }: { workerId: string; jobId: string; onBack: () => void; onPassbook: () => void }) {
   const data = useLoad(async () => {
-    const [job, booking] = await Promise.all([api.getJob(jobId), api.booking(jobId)]);
-    return { job, booking };
+    const [job, booking, worker] = await Promise.all([api.getJob(jobId), api.booking(jobId), api.getWorker(workerId)]);
+    return { job, booking, worker };
   }, [jobId], 5000);
   const [before, setBefore] = useState<PickedPhoto[]>([]);
   const [after, setAfter] = useState<PickedPhoto[]>([]);
@@ -311,7 +312,9 @@ export function WorkerJobScreen({ workerId, jobId, onBack, onPassbook }: { worke
   if (!data.data) {
     return <main className="screen"><AppBar title="Your job" onBack={onBack} />{data.error ? <ErrorNote error={data.error} onRetry={() => void data.reload()} /> : <Loading />}</main>;
   }
-  const { job, booking } = data.data;
+  const { job, booking, worker } = data.data;
+  const destination = job.request.location.latitude != null && job.request.location.longitude != null
+    ? { latitude: job.request.location.latitude, longitude: job.request.location.longitude } : null;
   const mine = booking.worker.id === workerId;
   const act = async (fn: () => Promise<unknown>) => {
     setSaving(true);
@@ -346,6 +349,11 @@ export function WorkerJobScreen({ workerId, jobId, onBack, onPassbook }: { worke
 
       {!mine && <div className="mt-12"><Note>This job is booked with another worker.</Note></div>}
       {Boolean(error) && <div className="mt-12"><ErrorNote error={error} /></div>}
+
+      {mine && job.status === 'booked' && (
+        <ShareLocationCard jobId={jobId} workerId={workerId} workerName={worker.display_name}
+          base={{ latitude: worker.location.latitude, longitude: worker.location.longitude }} destination={destination} />
+      )}
 
       {mine && job.status === 'booked' && (
         <div className="push-bottom">
@@ -552,5 +560,106 @@ export function WorkerProfileScreen({ workerId, go, onHireMode, onSignOut, hasEm
       })()}
       {workerNav('profile', go)}
     </main>
+  );
+}
+
+/* ------------------------------------------------------------------ live location while travelling */
+
+function initials(name: string): string {
+  return name.trim().split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function ShareLocationCard({ jobId, workerId, workerName, base, destination }: {
+  jobId: string; workerId: string; workerName: string; base: LatLng; destination: LatLng | null;
+}) {
+  const [mode, setMode] = useState<'off' | 'gps' | 'demo'>('off');
+  const [view, setView] = useState<Tracking | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [gpsProblem, setGpsProblem] = useState<string | null>(null);
+  const lastSent = useRef(0);
+
+  const send = useCallback(async (latitude: number, longitude: number, accuracy: number | null) => {
+    try {
+      setView(await api.shareLocation(jobId, { worker_id: workerId, latitude, longitude, accuracy_m: accuracy }));
+      setError(null);
+    } catch (err) {
+      setError(err);
+    }
+  }, [jobId, workerId]);
+
+  // Real GPS: send at most one update every 5 seconds.
+  useEffect(() => {
+    if (mode !== 'gps') return undefined;
+    if (!navigator.geolocation) { setGpsProblem('This device can’t share its location.'); setMode('off'); return undefined; }
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        const now = Date.now();
+        if (now - lastSent.current < 5000) return;
+        lastSent.current = now;
+        void send(pos.coords.latitude, pos.coords.longitude, Math.round(pos.coords.accuracy));
+      },
+      () => { setGpsProblem('Location is blocked on this device. You can run a demo trip instead.'); setMode('off'); },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, [mode, send]);
+
+  // Demo trip (for recordings on a laptop): moves from the worker's base to the job in ~1 minute.
+  const dLat = destination?.latitude;
+  const dLng = destination?.longitude;
+  useEffect(() => {
+    if (mode !== 'demo' || dLat == null || dLng == null) return undefined;
+    const steps = 20;
+    let step = 0;
+    const tick = () => {
+      const t = Math.min(1, step / steps);
+      void send(base.latitude + (dLat - base.latitude) * t, base.longitude + (dLng - base.longitude) * t, 10);
+      step += 1;
+      if (t >= 1) window.clearInterval(timer);
+    };
+    const timer = window.setInterval(tick, 3000);
+    tick();
+    return () => window.clearInterval(timer);
+  }, [mode, send, base.latitude, base.longitude, dLat, dLng]);
+
+  const here = view?.worker_location ?? null;
+  return (
+    <section className="card mt-12">
+      <div className="row spread">
+        <h2 className="h4 with-icon"><Navigation size={16} />Live location</h2>
+        {mode !== 'off' ? <Chip tone="orange" icon={<span className="dot" />}>{mode === 'demo' ? 'Demo trip' : 'Sharing'}</Chip> : <Chip>Off</Chip>}
+      </div>
+      <p className="small mt-2">The customer sees where you are and roughly when you’ll arrive. Sharing stops once you start the job.</p>
+
+      {mode !== 'off' && (
+        <>
+          <div className="mt-10"><LiveMap worker={here} destination={destination} workerLabel={initials(workerName)} /></div>
+          {view && (
+            <p className="eta-row mt-10">
+              {view.arrived ? <strong>You’ve arrived</strong> : view.eta_minutes != null
+                ? <><strong>{view.eta_minutes} min</strong><span className="small">to the job · {view.distance_km} km</span></>
+                : <span className="small">{view.eta_basis}</span>}
+            </p>
+          )}
+        </>
+      )}
+
+      {Boolean(error) && <div className="mt-10"><ErrorNote error={error} /></div>}
+      {gpsProblem && mode === 'off' && <p className="small danger mt-6">{gpsProblem}</p>}
+
+      <div className="share-actions mt-12">
+        {mode === 'off' ? (
+          <>
+            <button className="btn btn-small btn-primary" type="button" onClick={() => { setGpsProblem(null); setMode('gps'); }}><Navigation size={15} />Share live location</button>
+            {destination && <button className="btn btn-small btn-secondary" type="button" onClick={() => setMode('demo')}>Demo: simulate the trip</button>}
+          </>
+        ) : (
+          <button className="btn btn-small btn-secondary" type="button" onClick={() => setMode('off')}>Stop sharing</button>
+        )}
+        {destination && (
+          <a className="map-link" href={googleMapsUrl(destination, here)} target="_blank" rel="noreferrer"><MapPin size={14} />Navigate in Google Maps</a>
+        )}
+      </div>
+    </section>
   );
 }

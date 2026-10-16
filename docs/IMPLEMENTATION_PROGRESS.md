@@ -483,3 +483,29 @@ manual SQL fills only an empty reference and then enables the verified employer.
 - After a dispute, the reason is not retrievable later (no GET for reviews).
 - Language choice affects voice recognition and the job’s `language` field; screens are not yet
   translated.
+
+---
+
+## Live worker location (2026-10-16)
+
+**Done**
+- Backend: `worker_locations` table (latest position per job), `POST` / `GET
+  /api/v1/jobs/{job_id}/worker-location`, approximate ETA and stale/arrived flags,
+  `services/tracking.py`, 15 tests (`tests/test_tracking.py`); schema-upgrade test updated for the new table.
+- Frontend: `app/components/live-map.tsx` (Leaflet + OpenStreetMap tiles, Google Maps directions
+  link). Worker job screen: share live location via GPS (`watchPosition`, max one update / 5 s) or a
+  labelled demo trip that moves from the worker's base to the job in about a minute. Employer job
+  screen: live map, ETA, last update, Google Maps route link (polls every 5 s).
+
+**Verified**
+- `python -m pytest`: 259 passed; `ruff`: clean; `npx tsc --noEmit` and `npx eslint app`: clean.
+- In the browser against a live backend: booked job → worker demo trip → employer map showed
+  “Live · 8 min away · 2.03 km” and then “Arrived”.
+
+**Limitations**
+- The map is OpenStreetMap, not Google Maps (Google’s map tiles need a billed API key); the
+  “Open in Google Maps” link opens real Google directions.
+- ETA is distance-based, not routed or traffic-aware.
+- Real GPS needs a phone (or a laptop with location on) and HTTPS/localhost; the demo trip is for recordings.
+- No authentication: anyone with the job id and employer id can read the location (demo only).
+- Public OpenStreetMap tiles are fine for a demo but not for heavy production traffic.

@@ -375,3 +375,16 @@ select.input { appearance: auto; }
 .list-row:disabled { color: inherit; cursor: default; }
 .lead-row .right { flex-direction: column; align-items: flex-end; }
 .add-photo:disabled { opacity: .7; }
+
+/* ------------------------------------------------------------------ live map */
+.live-map { height: 220px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); z-index: 0; }
+.live-map .leaflet-control-attribution { font-size: 9px; }
+.pin-home { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50% 50% 50% 0; background: var(--navy); transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(16, 25, 60, .35); }
+.pin-home span { transform: rotate(45deg); color: #fff; font-size: 17px; line-height: 1; }
+.pin-worker { position: relative; width: 36px; height: 36px; display: grid; place-items: center; border: 3px solid #fff; border-radius: 50%; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px rgba(7, 88, 216, .5); }
+.pin-worker::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--brand); opacity: 0; animation: ping 1.8s ease-out infinite; }
+@keyframes ping { 0% { transform: scale(.6); opacity: .7; } 100% { transform: scale(1.4); opacity: 0; } }
+.eta-row { display: flex; align-items: baseline; gap: 8px; }
+.eta-row strong { font-size: 26px; font-weight: 800; color: var(--ink); }
+.map-link { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--brand); }
+.share-actions { display: grid; gap: 8px; }
