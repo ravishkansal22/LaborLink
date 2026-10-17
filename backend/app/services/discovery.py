@@ -58,6 +58,8 @@ def discover_jobs(
             trade=Trade(job.trade),
             problem_category=wo.problem_category,
             problem_summary=wo.problem_summary,
+            description=job.description,
+            image_id=job.image_id,
             complexity=Complexity(wo.complexity),
             urgency=Urgency(job.urgency),
             estimated_duration=wo.estimated_duration,

@@ -50,6 +50,7 @@ const offerChip: Record<WorkerOffer['status'], { label: string; tone: Tone }> = 
 function OpportunityRow({ item, onOpen }: { item: Opportunity; onOpen: () => void }) {
   return (
     <button type="button" className="card lead-row" onClick={onOpen}>
+      {item.image_id && <img className="lead-thumb" src={api.imageUrl(item.image_id)} alt={t('Photo of the problem')} loading="lazy" />}
       <span className="grow">
         <span className="row gap-6">
           {item.urgency === 'urgent' ? <Chip tone="red" icon={<Clock size={12} />}>{t('Urgent')}</Chip> : <Chip>{t(capitalise(item.urgency))}</Chip>}
@@ -219,6 +220,14 @@ export function OpportunityScreen({ workerId, opportunity, onBack, onCounter, on
       </div>
       <h1 className="h1 mt-12">{tx(o.problem_summary)}</h1>
       <p className="small with-icon mt-6"><Navigation size={13} />{o.distance_km != null ? t('{km} km from you', { km: o.distance_km }) : t('Distance unknown')}</p>
+
+      <section className="card mt-16">
+        <p className="field-label">{t('What the customer said')}</p>
+        <blockquote className="quote">“{tx(o.description)}”</blockquote>
+        {o.image_id ? (
+          <div className="mt-10"><Photo src={api.imageUrl(o.image_id)} label={t('Customer’s photo')} /></div>
+        ) : <p className="small mt-6">{t('No photo was shared for this job.')}</p>}
+      </section>
 
       <section className="card mt-16">
         <div className="lines">

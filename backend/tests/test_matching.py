@@ -152,6 +152,23 @@ def test_worker_discovers_relevant_open_jobs(client, make_worker, make_job):
     assert body["items"][1]["limitations"] == [NO_JOB_COORDINATES]
 
 
+def test_worker_sees_the_employers_photo_and_description(client, make_worker, make_job,
+                                                         png_bytes):
+    plumber = make_worker()
+    upload = {"file": ("tap.png", png_bytes, "image/png")}
+    image = client.post("/api/v1/images", files=upload).json()
+    job = make_job(image_id=image["id"])
+    without_photo = make_job()
+
+    listed = client.get(f"/api/v1/workers/{plumber['id']}/jobs").json()["items"]
+    items = {i["job_id"]: i for i in listed}
+    assert items[job["id"]]["image_id"] == image["id"]
+    assert items[job["id"]]["description"] == "Kitchen sink tap is leaking and dripping all night"
+    assert items[without_photo["id"]]["image_id"] is None
+    photo = client.get(f"/api/v1/images/{image['id']}")
+    assert photo.status_code == 200 and photo.content == png_bytes
+
+
 def test_unavailable_worker_sees_no_jobs(client, make_worker, make_job):
     w = make_worker(availability="unavailable")
     make_job()

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Loading } from './components/ui';
-import type { Job, Opportunity, Trade } from './lib/api';
+import { api, ApiError, type Job, type Opportunity, type Trade } from './lib/api';
 import { setLanguage, useTranslations } from './lib/i18n';
 import { useSession, type Language, type Role } from './lib/session';
 import {
@@ -38,15 +38,32 @@ export default function App() {
 
   // First screen: the signed-in dashboard, or onboarding. ?screen=passbook etc. jumps to a tab (for recording).
   useEffect(() => {
-    if (!session || stack.length) return;
-    const requested = new URLSearchParams(window.location.search).get('screen') as Screen | null;
-    if (session.role === 'worker' && session.workerId) {
-      reset({ screen: requested && workerTabs.includes(requested) ? requested : 'workerHome' });
-    } else if (session.role === 'employer' && session.employer) {
-      reset({ screen: requested && employerTabs.includes(requested) ? requested : 'home' });
-    } else {
-      reset({ screen: 'welcome' });
-    }
+    if (!session || stack.length) return undefined;
+    let cancelled = false;
+    void (async () => {
+      // A worker saved on this phone may no longer exist (e.g. the database was reset):
+      // forget it instead of showing "Worker … was not found" everywhere.
+      if (session.workerId) {
+        const gone = await api.getWorker(session.workerId).then(
+          () => false,
+          (err: unknown) => err instanceof ApiError && err.status === 404,
+        );
+        if (cancelled) return;
+        if (gone) {
+          update({ workerId: null, role: session.role === 'worker' ? (session.employer ? 'employer' : null) : session.role });
+          return; // the session change runs this effect again
+        }
+      }
+      const requested = new URLSearchParams(window.location.search).get('screen') as Screen | null;
+      if (session.role === 'worker' && session.workerId) {
+        reset({ screen: requested && workerTabs.includes(requested) ? requested : 'workerHome' });
+      } else if (session.role === 'employer' && session.employer) {
+        reset({ screen: requested && employerTabs.includes(requested) ? requested : 'home' });
+      } else {
+        reset({ screen: 'welcome' });
+      }
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 

@@ -56,6 +56,8 @@ class JobOpportunity(BaseModel):
     trade: Trade
     problem_category: str
     problem_summary: str
+    description: str  # the employer's own words
+    image_id: str | None  # the employer's photo of the problem, if any (GET /images/{id})
     complexity: Complexity
     urgency: Urgency
     estimated_duration: DurationRange

@@ -110,6 +110,19 @@ When submitting changes, please append an entry following this format:
   - Backend: `cd backend`, `python -m uvicorn app.main:app --reload`; `python -m pytest` (244 passed), `python -m ruff check .`.
   - Frontend: `cd frontend`, `npm run dev`, open http://localhost:3000; `npx tsc --noEmit`, `npx eslint app`.
 
+### [2026-10-17] - Workers see the employer's photo before offering
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | frontend | docs
+- **Type**: Feature
+- **Description**:
+  - `GET /api/v1/workers/{id}/jobs` items now include `description` (the employer's words) and
+    `image_id` (their photo of the fault). The address is still hidden.
+  - Worker app: a photo thumbnail in the job lists. The job-details screen shows "What the
+    customer said" and the full photo. The photo was already visible after booking.
+- **Execution & Testing**:
+  - `python -m pytest` (296 passed, 1 new test), `ruff`, `tsc` and `eslint` are clean.
+  - Live check: an uploaded photo appeared in the worker's Find work list and on the job details.
+
 ### [2026-10-17] - Multilingual app (11 languages), live dictation, map load fix
 - **Author**: Claude Code (AI assistant)
 - **Component**: backend | frontend | docs

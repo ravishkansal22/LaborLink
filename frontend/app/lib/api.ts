@@ -103,6 +103,8 @@ export interface Opportunity {
   trade: Trade;
   problem_category: string;
   problem_summary: string;
+  description: string; // the employer's own words
+  image_id: string | null; // the employer's photo of the problem
   complexity: 'low' | 'medium' | 'high';
   urgency: Urgency;
   estimated_duration: { min_hours: number; max_hours: number };

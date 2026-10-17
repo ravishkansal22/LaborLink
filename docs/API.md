@@ -447,7 +447,9 @@ Worker coordinates are not included. Errors: 404 `not_found`, 409 `trade_require
 ## GET `/api/v1/workers/{worker_id}/jobs?limit=20`
 
 Open (`estimated`) jobs matching the worker's trades and service area, nearest first (jobs without
-coordinates last, with a limitation). The employer's address, coordinates and request details are
+coordinates last, with a limitation). Each item includes the employer's own `description` and
+their photo of the problem (`image_id`, or `null`; download it from `GET /api/v1/images/{id}`),
+so the worker can judge the job before offering. The employer's address and coordinates are
 **not** included. An `unavailable` worker gets an empty list and a limitation. Poll this endpoint
 for new jobs (no push notifications).
 
@@ -462,6 +464,8 @@ for new jobs (no push notifications).
       "trade": "plumber",
       "problem_category": "leak_repair",
       "problem_summary": "Bathroom tap is leaking and dripping",
+      "description": "Bathroom tap is leaking and dripping",
+      "image_id": "5f0c2a1e9b7d4c3a8e6f1b2d3c4a5e6f",
       "complexity": "low",
       "urgency": "normal",
       "estimated_duration": {"min_hours": 1.0, "max_hours": 2.0},
