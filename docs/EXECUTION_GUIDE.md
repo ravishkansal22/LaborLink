@@ -83,14 +83,25 @@ curl.exe -X POST http://127.0.0.1:8000/api/v1/jobs -H "content-type: application
 
 ### Speech-to-text (optional)
 
-Set `SARVAM_API_KEY` (in `backend/.env` or the environment) to transcribe voice job descriptions
-with Sarvam AI. Check it with `GET /api/v1/speech/status` (`"available": true`). The app then
-records up to 25 seconds per tap of **Speak** and fills the description box. Without a key the
-app uses the browser's own recognition (Chrome/Edge). Quick check with any short WAV file:
+**Speak** first uses the browser's own speech recognition (Chrome, Edge, Android): it is free and
+types the words live as you talk, in the app language. If the browser has no recognizer (or
+can't do that language) and `SARVAM_API_KEY` is set, the app records up to 25 seconds and
+Sarvam AI transcribes it when you stop. Check the server side with
+`GET /api/v1/speech/status` (`"available": true`). Quick check with any short WAV file:
 
 ```powershell
 curl.exe -X POST http://127.0.0.1:8000/api/v1/speech/transcribe -F "file=@voice.wav;type=audio/wav" -F "language=en"
 ```
+
+### Languages (Sarvam AI translation)
+
+Pick a language on the first screen, or later under Profile → Language. With `SARVAM_API_KEY` set,
+each screen's English text is sent to `POST /api/v1/translate`. The backend translates every
+string once with Sarvam (`mayura:v1`, `formal` mode, eight requests in parallel) and caches it in
+the `translations` table. The browser also keeps a copy in localStorage. A new language's first
+screen takes a second or two; after that it loads instantly. Job descriptions typed in an Indian
+script are translated to English for the work-order engine; the stored request and the title
+keep the original text. To try it: choose हिन्दी, then describe a job in Hindi.
 
 ### Phase 2 configuration
 

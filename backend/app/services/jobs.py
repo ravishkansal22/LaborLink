@@ -16,7 +16,9 @@ from app.schemas.work_order import WorkOrderV1
 from app.services.db_guard import db_guard
 from app.services.lifecycle import JobNotOpenError, TradeRequiredError, ensure_transition
 from app.services.pricing import calculate_estimate
+from app.services.translation import TranslationService
 from app.services.work_orders import ImageInput, WorkOrderInput, WorkOrderService
+from app.services.work_orders.rule_based import normalize_description, summarize_description
 
 __all__ = ["TradeRequiredError", "create_job", "get_job", "recalculate_estimate", "to_response"]
 
@@ -77,6 +79,7 @@ def create_job(
     work_orders: WorkOrderService,
     rate_card: RateCard,
     upload_dir: Path,
+    translator: TranslationService | None = None,
 ) -> Job:
     image: ImageUpload | None = None
     if payload.image_id is not None:
@@ -87,8 +90,14 @@ def create_job(
                 f"image_id '{payload.image_id}' does not refer to an uploaded image."
             )
 
+    # Descriptions in an Indian script are translated to English for the keyword engine;
+    # the employer's original text is what gets stored and shown.
+    english = (
+        translator.to_english(session, payload.description, payload.language)
+        if translator else None
+    )
     data = WorkOrderInput(
-        description=payload.description,
+        description=english or payload.description,
         description_source=payload.description_source,
         language=payload.language,
         trade=payload.trade,
@@ -98,6 +107,11 @@ def create_job(
     )
     # Generated before any write: a provider failure can never leave a partial job behind.
     work_order = work_orders.generate(data)
+    if english:
+        # The title stays in the employer's own words; viewers' apps translate it for display.
+        original = normalize_description(payload.description)
+        summary = summarize_description(original)
+        work_order = work_order.model_copy(update={"problem_summary": summary})
 
     job = Job(
         description=payload.description,

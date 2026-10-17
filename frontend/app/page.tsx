@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Loading } from './components/ui';
 import type { Job, Opportunity, Trade } from './lib/api';
-import { useSession, type Role } from './lib/session';
+import { setLanguage, useTranslations } from './lib/i18n';
+import { useSession, type Language, type Role } from './lib/session';
 import {
   EmployerHomeScreen, EmployerJobScreen, EmployerJobsScreen, EmployerProfileScreen, NewJobScreen, type EmployerGo,
 } from './screens/employer';
@@ -27,6 +28,8 @@ export default function App() {
   const { session, update, clear } = useSession();
   const [stack, setStack] = useState<Route[]>([]);
   const [role, setRole] = useState<Role>('employer');
+  useTranslations(); // re-render the whole screen when translations arrive
+  useEffect(() => { if (session) setLanguage(session.language); }, [session?.language]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const push = (route: Route) => setStack((s) => [...s, route]);
   const replace = (route: Route) => setStack((s) => [...s.slice(0, -1), route]);
@@ -64,6 +67,7 @@ export default function App() {
   const toEmployer = () => {
     if (session.employer) { update({ role: 'employer' }); reset({ screen: 'home' }); } else push({ screen: 'setup', role: 'employer' });
   };
+  const changeLanguage = (language: Language) => update({ language });
   const openEmployerJob = (jobId: string) => push({ screen: 'employerJob', jobId });
   const openWorkerJob = (jobId: string) => push({ screen: 'workerJob', jobId });
 
@@ -103,7 +107,7 @@ export default function App() {
     case 'jobs':
       return <EmployerJobsScreen session={session} go={employerGo} onOpenJob={openEmployerJob} onNewJob={() => push({ screen: 'newJob' })} />;
     case 'profile':
-      return <EmployerProfileScreen session={session} go={employerGo} onWorkerMode={toWorker} onSignOut={signOut} />;
+      return <EmployerProfileScreen session={session} go={employerGo} onWorkerMode={toWorker} onSignOut={signOut} onLanguage={changeLanguage} />;
 
     case 'workerHome':
       return <WorkerHomeScreen workerId={session.workerId!} go={workerGo} onOpenJob={openWorkerJob} onOpportunity={(o) => push({ screen: 'opportunity', opportunity: o })} />;
@@ -124,6 +128,7 @@ export default function App() {
     case 'passbook':
       return <PassbookScreen workerId={session.workerId!} go={workerGo} onOpenJob={openWorkerJob} />;
     case 'workerProfile':
-      return <WorkerProfileScreen workerId={session.workerId!} go={workerGo} onHireMode={toEmployer} onSignOut={signOut} hasEmployer={Boolean(session.employer)} />;
+      return <WorkerProfileScreen workerId={session.workerId!} go={workerGo} onHireMode={toEmployer} onSignOut={signOut} hasEmployer={Boolean(session.employer)}
+        language={session.language} onLanguage={changeLanguage} />;
   }
 }

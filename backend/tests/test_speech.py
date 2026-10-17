@@ -63,7 +63,9 @@ def test_transcribe_returns_transcript(make_client):
     assert call["files"]["file"] == ("voice.webm", AUDIO, "audio/webm")
 
 
-@pytest.mark.parametrize("language, code", [("en", "en-IN"), ("hi", "hi-IN"), ("ta", "unknown")])
+@pytest.mark.parametrize(
+    "language, code", [("en", "en-IN"), ("hi", "hi-IN"), ("ta", "ta-IN"), ("xx", "unknown")]
+)
 def test_language_is_mapped_and_model_is_optional(make_client, language, code):
     fake = FakeTransport(httpx.Response(200, json={"transcript": "x", "language_code": None}))
     client = make_client(speech_service=_service(fake, model="saaras:v3"))

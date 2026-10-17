@@ -1,5 +1,6 @@
 'use client';
 
+import { t } from '../lib/i18n';
 import { useRef, useState, type PointerEvent } from 'react';
 import { ChevronsRight, Loader } from 'lucide-react';
 
@@ -34,7 +35,7 @@ export function SwipeButton({ label, onConfirm, busy = false, disabled = false }
 
   return (
     <div ref={track} className={`swipe ${disabled ? 'disabled' : ''}`}>
-      <span className="swipe-label" style={{ opacity: 1 - offset / Math.max(1, maxOffset()) }}>{busy ? 'Please wait…' : label}</span>
+      <span className="swipe-label" style={{ opacity: 1 - offset / Math.max(1, maxOffset()) }}>{busy ? t('Please wait…') : label}</span>
       <button type="button" className="swipe-thumb" aria-label={label} disabled={disabled || busy}
         style={{ transform: `translateX(${offset}px)`, transition: dragging ? 'none' : 'transform .25s ease' }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}

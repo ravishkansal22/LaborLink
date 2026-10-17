@@ -285,6 +285,10 @@ export const api = {
   },
   imageUrl: (imageId: string) => `${BASE}/images/${encodeURIComponent(imageId)}`,
 
+  translate: (texts: string[], targetLanguage: string, sourceLanguage: 'en' | 'auto' = 'en') =>
+    post<{ target_language: string; translations: Array<string | null>; available: boolean }>('/translate', {
+      texts, target_language: targetLanguage, source_language: sourceLanguage,
+    }),
   speechStatus: () => request<{ available: boolean; provider: 'sarvam' | null; max_bytes: number }>('/speech/status'),
   transcribe(audio: Blob, language: string) {
     const form = new FormData();
@@ -361,8 +365,12 @@ export function when(iso: string): string {
   const date = new Date(iso);
   const today = new Date();
   const sameDay = date.toDateString() === today.toDateString();
-  const time = date.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
-  return sameDay ? `Today, ${time}` : `${date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, ${time}`;
+  // The page's lang (set from the chosen app language) localises dates for free via Intl.
+  const locale = (typeof document !== 'undefined' && document.documentElement.lang) || 'en-IN';
+  const time = date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+  if (!sameDay) return `${date.toLocaleDateString(locale, { day: 'numeric', month: 'short' })}, ${time}`;
+  const todayWord = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'day');
+  return `${todayWord[0].toUpperCase()}${todayWord.slice(1)}, ${time}`;
 }
 
 export function capitalise(text: string): string {

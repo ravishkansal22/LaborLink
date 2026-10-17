@@ -1,5 +1,7 @@
 'use client';
 
+import { t } from '../lib/i18n';
+import { LANGUAGES, type Language } from '../lib/languages';
 import { useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Camera, Check, ChevronRight, Image as ImageIcon, Info, Loader, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { api, errorText, type JobStatus } from '../lib/api';
@@ -7,7 +9,7 @@ import { api, errorText, type JobStatus } from '../lib/api';
 export function AppBar({ title, subtitle, onBack, right }: { title?: string; subtitle?: string; onBack?: () => void; right?: ReactNode }) {
   return (
     <header className="appbar">
-      {onBack ? <button className="icon-btn" type="button" onClick={onBack} aria-label="Go back"><ArrowLeft size={20} /></button> : <span className="appbar-spacer" />}
+      {onBack ? <button className="icon-btn" type="button" onClick={onBack} aria-label={t('Go back')}><ArrowLeft size={20} /></button> : <span className="appbar-spacer" />}
       <div className="appbar-title">{title && <h1>{title}</h1>}{subtitle && <span>{subtitle}</span>}</div>
       {right ?? <span className="appbar-spacer" />}
     </header>
@@ -16,7 +18,7 @@ export function AppBar({ title, subtitle, onBack, right }: { title?: string; sub
 
 export function Steps({ current, total }: { current: number; total: number }) {
   return (
-    <div className="steps" aria-label={`Step ${current} of ${total}`}>
+    <div className="steps" aria-label={t('Step {current} of {total}', { current, total })}>
       {Array.from({ length: total }, (_, i) => <span key={i} className={i < current ? 'on' : ''} />)}
     </div>
   );
@@ -65,7 +67,7 @@ export function JobSteps({ labels, current, waiting = false }: { labels: string[
       {labels.map((label, i) => (
         <li key={label} className={i < current ? 'done' : i === current && !waiting ? 'current' : ''}>
           <span>{i < current ? <Check size={12} strokeWidth={3} /> : null}</span>
-          <small>{label}</small>
+          <small>{t(label)}</small>
         </li>
       ))}
     </ol>
@@ -77,7 +79,7 @@ export function BottomNav({ items }: { items: Array<{ label: string; icon: React
     <nav className="bottom-nav">
       {items.map((item) => (
         <button key={item.label} type="button" className={item.active ? 'active' : ''} onClick={item.onClick}>
-          {item.icon}<span>{item.label}</span>
+          {item.icon}<span>{t(item.label)}</span>
         </button>
       ))}
     </nav>
@@ -94,16 +96,16 @@ export function SettingRow({ icon, title, detail, onClick }: { icon: ReactNode; 
   );
 }
 
-export function Loading({ label = 'Loading…' }: { label?: string }) {
-  return <div className="loading"><Loader size={20} className="spin" /><span>{label}</span></div>;
+export function Loading({ label }: { label?: string }) {
+  return <div className="loading"><Loader size={20} className="spin" /><span>{label ?? t('Loading…')}</span></div>;
 }
 
 export function ErrorNote({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return (
     <div className="error-note" role="alert">
       <TriangleAlert size={18} />
-      <p>{errorText(error)}</p>
-      {onRetry && <button type="button" onClick={onRetry} aria-label="Try again"><RefreshCw size={16} /></button>}
+      <p>{t(errorText(error))}</p>
+      {onRetry && <button type="button" onClick={onRetry} aria-label={t('Try again')}><RefreshCw size={16} /></button>}
     </div>
   );
 }
@@ -137,7 +139,7 @@ export const statusInfo: Record<JobStatus, { label: string; tone: Tone; live?: b
 
 export function StatusChip({ status, label }: { status: JobStatus; label?: string }) {
   const info = statusInfo[status];
-  return <Chip tone={info.tone} icon={info.live ? <span className="dot" /> : undefined}>{label ?? info.label}</Chip>;
+  return <Chip tone={info.tone} icon={info.live ? <span className="dot" /> : undefined}>{label ?? t(info.label)}</Chip>;
 }
 
 export const stepLabels = ['Booked', 'Started', 'Photos sent', 'Confirmed'];
@@ -186,19 +188,32 @@ export function PhotoPicker({ photos, onChange, max, label }: { photos: PickedPh
         {photos.map((photo, i) => (
           <div key={photo.id} className="picked">
             <Photo src={photo.preview} label={`${label} ${i + 1}`} />
-            <button type="button" aria-label="Remove photo" onClick={() => onChange(photos.filter((p) => p.id !== photo.id))}><X size={14} /></button>
+            <button type="button" aria-label={t('Remove photo')} onClick={() => onChange(photos.filter((p) => p.id !== photo.id))}><X size={14} /></button>
           </div>
         ))}
         {photos.length < max && (
           <button className="photo add-photo" type="button" disabled={busy} onClick={() => input.current?.click()}>
             {busy ? <Loader size={20} className="spin" /> : <Camera size={20} />}
-            <span>{busy ? 'Uploading' : `Add ${label.toLowerCase()}`}</span>
+            <span>{busy ? t('Uploading…') : t('Add {item}', { item: label.toLowerCase() })}</span>
           </button>
         )}
       </div>
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple hidden
         onChange={(event) => void pick(event.target.files)} />
       {Boolean(error) && <div className="mt-6"><ErrorNote error={error} /></div>}
+    </>
+  );
+}
+
+/** Language picker for the profile screens. */
+export function LanguageSetting({ language, onChange }: { language: Language; onChange: (language: Language) => void }) {
+  return (
+    <>
+      <p className="list-title">{t('Language')}</p>
+      <select className="lang-select" value={language} aria-label={t('App language')} onChange={(e) => onChange(e.target.value as Language)}>
+        {LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.native}{l.id === 'en' ? '' : ` · ${l.english}`}</option>)}
+      </select>
+      <p className="small mt-6">{t('Screens and voice input switch to this language. Translations are made with Sarvam AI.')}</p>
     </>
   );
 }

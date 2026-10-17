@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_rate_card, get_settings, get_work_order_service
@@ -23,6 +23,7 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 )
 def create_job(
     payload: JobCreate,
+    request: Request,
     db: Session = Depends(get_db),
     work_orders: WorkOrderService = Depends(get_work_order_service),
     rate_card: RateCard = Depends(get_rate_card),
@@ -31,6 +32,7 @@ def create_job(
     job = job_service.create_job(
         db, payload, work_orders=work_orders, rate_card=rate_card,
         upload_dir=settings.upload_path,
+        translator=request.app.state.translation_service,
     )
     return job_service.to_response(job)
 

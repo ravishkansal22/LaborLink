@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
+import { isLanguage, languageInfo, type Language } from './languages';
 
 /* The backend has no login yet, so "who am I" is kept on this device (see docs: no authentication).
    Everything else is loaded from the API. */
 
-export type Language = 'en' | 'hi';
+export type { Language };
 export type Role = 'employer' | 'worker';
 
 export interface EmployerProfile {
@@ -33,7 +34,8 @@ export const emptySession: Session = { language: 'en', role: null, employer: nul
 function read(): Session {
   try {
     const raw = window.localStorage.getItem(KEY);
-    return raw ? { ...emptySession, ...(JSON.parse(raw) as Partial<Session>) } : emptySession;
+    const saved = raw ? { ...emptySession, ...(JSON.parse(raw) as Partial<Session>) } : emptySession;
+    return isLanguage(saved.language) ? saved : { ...saved, language: 'en' };
   } catch {
     return emptySession;
   }
@@ -89,7 +91,7 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[], pollMs?: num
   return { data, error, loading, reload };
 }
 
-/* ------------------------------------------------------------------ speech to text (browser) */
+/* ------------------------------------------------------------------ speech to text */
 
 interface SpeechResultList { length: number; [index: number]: { isFinal: boolean; 0: { transcript: string } } }
 interface SpeechRecognitionLike {
@@ -99,20 +101,30 @@ interface SpeechRecognitionLike {
   onend: (() => void) | null;
   onerror: ((event: { error: string }) => void) | null;
 }
+type RecognitionCtor = new () => SpeechRecognitionLike;
 
-/** Uses the browser's speech recognition (Chrome/Edge). Returns null support if unavailable. */
 const MAX_RECORDING_MS = 25_000; // Sarvam's real-time API is meant for clips under 30 s
 const RECORDER_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
-type SpeechEngine = 'server' | 'browser' | 'none';
+export type SpeechEngine = 'browser' | 'server' | 'none';
+
+function recognitionCtor(): RecognitionCtor | undefined {
+  const w = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
+}
 
 /**
- * Voice-to-text for job descriptions. Uses Sarvam AI through the backend when the server has a
- * key (works in any browser that can record audio, good with Hindi/Hinglish); otherwise falls
- * back to the browser's own SpeechRecognition (Chrome/Edge).
+ * Voice-to-text for job descriptions.
+ * 1. The browser's own recognizer (Chrome, Edge, Android) is used first: it is free and shows
+ *    words live as you speak (`interim`), in all the app's languages.
+ * 2. Where the browser has no recognizer (or it can't handle the language), audio is recorded
+ *    and transcribed by Sarvam AI through the backend, if the server has a key. This costs
+ *    Sarvam credits, so it is only the fallback; the text arrives when you stop.
  */
 export function useSpeech(language: Language, onText: (text: string) => void) {
   const [engine, setEngine] = useState<SpeechEngine>('none');
+  const [serverReady, setServerReady] = useState(false);
   const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState('');
   const [transcribing, setTranscribing] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
@@ -121,41 +133,56 @@ export function useSpeech(language: Language, onText: (text: string) => void) {
 
   useEffect(() => {
     let cancelled = false;
-    const w = window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
-    const browser = Boolean(w.SpeechRecognition ?? w.webkitSpeechRecognition);
+    const hasBrowser = Boolean(recognitionCtor());
     const canRecord = typeof MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia);
-    setEngine(browser ? 'browser' : 'none');
+    setEngine(hasBrowser ? 'browser' : 'none');
     if (canRecord) {
       api.speechStatus()
-        .then((status) => { if (!cancelled && status.available) setEngine('server'); })
-        .catch(() => undefined); // backend down or old: keep the browser engine
+        .then((status) => {
+          if (cancelled || !status.available) return;
+          setServerReady(true);
+          if (!hasBrowser) setEngine('server');
+        })
+        .catch(() => undefined); // backend unreachable: browser recognition only
     }
     return () => {
       cancelled = true;
       if (timerRef.current) window.clearTimeout(timerRef.current);
+      recRef.current?.stop();
       recorderRef.current?.stream.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
   const startBrowser = useCallback(() => {
-    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
-    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    const Ctor = recognitionCtor();
     if (!Ctor) return;
     const rec = new Ctor();
-    rec.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    rec.lang = languageInfo(language).speech;
     rec.continuous = true;
-    rec.interimResults = false;
+    rec.interimResults = true; // words appear while you are still speaking
     rec.onresult = (event) => {
+      let pending = '';
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        if (event.results[i].isFinal) onText(event.results[i][0].transcript.trim());
+        const text = event.results[i][0].transcript;
+        if (event.results[i].isFinal) { if (text.trim()) onText(text.trim()); } else pending += text;
+      }
+      setInterim(pending.trim());
+    };
+    rec.onerror = (event) => {
+      if ((event.error === 'language-not-supported' || event.error === 'network' || event.error === 'service-not-allowed') && serverReady) {
+        setEngine('server'); // this browser can't do it: use Sarvam from now on
+        setProblem('Live typing isn’t available here. Tap Speak again — your voice will be written down when you stop.');
+      } else if (event.error === 'not-allowed') {
+        setProblem('Microphone access is blocked. Allow it in the browser, or type instead.');
+      } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
+        setProblem('Couldn’t hear that. Try again or type instead.');
       }
     };
-    rec.onerror = (event) => setProblem(event.error === 'not-allowed' ? 'Microphone access is blocked.' : 'Couldn’t hear that. Try again or type instead.');
-    rec.onend = () => setListening(false);
+    rec.onend = () => { setListening(false); setInterim(''); };
     recRef.current = rec;
     setListening(true);
     rec.start();
-  }, [language, onText]);
+  }, [language, onText, serverReady]);
 
   const startServer = useCallback(async () => {
     let stream: MediaStream;
@@ -194,8 +221,8 @@ export function useSpeech(language: Language, onText: (text: string) => void) {
 
   const start = useCallback(() => {
     setProblem(null);
-    if (engine === 'server') void startServer();
-    else if (engine === 'browser') startBrowser();
+    if (engine === 'browser') startBrowser();
+    else if (engine === 'server') void startServer();
   }, [engine, startBrowser, startServer]);
 
   const stop = useCallback(() => {
@@ -204,5 +231,5 @@ export function useSpeech(language: Language, onText: (text: string) => void) {
     setListening(false);
   }, []);
 
-  return { supported: engine !== 'none', engine, listening, transcribing, problem, start, stop };
+  return { supported: engine !== 'none', engine, listening, interim, transcribing, problem, start, stop };
 }

@@ -328,3 +328,16 @@ class WorkerLocation(Base):
     longitude: Mapped[float] = mapped_column(Float)
     accuracy_m: Mapped[float | None] = mapped_column(Float)
     recorded_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class Translation(Base):
+    """Cache of Sarvam AI translations, so each string is translated (and paid for) only once."""
+
+    __tablename__ = "translations"
+
+    source_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    source_language: Mapped[str] = mapped_column(String(8))
+    target_language: Mapped[str] = mapped_column(String(8), index=True)
+    source_text: Mapped[str] = mapped_column(Text)
+    translated_text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.main import create_app
 from app.services.speech import SpeechService
+from app.services.translation import TranslationService
 from app.services.work_orders import WorkOrderService
 
 
@@ -34,9 +35,10 @@ def make_client(settings) -> Iterator[Callable[..., TestClient]]:
     clients: list[TestClient] = []
 
     def _make(service: WorkOrderService | None = None, cfg: Settings | None = None,
-              speech_service: SpeechService | None = None) -> TestClient:
+              speech_service: SpeechService | None = None,
+              translation_service: TranslationService | None = None) -> TestClient:
         app = create_app(cfg or settings, work_order_service=service,
-                         speech_service=speech_service)
+                         speech_service=speech_service, translation_service=translation_service)
         client = TestClient(app, raise_server_exceptions=False)
         client.__enter__()
         clients.append(client)

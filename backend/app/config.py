@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     )
     sarvam_stt_model: str = ""  # empty = Sarvam's default model
     max_audio_bytes: int = Field(default=2 * 1024 * 1024, gt=0)
+    # Translation (Sarvam AI, same key). "formal" keeps the text in the native script; the
+    # colloquial modes mix in many English words.
+    sarvam_translate_model: str = "mayura:v1"
+    sarvam_translate_mode: Literal[
+        "formal", "modern-colloquial", "classic-colloquial", "code-mixed"
+    ] = "formal"
 
     @property
     def resolved_database_url(self) -> str:

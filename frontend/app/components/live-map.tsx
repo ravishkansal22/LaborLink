@@ -1,5 +1,6 @@
 'use client';
 
+import { t } from '../lib/i18n';
 import { useEffect, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
 import { LocateFixed } from 'lucide-react';
@@ -30,11 +31,16 @@ export function LiveMap({ worker, destination, route, bottomInset = 0 }: {
   const heading = useRef(0);
   const [ready, setReady] = useState(false);
   const [follow, setFollow] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   // Create the map once.
   useEffect(() => {
     let cancelled = false;
-    void import('leaflet').then((lib) => {
+    // A stale dev build can fail to serve the Leaflet chunk: retry once, then show a reload button.
+    const load = () => import('leaflet').catch(() => new Promise<typeof Leaflet>((resolve, reject) => {
+      window.setTimeout(() => { import('leaflet').then(resolve, reject); }, 1200);
+    }));
+    load().then((lib) => {
       if (cancelled || !element.current || map.current) return;
       L.current = lib;
       map.current = lib.map(element.current, { zoomControl: false, attributionControl: true }).setView([28.6139, 77.209], 13);
@@ -44,7 +50,7 @@ export function LiveMap({ worker, destination, route, bottomInset = 0 }: {
       routeLayer.current = lib.layerGroup().addTo(map.current);
       map.current.on('dragstart', () => setFollow(false));
       setReady(true);
-    });
+    }).catch(() => { if (!cancelled) setFailed(true); });
     const observer = new ResizeObserver(() => map.current?.invalidateSize());
     if (element.current) observer.observe(element.current);
     return () => {
@@ -125,9 +131,15 @@ export function LiveMap({ worker, destination, route, bottomInset = 0 }: {
 
   return (
     <div className="live-map-wrap">
-      <div ref={element} className="live-map" role="img" aria-label="Map showing the worker and the job location" />
+      <div ref={element} className="live-map" role="img" aria-label={t('Map showing the worker and the job location')} />
+      {failed && (
+        <div className="map-failed">
+          <p>{t('The map couldn’t load.')}</p>
+          <button type="button" className="btn btn-small btn-secondary" onClick={() => window.location.reload()}>{t('Reload map')}</button>
+        </div>
+      )}
       {!follow && (
-        <button type="button" className="recenter" onClick={() => setFollow(true)} aria-label="Re-center map">
+        <button type="button" className="recenter" onClick={() => setFollow(true)} aria-label={t('Re-center map')}>
           <LocateFixed size={20} />
         </button>
       )}

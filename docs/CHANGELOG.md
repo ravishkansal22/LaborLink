@@ -110,6 +110,35 @@ When submitting changes, please append an entry following this format:
   - Backend: `cd backend`, `python -m uvicorn app.main:app --reload`; `python -m pytest` (244 passed), `python -m ruff check .`.
   - Frontend: `cd frontend`, `npm run dev`, open http://localhost:3000; `npx tsc --noEmit`, `npx eslint app`.
 
+### [2026-10-17] - Multilingual app (11 languages), live dictation, map load fix
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | frontend | docs
+- **Type**: Feature + Bug fix
+- **Description**:
+  - Multilingual:
+    - The app is available in English, Hindi, Bengali, Marathi, Gujarati, Punjabi, Tamil,
+      Telugu, Kannada, Malayalam and Odia. Pick one on the first screen or in Profile.
+    - New `POST /api/v1/translate` endpoint (Sarvam AI `mayura:v1`, `formal` mode), with a
+      `translations` cache table.
+    - Frontend `t()` / `tx()` (`lib/i18n.ts`) batch the missing strings and keep them in
+      localStorage. Hand-checked Hindi overrides are in `lib/overrides.ts`. Dates are localised
+      with `Intl`.
+  - Job descriptions in an Indian script are translated to English for the work-order engine.
+    The original text is stored and shown.
+  - Dictation:
+    - **Speak** now uses the browser's recognizer first, with interim results, so words appear
+      live as you speak in the app language. It's free and saves Sarvam credits.
+    - Sarvam speech-to-text is the fallback for browsers without a recognizer.
+    - Speech now supports all 11 languages.
+  - Fix: the Leaflet chunk load is retried once, and then a "Reload map" button is shown
+    instead of crashing the screen. The `ChunkLoadError` came from a stale `.next` dev cache.
+- **Execution & Testing**:
+  - `python -m pytest`: 295 passed. `ruff`, `npx tsc --noEmit` and `npx eslint app` are clean.
+  - Live checks with a real key:
+    - The welcome screen in Tamil, and the new-job screen and job page in Hindi.
+    - A Devanagari description was priced as plumbing work, with its Hindi title kept.
+    - A 24-string screen in a new language translated in about 2.4 s.
+
 ### [2026-10-17] - Job titles from the employer's words; Sarvam AI speech-to-text
 - **Author**: Claude Code (AI assistant)
 - **Component**: backend | frontend | docs

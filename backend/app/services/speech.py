@@ -22,7 +22,10 @@ SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
 PROVIDER = "sarvam"
 
 # App language -> Sarvam BCP-47 code. Anything else lets Sarvam detect the language.
-LANGUAGE_CODES = {"en": "en-IN", "hi": "hi-IN"}
+LANGUAGE_CODES = {
+    "en": "en-IN", "hi": "hi-IN", "bn": "bn-IN", "mr": "mr-IN", "gu": "gu-IN", "pa": "pa-IN",
+    "ta": "ta-IN", "te": "te-IN", "kn": "kn-IN", "ml": "ml-IN", "od": "od-IN",
+}
 
 # Formats the browser recorder produces, plus common uploads. Sarvam accepts all of these.
 AUDIO_TYPES = {

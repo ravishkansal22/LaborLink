@@ -970,7 +970,7 @@ otherwise the app uses the browser's own speech recognition.
 | Field | Required | Notes |
 |---|---|---|
 | `file` | yes | Audio recording, under 30 seconds. Accepted: `audio/webm`, `audio/ogg`, `audio/mp4`, `audio/mpeg`, `audio/wav`, `audio/aac`, `audio/flac`. Max `LABORLINK_MAX_AUDIO_BYTES` (2 MB) |
-| `language` | no | App language: `en` → `en-IN`, `hi` → `hi-IN`; anything else lets Sarvam auto-detect |
+| `language` | no | App language (`en`, `hi`, `bn`, `mr`, `gu`, `pa`, `ta`, `te`, `kn`, `ml`, `od`) → its `xx-IN` code; anything else lets Sarvam auto-detect |
 
 **200**
 ```json
@@ -985,6 +985,39 @@ otherwise the app uses the browser's own speech recognition.
 | 429 | `speech_rate_limited` | Sarvam returned 429 (quota / rate limit) |
 | 502 | `speech_provider_error` | Sarvam unreachable, timed out, rejected the request or replied unexpectedly |
 | 503 | `speech_not_configured` | `SARVAM_API_KEY` is not set |
+
+## Translation (Sarvam AI)
+
+### POST `/api/v1/translate`
+
+Translates app text into one of the 11 supported languages (`en`, `hi`, `bn`, `mr`, `gu`, `pa`,
+`ta`, `te`, `kn`, `ml`, `od`). Each distinct string is sent to Sarvam AI once and cached in the
+`translations` table; later requests are served from the cache.
+
+**Request**
+```json
+{"target_language": "hi", "source_language": "en", "texts": ["Book a worker", "Arriving in {n} min"]}
+```
+`source_language` defaults to `en`; use `auto` for user-written text in an unknown language.
+There can be at most 200 texts per request. Texts longer than 1,000 characters are not
+translated.
+
+**200**
+```json
+{"target_language": "hi", "translations": ["कारीगर बुक करें", "{n} मिनट में पहुँचेंगे"], "available": true}
+```
+- `translations` is in the same order as `texts`.
+- `null` means "not translated yet": show the original. This happens with no key, a provider
+  error, or text that is too long.
+- `{placeholders}` are sent to Sarvam as `[0]`, `[1]`… and restored afterwards. A reply that
+  loses one keeps the English text.
+- `available` is `false` without `SARVAM_API_KEY`; cached translations are still returned.
+
+**422** `unsupported_language` for any other language code.
+
+**Job descriptions:** `POST /api/v1/jobs` with a description in an Indian script (and a key set)
+translates it to English for the work-order engine. `request.description` and
+`work_order.problem_summary` keep the employer's original words.
 
 ## Notes for frontend integration (future)
 

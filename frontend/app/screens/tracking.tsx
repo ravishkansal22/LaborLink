@@ -1,5 +1,6 @@
 'use client';
 
+import { t, tx } from '../lib/i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bike, ChevronRight, CircleCheck, Clock, House, MapPin, Navigation, Wrench } from 'lucide-react';
 import { LiveMap, googleMapsUrl, type LatLng } from '../components/live-map';
@@ -13,9 +14,9 @@ const SHEET_INSET = 290; // keeps the map's points above the bottom sheet
 
 function first(name: string) { return name.trim().split(/\s+/)[0]; }
 function agoText(seconds: number) {
-  if (seconds < 10) return 'just now';
-  if (seconds < 60) return `${seconds}s ago`;
-  return `${Math.round(seconds / 60)} min ago`;
+  if (seconds < 10) return t('just now');
+  if (seconds < 60) return t('{n}s ago', { n: seconds });
+  return t('{n} min ago', { n: Math.round(seconds / 60) });
 }
 
 /** Fetches the road route once, from the first known position of the worker. */
@@ -39,29 +40,33 @@ export function EmployerTrackScreen({ jobId, employerId, onBack }: { jobId: stri
     return { job, booking, tracking: live ? await api.tracking(jobId, employerId) : null };
   }, [jobId], 4000);
 
-  const t = data.data?.tracking ?? null;
-  const here = t?.worker_location ?? null;
-  const dest = t?.destination ?? null;
+  const trk = data.data?.tracking ?? null;
+  const here = trk?.worker_location ?? null;
+  const dest = trk?.destination ?? null;
   const route = useRoute(here, dest);
 
   if (!data.data) {
-    return <main className="screen"><div className="track-top static"><button type="button" className="icon-btn" onClick={onBack} aria-label="Back"><ArrowLeft size={20} /></button></div>
-      {data.error ? <ErrorNote error={data.error} onRetry={() => void data.reload()} /> : <Loading label="Finding your worker…" />}</main>;
+    return <main className="screen"><div className="track-top static"><button type="button" className="icon-btn" onClick={onBack} aria-label={t('Back')}><ArrowLeft size={20} /></button></div>
+      {data.error ? <ErrorNote error={data.error} onRetry={() => void data.reload()} /> : <Loading label={t('Finding your worker…')} />}</main>;
   }
   const { job, booking } = data.data;
   const name = first(booking.worker.display_name);
   const remaining = here && route ? remainingKm(route, [here.latitude, here.longitude]) : null;
-  const km = remaining ?? (t?.distance_km != null ? t.distance_km * 1.3 : null);
-  const eta = t?.arrived ? 0 : km != null ? etaMinutes(km) : t?.eta_minutes ?? null;
+  const km = remaining ?? (trk?.distance_km != null ? trk.distance_km * 1.3 : null);
+  const eta = trk?.arrived ? 0 : km != null ? etaMinutes(km) : trk?.eta_minutes ?? null;
   const progress = route && remaining != null ? Math.min(1, Math.max(0, 1 - remaining / Math.max(route.km, 0.01))) : 0;
 
-  let pill = `Waiting for ${name} to set off`;
-  let headline = 'Not started yet';
-  let sub = `You’ll see ${name} on the map as soon as they start the trip.`;
-  if (job.status === 'in_progress') { pill = 'Work in progress'; headline = `${name} is working on it`; sub = 'You’ll be asked to check the work when it’s done.'; }
-  else if (t?.arrived) { pill = `${name} has arrived`; headline = 'At your door'; sub = `${name} has reached your location.`; }
-  else if (here && eta != null) { pill = `${name} is on the way`; headline = `Arriving in ${eta} min`; sub = `${km?.toFixed(1)} km away · updated ${agoText(here.age_seconds)}`; }
-  if (here?.stale && !t?.arrived && job.status === 'booked') sub = `Location last updated ${agoText(here.age_seconds)} — ${name} may have lost signal.`;
+  let pill = t('Waiting for {name} to set off', { name });
+  let headline = t('Not started yet');
+  let sub = t('You’ll see {name} on the map as soon as they start the trip.', { name });
+  if (job.status === 'in_progress') { pill = t('Work in progress'); headline = t('{name} is working on it', { name }); sub = t('You’ll be asked to check the work when it’s done.'); }
+  else if (trk?.arrived) { pill = t('{name} has arrived', { name }); headline = t('At your door'); sub = t('{name} has reached your location.', { name }); }
+  else if (here && eta != null) {
+    pill = t('{name} is on the way', { name });
+    headline = t('Arriving in {n} min', { n: eta });
+    sub = `${t('{km} km away', { km: km?.toFixed(1) ?? '' })} · ${t('updated {when}', { when: agoText(here.age_seconds) })}`;
+  }
+  if (here?.stale && !trk?.arrived && job.status === 'booked') sub = t('Location last updated {when} — {name} may have lost signal.', { when: agoText(here.age_seconds), name });
   const over = !(job.status === 'booked' || job.status === 'in_progress');
 
   return (
@@ -70,9 +75,9 @@ export function EmployerTrackScreen({ jobId, employerId, onBack }: { jobId: stri
         <LiveMap worker={here} destination={dest} route={route?.points ?? null} bottomInset={SHEET_INSET} />
       </div>
       <div className="track-top">
-        <button type="button" className="icon-btn floating" onClick={onBack} aria-label="Back"><ArrowLeft size={20} /></button>
-        <span className={`track-pill ${t?.arrived || job.status === 'in_progress' ? 'done' : here ? 'live' : ''}`}>
-          {here && !t?.arrived && job.status === 'booked' && <span className="dot" />}{over ? 'This visit is over' : pill}
+        <button type="button" className="icon-btn floating" onClick={onBack} aria-label={t('Back')}><ArrowLeft size={20} /></button>
+        <span className={`track-pill ${trk?.arrived || job.status === 'in_progress' ? 'done' : here ? 'live' : ''}`}>
+          {here && !trk?.arrived && job.status === 'booked' && <span className="dot" />}{over ? t('This visit is over') : pill}
         </span>
       </div>
 
@@ -80,26 +85,26 @@ export function EmployerTrackScreen({ jobId, employerId, onBack }: { jobId: stri
         <div className="sheet-handle" />
         {over ? (
           <>
-            <h2 className="sheet-title">Live tracking has ended</h2>
-            <p className="small">The worker has finished at your home. Check the work from the job page.</p>
-            <button className="btn btn-primary mt-12" type="button" onClick={onBack}>Back to job</button>
+            <h2 className="sheet-title">{t('Live tracking has ended')}</h2>
+            <p className="small">{t('The worker has finished at your home. Check the work from the job page.')}</p>
+            <button className="btn btn-primary mt-12" type="button" onClick={onBack}>{t('Back to job')}</button>
           </>
         ) : (
           <>
             <div className="row spread">
               <div>
-                <p className="small">{job.status === 'in_progress' ? 'Status' : t?.arrived ? 'Arrived' : 'Estimated arrival'}</p>
+                <p className="small">{job.status === 'in_progress' ? t('Status') : trk?.arrived ? t('Arrived') : t('Estimated arrival')}</p>
                 <h2 className="sheet-title">{headline}</h2>
               </div>
-              <span className={`sheet-icon ${t?.arrived ? 'done' : ''}`}>
-                {job.status === 'in_progress' ? <Wrench size={22} /> : t?.arrived ? <CircleCheck size={22} /> : here ? <Bike size={22} /> : <Clock size={22} />}
+              <span className={`sheet-icon ${trk?.arrived ? 'done' : ''}`}>
+                {job.status === 'in_progress' ? <Wrench size={22} /> : trk?.arrived ? <CircleCheck size={22} /> : here ? <Bike size={22} /> : <Clock size={22} />}
               </span>
             </div>
             <p className="small mt-2">{sub}</p>
             {job.status === 'booked' && (
               <div className="journey mt-12">
                 <Bike size={16} />
-                <div className="journey-bar"><span style={{ width: `${(t?.arrived ? 1 : progress) * 100}%` }} /></div>
+                <div className="journey-bar"><span style={{ width: `${(trk?.arrived ? 1 : progress) * 100}%` }} /></div>
                 <House size={16} />
               </div>
             )}
@@ -107,23 +112,23 @@ export function EmployerTrackScreen({ jobId, employerId, onBack }: { jobId: stri
               <Avatar name={booking.worker.display_name} size={48} />
               <div className="grow">
                 <strong>{booking.worker.display_name}</strong>
-                <span>{booking.worker.trades.map((tr) => tradeNames[tr].en).join(', ')}{booking.worker.years_experience != null ? ` · ${booking.worker.years_experience} yrs` : ''}</span>
+                <span>{booking.worker.trades.map((tr) => t(tradeNames[tr].en)).join(', ')}{booking.worker.years_experience != null ? ` · ${t('{n} yrs', { n: booking.worker.years_experience })}` : ''}</span>
               </div>
-              <div className="right"><strong className="amount">{money(booking.agreed_total_amount, booking.currency)}</strong><small className="small">agreed</small></div>
+              <div className="right"><strong className="amount">{money(booking.agreed_total_amount, booking.currency)}</strong><small className="small">{t('agreed')}</small></div>
             </div>
             <div className="sheet-job mt-12">
               <MapPin size={14} />
-              <span>{job.work_order.problem_summary} · {job.request.location.address ?? 'your location'}</span>
+              <span>{tx(job.work_order.problem_summary)} · {job.request.location.address ?? t('your location')}</span>
             </div>
             <div className="grid-2 mt-12">
-              <button className="btn btn-small btn-secondary" type="button" onClick={onBack}>Job details</button>
-              {dest && here && job.status === 'booked' && !t?.arrived ? (
-                <a className="btn btn-small btn-secondary" href={googleMapsUrl(dest, here)} target="_blank" rel="noreferrer"><Navigation size={15} />Google Maps</a>
+              <button className="btn btn-small btn-secondary" type="button" onClick={onBack}>{t('Job details')}</button>
+              {dest && here && job.status === 'booked' && !trk?.arrived ? (
+                <a className="btn btn-small btn-secondary" href={googleMapsUrl(dest, here)} target="_blank" rel="noreferrer"><Navigation size={15} />{t('Google Maps')}</a>
               ) : <span />}
             </div>
-            {job.status === 'booked' && !t?.arrived && (
+            {job.status === 'booked' && !trk?.arrived && (
               <p className="tiny-note mt-10">
-                {route?.source === 'road' ? `Arrival time is estimated from the road route at ${SPEED_KMH} km/h city speed.` : t?.eta_basis ?? ''}
+                {route?.source === 'road' ? t('Arrival time is estimated from the road route at {speed} km/h city speed.', { speed: SPEED_KMH }) : t(trk?.eta_basis ?? '')}
               </p>
             )}
           </>
@@ -136,19 +141,19 @@ export function EmployerTrackScreen({ jobId, employerId, onBack }: { jobId: stri
 /** Compact "worker on the way" banner for the employer's home and job pages. */
 export function TrackBanner({ jobId, employerId, onOpen }: { jobId: string; employerId: string; onOpen: () => void }) {
   const tracking = useLoad(() => api.tracking(jobId, employerId), [jobId], 6000);
-  const t = tracking.data;
-  if (!t) return null;
-  const name = first(t.worker_name);
-  const here = t.worker_location;
-  const title = t.job_status === 'in_progress' ? `${name} is working on your job`
-    : t.arrived ? `${name} has arrived` : here ? `${name} is on the way` : `${name} is booked`;
-  const detail = t.job_status === 'in_progress' ? 'Tap to see the job'
-    : t.arrived ? 'At your door' : here && t.eta_minutes != null ? `Arriving in about ${t.eta_minutes} min` : 'Waiting for them to set off';
+  const trk = tracking.data;
+  if (!trk) return null;
+  const name = first(trk.worker_name);
+  const here = trk.worker_location;
+  const title = trk.job_status === 'in_progress' ? t('{name} is working on your job', { name })
+    : trk.arrived ? t('{name} has arrived', { name }) : here ? t('{name} is on the way', { name }) : t('{name} is booked', { name });
+  const detail = trk.job_status === 'in_progress' ? t('Tap to see the job')
+    : trk.arrived ? t('At your door') : here && trk.eta_minutes != null ? t('Arriving in about {n} min', { n: trk.eta_minutes }) : t('Waiting for them to set off');
   return (
     <button type="button" className="track-banner" onClick={onOpen}>
-      <span className="track-banner-icon">{t.arrived || t.job_status === 'in_progress' ? <CircleCheck size={20} /> : <Bike size={20} />}</span>
+      <span className="track-banner-icon">{trk.arrived || trk.job_status === 'in_progress' ? <CircleCheck size={20} /> : <Bike size={20} />}</span>
       <span className="grow"><strong>{title}</strong><small>{detail}</small></span>
-      <span className="track-banner-cta">Track <ChevronRight size={16} /></span>
+      <span className="track-banner-cta">{t('Track')} <ChevronRight size={16} /></span>
     </button>
   );
 }
@@ -232,10 +237,10 @@ export function WorkerTripScreen({ jobId, workerId, onBack, onStarted }: { jobId
         <LiveMap worker={pos} destination={dest} route={route?.points ?? null} bottomInset={SHEET_INSET} />
       </div>
       <div className="track-top">
-        <button type="button" className="icon-btn floating" onClick={onBack} aria-label="Back"><ArrowLeft size={20} /></button>
+        <button type="button" className="icon-btn floating" onClick={onBack} aria-label={t('Back')}><ArrowLeft size={20} /></button>
         <span className={`track-pill ${pos ? 'live' : ''}`}>
           {pos && <span className="dot" />}
-          {mode === 'demo' ? 'Demo trip · sharing location' : pos ? 'Sharing live location' : mode === 'blocked' ? 'Location is off' : 'Getting your location…'}
+          {mode === 'demo' ? t('Demo trip · sharing location') : pos ? t('Sharing live location') : mode === 'blocked' ? t('Location is off') : t('Getting your location…')}
         </span>
       </div>
 
@@ -243,26 +248,26 @@ export function WorkerTripScreen({ jobId, workerId, onBack, onStarted }: { jobId
         <div className="sheet-handle" />
         <div className="row spread">
           <div>
-            <p className="small">{arrived ? 'You’ve arrived' : 'Heading to the customer'}</p>
-            <h2 className="sheet-title">{arrived ? 'At the customer’s home' : eta != null ? `${eta} min · ${remaining?.toFixed(1)} km` : 'Route loading…'}</h2>
+            <p className="small">{arrived ? t('You’ve arrived') : t('Heading to the customer')}</p>
+            <h2 className="sheet-title">{arrived ? t('At the customer’s home') : eta != null ? t('{n} min · {km} km', { n: eta, km: remaining?.toFixed(1) ?? '' }) : t('Route loading…')}</h2>
           </div>
           <span className={`sheet-icon ${arrived ? 'done' : ''}`}>{arrived ? <CircleCheck size={22} /> : <Bike size={22} />}</span>
         </div>
-        <div className="sheet-job mt-6"><MapPin size={14} /><span>{job!.request.location.address ?? 'Customer location'} · {money(booking.agreed_total_amount, booking.currency)}</span></div>
+        <div className="sheet-job mt-6"><MapPin size={14} /><span>{job!.request.location.address ?? t('Customer location')} · {money(booking.agreed_total_amount, booking.currency)}</span></div>
 
         {mode === 'blocked' && (
           <div className="blocked mt-10">
-            <p className="small">Your location is off, so the customer can’t see you coming.</p>
-            {dest && <button className="btn btn-small btn-secondary mt-6" type="button" onClick={() => setMode('demo')}>Run a demo trip instead</button>}
+            <p className="small">{t('Your location is off, so the customer can’t see you coming.')}</p>
+            {dest && <button className="btn btn-small btn-secondary mt-6" type="button" onClick={() => setMode('demo')}>{t('Run a demo trip instead')}</button>}
           </div>
         )}
         {Boolean(error) && <div className="mt-10"><ErrorNote error={error} /></div>}
 
         {dest && (
-          <a className="btn btn-small btn-secondary mt-12" href={googleMapsUrl(dest, pos)} target="_blank" rel="noreferrer"><Navigation size={15} />Navigate in Google Maps</a>
+          <a className="btn btn-small btn-secondary mt-12" href={googleMapsUrl(dest, pos)} target="_blank" rel="noreferrer"><Navigation size={15} />{t('Navigate in Google Maps')}</a>
         )}
-        <div className="mt-12"><SwipeButton label="Swipe to start the job" busy={starting} onConfirm={() => void start()} /></div>
-        <p className="tiny-note mt-6">Only swipe once you’ve reached the customer. Sharing stops when the job starts.</p>
+        <div className="mt-12"><SwipeButton label={t('Swipe to start the job')} busy={starting} onConfirm={() => void start()} /></div>
+        <p className="tiny-note mt-6">{t('Only swipe once you’ve reached the customer. Sharing stops when the job starts.')}</p>
       </section>
     </main>
   );

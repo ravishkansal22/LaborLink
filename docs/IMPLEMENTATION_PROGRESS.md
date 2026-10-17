@@ -588,3 +588,46 @@ manual SQL fills only an empty reference and then enables the verified employer.
   the recorder-to-endpoint path was tested with a generated audio stream.
 - Recordings are capped at 25 s (Sarvam's real-time API is for clips under 30 s).
 - Voice notes are sent to Sarvam AI, a third party; tell users and get consent before a real launch.
+
+## Multilingual app, live dictation, map load fix (2026-10-17)
+
+**Done**
+- Backend:
+  - `services/translation.py`, `api/v1/translate.py` and `schemas/translate.py`.
+  - A `translations` cache table, keyed by model, mode, languages and text.
+  - One Sarvam request per string, eight in parallel. Multi-line batching was tried, but Sarvam
+    merges the lines.
+  - Placeholders are protected as `[0]`, `[1]`.
+  - Non-Latin job descriptions are translated to English before the work order is generated.
+  - 14 tests in `tests/test_translation.py`.
+- Frontend:
+  - `lib/languages.ts` (11 languages), `lib/i18n.ts` (`t`, `tx`, `useTranslations`) and
+    `lib/overrides.ts` (hand-checked Hindi).
+  - Every screen's text is wrapped in `t()`. User-written text (descriptions, summaries, offer
+    messages, notes) uses `tx()`.
+  - A language grid on the welcome screen and a language picker in both profiles.
+  - Dates are localised through `Intl` using the page `lang`.
+- Dictation:
+  - `useSpeech` prefers browser recognition with `interimResults`, shown live in the
+    description box.
+  - Sarvam recording is the fallback, used automatically when the browser reports
+    `language-not-supported`, `network` or `service-not-allowed`.
+- Map: the `import('leaflet')` is retried once, and then a "Reload map" fallback is shown.
+
+**Verified**
+- `python -m pytest`: 295 passed. `ruff`, `tsc` and `eslint` are clean.
+- Live with a real key (scratch database):
+  - The Tamil welcome screen in native script.
+  - The Hindi new-job screen with the overrides applied.
+  - A Devanagari leak description became a plumbing job (₹350–500), with its Hindi title kept.
+    The job page then rendered fully in Hindi.
+  - A 24-string screen in an uncached language translated in about 2.4 s; cached screens load
+    instantly.
+
+**Limitations**
+- Machine translation can be literal or miss context; only key Hindi strings are hand-checked.
+- Live dictation was not tested with a real microphone, because the preview browser has none.
+- The `ChunkLoadError` fallback could not be reproduced on purpose. The root cause is a stale
+  `.next` cache, which the README now explains how to clear.
+- Without `SARVAM_API_KEY` the UI stays in English (apart from strings already cached).
+

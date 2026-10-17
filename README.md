@@ -56,8 +56,14 @@ Skilled daily-wage workers mostly find work through labour chowks, middlemen and
 ## Features
 
 **Employer app**
-- Photo and voice/text job intake. Voice is transcribed by **Sarvam AI** (Hindi, English,
-  Hinglish, any browser) when the server has a key, or by the browser's own speech recognition.
+- **11 languages:** English, Hindi, Bengali, Marathi, Gujarati, Punjabi, Tamil, Telugu, Kannada,
+  Malayalam and Odia. You pick one on the first screen and can change it in Profile. Screens are
+  translated with **Sarvam AI**, and each string is cached so it is only translated once.
+- Photo and voice/text job intake. Voice input shows your words **live as you speak**, using the
+  browser's free speech recognition in your language. Where the browser can't do that, the
+  recording is transcribed by Sarvam AI instead.
+- Descriptions written in an Indian script are translated to English behind the scenes, so the
+  work order and price still work. The title and request stay exactly as you wrote them.
 - The job title is the employer's own words, so the worker sees exactly what was described.
 - Work order and FairRate price range, with a "How we worked it out" breakdown.
 - Live offers from matching workers, with distance, experience and amount, and one-tap booking.
@@ -306,6 +312,8 @@ You can also run the whole flow with the API alone; see
 | `SARVAM_API_KEY` | (none) | Turns on server speech-to-text with Sarvam AI. Get a key at <https://dashboard.sarvam.ai>. Never commit it. |
 | `LABORLINK_SARVAM_STT_MODEL` | (empty) | Sarvam model to use; empty means Sarvam's default |
 | `LABORLINK_MAX_AUDIO_BYTES` | `2097152` (2 MB) | Maximum voice-note size |
+| `LABORLINK_SARVAM_TRANSLATE_MODEL` | `mayura:v1` | Sarvam translation model |
+| `LABORLINK_SARVAM_TRANSLATE_MODE` | `formal` | `formal` keeps the native script; the colloquial modes mix in English words |
 
 **Frontend:** set these as environment variables when you start Next.js.
 
@@ -339,6 +347,7 @@ All routes are under `/api/v1`. Full request and response schemas are in
 |---|---|
 | Health & images | `GET /health`, `POST /images`, `GET /images/{id}` |
 | Speech-to-text | `GET /speech/status`, `POST /speech/transcribe` |
+| Translation | `POST /translate` |
 | Jobs | `POST /jobs`, `GET /jobs/{id}` |
 | Workers | `POST /workers`, `GET`/`PATCH /workers/{id}`, `GET /workers/{id}/jobs`, `GET /workers/{id}/offers` |
 | Marketplace | `GET /jobs/{id}/matches`, `POST`/`GET /jobs/{id}/offers`, `POST /jobs/{id}/bookings`, `GET /jobs/{id}/booking` |
@@ -369,8 +378,14 @@ This is a hackathon prototype, and some things are deliberately out of scope:
   - The ETA assumes 20 km/h and ignores traffic.
 - **Live GPS only works in some setups.** It needs `localhost` or HTTPS, plus location permission.
   Use the demo trip when recording on a laptop.
-- **Voice input** uses Sarvam AI only when `SARVAM_API_KEY` is set (recordings up to 25 s are sent
-  to Sarvam for transcription and not stored). Without a key it needs Chrome or Edge.
+- **Voice input:** live word-by-word dictation needs a browser with speech recognition (Chrome,
+  Edge, Android). Elsewhere, recordings of up to 25 s are sent to Sarvam AI (only when
+  `SARVAM_API_KEY` is set) and the text appears when you stop. Audio is not stored.
+- **Translations are machine-made** by Sarvam AI and can be too literal. The most visible Hindi
+  strings are hand-checked (`frontend/app/lib/overrides.ts`); other languages should be reviewed
+  by native speakers. Without `SARVAM_API_KEY` the app stays in English (apart from cached text).
+- **The first visit to a screen in a new language** takes a second or two while its text is
+  translated. After that it loads from the cache.
 - **The demo is set in Delhi NCR**, using a preset list of areas.
 
 ## Troubleshooting
@@ -380,6 +395,7 @@ This is a hackathon prototype, and some things are deliberately out of scope:
 | The app says it can't reach the server | Make sure the backend is running on port 8000, or set `LABORLINK_API_URL`. |
 | `Port 8000 / 3000 is already in use` | Stop the other process, or use `--port 8010` for Uvicorn or `npm run dev -- -p 3005` for Next.js. Point `LABORLINK_API_URL` at the new backend port. |
 | `Activate.ps1 cannot be loaded` | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. |
+| `ChunkLoadError` / “The map couldn’t load” | The dev server's build cache is stale. Stop `npm run dev`, delete `frontend/.next`, and start it again. |
 | The map is grey or blank | Check your internet connection. Map tiles and routes are loaded online. |
 | The worker never appears on the map | Allow location in the browser, or use **Run a demo trip instead**. |
 | You want a fresh start | Stop the backend and delete `backend/var/laborlink.db`; it's recreated on the next start. In the browser, clear site data for `localhost:3000`. |
