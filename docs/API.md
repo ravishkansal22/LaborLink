@@ -194,7 +194,7 @@ Unknown fields are rejected (422).
     "trade_source": "inferred",
     "trade_confidence": "high",
     "problem_category": "leak_repair",
-    "problem_summary": "Leaking pipe, tap or joint needs repair",
+    "problem_summary": "Bathroom tap is leaking and dripping",
     "classification_confidence": "high",
     "complexity": "low",
     "likely_tools": ["pipe wrench", "adjustable spanner", "plumber's tape", "sealant gun"],
@@ -252,7 +252,8 @@ Unknown fields are rejected (422).
 | `schema_version` | `"1.0"` |
 | `suggested_trade` / `trade_source` | trade or `null` / `employer_selected` \| `inferred` \| `unknown` |
 | `trade_confidence`, `classification_confidence` | `low` \| `medium` \| `high` |
-| `problem_category`, `problem_summary` | e.g. `leak_repair`; `unclassified` when the trade is unknown |
+| `problem_category` | e.g. `leak_repair`; `unclassified` when the trade is unknown |
+| `problem_summary` | Short job title. The rule-based generator uses the employer's own words (first sentence, max 120 characters, cut at a word); the category is in `problem_category` |
 | `complexity` | `low` \| `medium` \| `high` |
 | `likely_tools`, `likely_materials` | lists of strings ("likely", not confirmed) |
 | `estimated_duration` | `{min_hours, max_hours}`, min ≤ max |
@@ -460,7 +461,7 @@ for new jobs (no push notifications).
       "job_id": "3dfc392e-8de0-4f75-93f7-a7d2f4be47ba",
       "trade": "plumber",
       "problem_category": "leak_repair",
-      "problem_summary": "Leaking pipe, tap or joint needs repair",
+      "problem_summary": "Bathroom tap is leaking and dripping",
       "complexity": "low",
       "urgency": "normal",
       "estimated_duration": {"min_hours": 1.0, "max_hours": 2.0},
@@ -921,7 +922,7 @@ Each entry's `earning_status`:
       "job_id": "1798cb14-91e9-424e-97e0-e7590dca87a8",
       "booking_id": "aa6fd84e-4b4b-41e2-881a-939f639062a0",
       "trade": "plumber",
-      "problem_summary": "Leaking pipe, tap or joint needs repair",
+      "problem_summary": "Bathroom tap is leaking and dripping",
       "job_status": "completed",
       "earning_status": "settled",
       "agreed_labour_amount": 380,
@@ -946,6 +947,44 @@ Entries are newest first (by completion/dispute time, else booking time). Errors
 `not_found`, 422 (bad `limit`).
 
 ---
+
+## Speech-to-text (Sarvam AI)
+
+Turns a short voice note into text for the job description. The backend forwards the audio to
+the Sarvam AI speech-to-text API (`POST https://api.sarvam.ai/speech-to-text`) and returns the
+transcript. Audio is never stored or logged. The feature is on only when `SARVAM_API_KEY` is set;
+otherwise the app uses the browser's own speech recognition.
+
+### GET `/api/v1/speech/status`
+
+```json
+{"available": true, "provider": "sarvam", "max_bytes": 2097152}
+```
+
+`available` is `false` and `provider` is `null` when no key is configured.
+
+### POST `/api/v1/speech/transcribe`
+
+`multipart/form-data` with:
+
+| Field | Required | Notes |
+|---|---|---|
+| `file` | yes | Audio recording, under 30 seconds. Accepted: `audio/webm`, `audio/ogg`, `audio/mp4`, `audio/mpeg`, `audio/wav`, `audio/aac`, `audio/flac`. Max `LABORLINK_MAX_AUDIO_BYTES` (2 MB) |
+| `language` | no | App language: `en` → `en-IN`, `hi` → `hi-IN`; anything else lets Sarvam auto-detect |
+
+**200**
+```json
+{"transcript": "Bathroom ka nal tapak raha hai", "language_code": "hi-IN", "provider": "sarvam"}
+```
+
+| Status | `error.code` | When |
+|---|---|---|
+| 413 | `payload_too_large` | Recording larger than the limit |
+| 415 | `unsupported_media_type` | Not an accepted audio type |
+| 422 | `empty_audio` | Empty file |
+| 429 | `speech_rate_limited` | Sarvam returned 429 (quota / rate limit) |
+| 502 | `speech_provider_error` | Sarvam unreachable, timed out, rejected the request or replied unexpectedly |
+| 503 | `speech_not_configured` | `SARVAM_API_KEY` is not set |
 
 ## Notes for frontend integration (future)
 

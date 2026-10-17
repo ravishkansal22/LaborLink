@@ -110,6 +110,19 @@ When submitting changes, please append an entry following this format:
   - Backend: `cd backend`, `python -m uvicorn app.main:app --reload`; `python -m pytest` (244 passed), `python -m ruff check .`.
   - Frontend: `cd frontend`, `npm run dev`, open http://localhost:3000; `npx tsc --noEmit`, `npx eslint app`.
 
+### [2026-10-17] - Job titles from the employer's words; Sarvam AI speech-to-text
+- **Author**: Claude Code (AI assistant)
+- **Component**: backend | frontend | docs
+- **Type**: Bug fix + Feature
+- **Description**:
+  - Fix: the rule-based work order used a fixed category label as the job title (for example "General electrical inspection and repair"), so the title never matched what was typed. `problem_summary` is now the employer's own first sentence (max 120 characters); the category stays in `problem_category`.
+  - Fix: keyword matching accepts simple plurals ("lights", "shelves", "tiles"). Added keywords and a "fan, light or regulator" electrician category. A selected trade with no matching words in the description now raises a follow-up question.
+  - Feature: `GET /api/v1/speech/status` and `POST /api/v1/speech/transcribe` (Sarvam AI). New settings `SARVAM_API_KEY`, `LABORLINK_SARVAM_STT_MODEL`, `LABORLINK_MAX_AUDIO_BYTES`. `httpx` moved to runtime requirements.
+  - Frontend: the **Speak** button records audio (up to 25 s) and sends it to the backend when Sarvam is available; otherwise it uses browser speech recognition.
+- **Execution & Testing**:
+  - `python -m pytest` (280 passed), `python -m ruff check .`; `npx tsc --noEmit`, `npx eslint app`.
+  - Live: a real WAV and a browser WebM/Opus recording were transcribed through the endpoint; a typed job showed the typed text as its title.
+
 ### [2026-10-16] - Ride-style trip tracking
 - **Author**: Claude Code (AI assistant)
 - **Component**: frontend | docs

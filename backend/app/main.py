@@ -18,6 +18,7 @@ from app.config import Settings, get_settings
 from app.db import create_db_engine, create_session_factory, init_db
 from app.errors import register_error_handlers
 from app.services.pricing import load_rate_card
+from app.services.speech import SpeechService, build_speech_service
 from app.services.work_orders import WorkOrderService, build_work_order_service
 
 
@@ -25,6 +26,7 @@ def create_app(
     settings: Settings | None = None,
     *,
     work_order_service: WorkOrderService | None = None,
+    speech_service: SpeechService | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -55,6 +57,7 @@ def create_app(
     app.state.session_factory = create_session_factory(engine)
     app.state.rate_card = rate_card
     app.state.work_order_service = work_order_service or build_work_order_service(settings)
+    app.state.speech_service = speech_service or build_speech_service(settings)
 
     app.add_middleware(
         CORSMiddleware,

@@ -5,10 +5,11 @@ SQLAlchemy==2.0.54
 pydantic==2.14.1
 pydantic-settings==2.15.0
 python-multipart==0.0.32
+# Calls the Sarvam AI speech-to-text API (only when SARVAM_API_KEY is set)
+httpx==0.28.1
 # Optional vision-language provider (only used when LABORLINK_WORK_ORDER_PROVIDER=anthropic)
 anthropic==1.15.0
 
 # Development / testing
 pytest==9.1.1
-httpx==0.28.1
 ruff==0.17.1

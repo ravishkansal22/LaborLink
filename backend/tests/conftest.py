@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from app.services.speech import SpeechService
 from app.services.work_orders import WorkOrderService
 
 
@@ -24,6 +25,7 @@ def settings(tmp_path) -> Settings:
         upload_dir=str(tmp_path / "uploads"),
         max_upload_bytes=1024 * 1024,
         work_order_provider="rule_based",
+        SARVAM_API_KEY=None,  # never call the real speech API from tests
     )
 
 
@@ -31,8 +33,10 @@ def settings(tmp_path) -> Settings:
 def make_client(settings) -> Iterator[Callable[..., TestClient]]:
     clients: list[TestClient] = []
 
-    def _make(service: WorkOrderService | None = None, cfg: Settings | None = None) -> TestClient:
-        app = create_app(cfg or settings, work_order_service=service)
+    def _make(service: WorkOrderService | None = None, cfg: Settings | None = None,
+              speech_service: SpeechService | None = None) -> TestClient:
+        app = create_app(cfg or settings, work_order_service=service,
+                         speech_service=speech_service)
         client = TestClient(app, raise_server_exceptions=False)
         client.__enter__()
         clients.append(client)

@@ -560,3 +560,31 @@ manual SQL fills only an empty reference and then enables the verified employer.
   route, the remaining distance is measured from the nearest point on it.
 - ETA assumes a constant 20 km/h and ignores traffic.
 - CARTO basemap tiles now require an API key, so the map stays on the standard OpenStreetMap tiles.
+
+## Job titles from the employer's words; Sarvam speech-to-text (2026-10-17)
+
+**Done**
+- `services/work_orders/rule_based.py`: `problem_summary` = the employer's first sentence
+  (`summarize_description`), not a canned category label. Plural-tolerant keyword matching; more
+  keywords and a `fan_light_repair` category in `trade_rules.py`; conflicting-trade question also
+  when the chosen trade has no matching words.
+- `services/speech.py`, `api/v1/speech.py`, `schemas/speech.py`: Sarvam AI speech-to-text proxy
+  with type/size checks and clean error codes; audio is never stored or logged. 13 tests in
+  `tests/test_speech.py` use a fake transport. 8 new work-order tests.
+- Frontend `useSpeech`: records with `MediaRecorder` (WebM/Opus) and calls
+  `/speech/transcribe` when `/speech/status` says Sarvam is available; falls back to the browser's
+  SpeechRecognition.
+
+**Verified**
+- `python -m pytest`: 280 passed; `ruff`, `tsc`, `eslint`: clean.
+- With a real key: a synthesized English WAV came back word-for-word
+  ("The kitchen sink is leaking and water is dripping under the cabinet."); a WebM/Opus
+  recording from the browser was accepted (HTTP 200).
+- Typing "Bedroom fan makes a loud noise and runs very slow at full speed" created a job with
+  exactly that title, matched to an electrician.
+
+**Limitations**
+- Clicking **Speak** with a real microphone was not tested in the preview browser (no mic there);
+  the recorder-to-endpoint path was tested with a generated audio stream.
+- Recordings are capped at 25 s (Sarvam's real-time API is for clips under 30 s).
+- Voice notes are sent to Sarvam AI, a third party; tell users and get consent before a real launch.

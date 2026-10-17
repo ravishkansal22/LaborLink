@@ -120,6 +120,43 @@ def test_employer_choice_conflicting_with_description_raises_question():
     assert any("plumber work" in q for q in wo.follow_up_questions)
 
 
+@pytest.mark.parametrize(
+    "text, summary",
+    [
+        ("bedroom fan makes a loud noise and runs slow",
+         "Bedroom fan makes a loud noise and runs slow"),
+        ("The AC is not cooling. Please send someone today!", "The AC is not cooling"),
+        ("Kitchen sink is blocked.", "Kitchen sink is blocked"),
+    ],
+)
+def test_summary_uses_the_employers_own_words(text, summary):
+    assert provider.generate(_input(text)).problem_summary == summary
+
+
+def test_long_summary_is_cut_at_a_word():
+    wo = provider.generate(_input("Leaking " + "very " * 40 + "badly"))
+    assert len(wo.problem_summary) <= 120
+    assert wo.problem_summary.endswith("very…")
+
+
+@pytest.mark.parametrize(
+    "text, trade, category",
+    [
+        ("Lights in the hall keep flickering", Trade.electrician, "fan_light_repair"),
+        ("Need two new shelves in my study room", Trade.carpenter, "custom_build"),
+        ("Bathroom tiles are broken near the drain", Trade.mason, "tiling"),
+    ],
+)
+def test_plurals_and_new_keywords_are_recognised(text, trade, category):
+    wo = provider.generate(_input(text))
+    assert (wo.suggested_trade, wo.problem_category) == (trade, category)
+
+
+def test_selected_trade_with_no_matching_words_raises_question():
+    wo = provider.generate(_input("Washing machine hose is leaking", trade=Trade.electrician))
+    assert any("plumber work" in q for q in wo.follow_up_questions)
+
+
 def test_rule_based_never_claims_to_have_seen_the_photo(tmp_path):
     image = ImageInput(path=Path(tmp_path / "x.png"), content_type="image/png")
     wo = provider.generate(_input("Tap leaking", image=image))

@@ -26,8 +26,20 @@ def normalize_description(text: str) -> str:
     return text[:1].upper() + text[1:] if text else text
 
 
+_SUMMARY_MAX = 120
+
+
+def summarize_description(normalized: str) -> str:
+    """The employer's own words as a short job title: the first sentence, cut at a word."""
+    first = re.split(r"(?<=[.!?।])\s", normalized, maxsplit=1)[0].rstrip(" .!?।,;:")
+    if len(first) > _SUMMARY_MAX:
+        first = first[: _SUMMARY_MAX - 1].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
+    return first[:1].upper() + first[1:]
+
+
 def _contains(text: str, phrase: str) -> bool:
-    return re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", text) is not None
+    # Whole words, also accepting simple plurals ("light" matches "lights", "switches").
+    return re.search(rf"(?<!\w){re.escape(phrase)}(?:s|es)?(?!\w)", text) is not None
 
 
 def _score(text: str, keywords: tuple[str, ...]) -> int:
@@ -56,7 +68,7 @@ class RuleBasedProvider:
         if data.trade is not None:
             trade, trade_source, trade_conf = data.trade, "employer_selected", "high"
             other = max((t for t in Trade if t != trade), key=lambda t: scores[t])
-            if scores[other] >= 2 and scores[other] > scores[trade]:
+            if scores[other] > scores[trade] and (scores[other] >= 2 or scores[trade] == 0):
                 questions.append(
                     f"The description sounds like {other.value} work. "
                     f"Please confirm that a {trade.value} is the right worker."
@@ -78,7 +90,6 @@ class RuleBasedProvider:
             missing.append(f"Which trade is needed ({_TRADE_LIST})")
             questions.append(f"Which kind of worker do you need: {_TRADE_LIST}?")
             category = "unclassified"
-            summary = "Problem type could not be determined from the description"
             class_conf, complexity = "low", Complexity.medium
             duration, tools, materials = UNKNOWN_DURATION, (), ()
         else:
@@ -97,7 +108,7 @@ class RuleBasedProvider:
             else:
                 class_conf = "high" if best >= 2 else "medium"
             questions.extend(problem.questions)
-            category, summary = problem.category, problem.summary
+            category = problem.category
             complexity, duration = problem.complexity, problem.duration
             tools, materials = problem.tools, problem.materials
 
@@ -121,7 +132,7 @@ class RuleBasedProvider:
             trade_source=trade_source,
             trade_confidence=trade_conf,
             problem_category=category,
-            problem_summary=summary,
+            problem_summary=summarize_description(normalized),
             classification_confidence=class_conf,
             complexity=complexity,
             likely_tools=list(tools),

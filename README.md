@@ -56,7 +56,9 @@ Skilled daily-wage workers mostly find work through labour chowks, middlemen and
 ## Features
 
 **Employer app**
-- Photo and voice/text job intake. Voice uses the browser's speech recognition.
+- Photo and voice/text job intake. Voice is transcribed by **Sarvam AI** (Hindi, English,
+  Hinglish, any browser) when the server has a key, or by the browser's own speech recognition.
+- The job title is the employer's own words, so the worker sees exactly what was described.
 - Work order and FairRate price range, with a "How we worked it out" breakdown.
 - Live offers from matching workers, with distance, experience and amount, and one-tap booking.
 - **Live trip tracking:**
@@ -301,6 +303,9 @@ You can also run the whole flow with the API alone; see
 | `LABORLINK_WORK_ORDER_PROVIDER` | `rule_based` | `rule_based` (offline) or `anthropic` (Claude vision model) |
 | `LABORLINK_ANTHROPIC_MODEL` | `claude-opus-5-5` | Model used when the provider is `anthropic` |
 | `ANTHROPIC_API_KEY` | (none) | Only needed for the `anthropic` provider. Never commit it. |
+| `SARVAM_API_KEY` | (none) | Turns on server speech-to-text with Sarvam AI. Get a key at <https://dashboard.sarvam.ai>. Never commit it. |
+| `LABORLINK_SARVAM_STT_MODEL` | (empty) | Sarvam model to use; empty means Sarvam's default |
+| `LABORLINK_MAX_AUDIO_BYTES` | `2097152` (2 MB) | Maximum voice-note size |
 
 **Frontend:** set these as environment variables when you start Next.js.
 
@@ -333,6 +338,7 @@ All routes are under `/api/v1`. Full request and response schemas are in
 | Area | Endpoints |
 |---|---|
 | Health & images | `GET /health`, `POST /images`, `GET /images/{id}` |
+| Speech-to-text | `GET /speech/status`, `POST /speech/transcribe` |
 | Jobs | `POST /jobs`, `GET /jobs/{id}` |
 | Workers | `POST /workers`, `GET`/`PATCH /workers/{id}`, `GET /workers/{id}/jobs`, `GET /workers/{id}/offers` |
 | Marketplace | `GET /jobs/{id}/matches`, `POST`/`GET /jobs/{id}/offers`, `POST /jobs/{id}/bookings`, `GET /jobs/{id}/booking` |
@@ -363,7 +369,8 @@ This is a hackathon prototype, and some things are deliberately out of scope:
   - The ETA assumes 20 km/h and ignores traffic.
 - **Live GPS only works in some setups.** It needs `localhost` or HTTPS, plus location permission.
   Use the demo trip when recording on a laptop.
-- **Voice input** needs Chrome or Edge, which support the Web Speech API.
+- **Voice input** uses Sarvam AI only when `SARVAM_API_KEY` is set (recordings up to 25 s are sent
+  to Sarvam for transcription and not stored). Without a key it needs Chrome or Edge.
 - **The demo is set in Delhi NCR**, using a preset list of areas.
 
 ## Troubleshooting

@@ -285,6 +285,14 @@ export const api = {
   },
   imageUrl: (imageId: string) => `${BASE}/images/${encodeURIComponent(imageId)}`,
 
+  speechStatus: () => request<{ available: boolean; provider: 'sarvam' | null; max_bytes: number }>('/speech/status'),
+  transcribe(audio: Blob, language: string) {
+    const form = new FormData();
+    form.append('file', audio, `voice.${audio.type.includes('ogg') ? 'ogg' : audio.type.includes('mp4') ? 'm4a' : 'webm'}`);
+    form.append('language', language);
+    return request<{ transcript: string; language_code: string | null; provider: 'sarvam' }>('/speech/transcribe', { method: 'POST', body: form });
+  },
+
   createJob: (body: {
     description: string; description_source: 'text' | 'voice_transcript'; language: string;
     trade: Trade | null; urgency: Urgency; location: JobLocation; image_id: string | null; employer_id: string;

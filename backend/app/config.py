@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
     anthropic_effort: Literal["low", "medium", "high", "xhigh", "max"] = "low"
     provider_timeout_seconds: float = Field(default=30.0, gt=0)
+
+    # Speech-to-text (Sarvam AI). No key = feature off; the app uses browser recognition.
+    sarvam_api_key: SecretStr | None = Field(
+        default=None, validation_alias=AliasChoices("SARVAM_API_KEY", "LABORLINK_SARVAM_API_KEY")
+    )
+    sarvam_stt_model: str = ""  # empty = Sarvam's default model
+    max_audio_bytes: int = Field(default=2 * 1024 * 1024, gt=0)
 
     @property
     def resolved_database_url(self) -> str:

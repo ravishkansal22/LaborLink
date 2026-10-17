@@ -97,8 +97,8 @@
   <section id="summary">
     <h2>At a glance</h2>
     <div class="grid">
-      <div class="card"><span class="tag">Prototype today</span><h3>No paid service needed</h3><p>The project runs on a laptop with Python, Node.js and an internet connection. Every external service it uses today is free and needs no API key.</p></div>
-      <div class="card"><span class="tag">Next step</span><h3>Indian-language AI</h3><p>Sarvam AI for speech-to-text, translation and text-to-speech in Hindi and regional languages. OCR to read documents and labels in photos.</p></div>
+      <div class="card"><span class="tag">Prototype today</span><h3>One optional key</h3><p>The project runs on a laptop with Python, Node.js and an internet connection. The only key is the optional <code>SARVAM_API_KEY</code> for speech-to-text; everything else is free and keyless.</p></div>
+      <div class="card"><span class="tag">Next step</span><h3>Indian-language AI</h3><p>Sarvam AI speech-to-text is now built in (on when <code>SARVAM_API_KEY</code> is set). Next: Sarvam translation and text-to-speech, and OCR for documents and labels in photos.</p></div>
       <div class="card"><span class="tag">For a pilot</span><h3>Cloud, database &amp; APIs</h3><p>Cloud hosting, a managed PostgreSQL database, photo storage, maps and routing, OTP login, notifications and, later, payments and KYC.</p></div>
     </div>
     <div class="table-scroll" style="margin-top:16px">
@@ -116,7 +116,7 @@
 
   <section id="now">
     <h2>External services used today</h2>
-    <p class="lead">These are called by the running prototype. None needs a key.</p>
+    <p class="lead">These are called by the running prototype. Only Sarvam AI needs a key.</p>
     <div class="table-scroll">
       <table>
         <thead><tr><th>Service</th><th>What we use it for</th><th>Where</th><th>Key / cost</th><th>Notes</th></tr></thead>
@@ -125,6 +125,7 @@
           <tr><td><strong>OSRM public routing</strong><br><small>router.project-osrm.org</small></td><td>Road route between the worker and the home, used for the path, remaining distance and ETA</td><td>Frontend (<code>lib/route.ts</code>)</td><td>No key, free</td><td>A demo server with no uptime guarantee. The worker’s start point and the job’s coordinates are sent to it. Falls back to a straight-line estimate.</td></tr>
           <tr><td><strong>Google Maps (links only)</strong></td><td>“Navigate in Google Maps” and “Open route” buttons</td><td>Frontend</td><td>No key, free</td><td>We only open a <code>google.com/maps/dir</code> URL; nothing is embedded.</td></tr>
           <tr><td><strong>Google Fonts</strong></td><td>Mukta typeface (Latin + Devanagari)</td><td>Frontend (<code>next/font</code>)</td><td>No key, free</td><td>Downloaded at build time.</td></tr>
+          <tr><td><strong>Sarvam AI speech-to-text</strong><br><small>api.sarvam.ai</small></td><td>Voice job descriptions in Hindi, English and Hinglish</td><td>Backend (<code>services/speech.py</code>)</td><td><code>SARVAM_API_KEY</code>, pay per use</td><td>Optional: off without a key, and the app falls back to browser recognition. Recordings are sent to Sarvam and not stored by us.</td></tr>
           <tr><td><strong>Rule-based work-order engine</strong></td><td>Turns the job description into a structured work order and trade</td><td>Backend (offline)</td><td>No key</td><td>Deterministic and runs without internet. It understands common Hindi and Hinglish keywords.</td></tr>
           <tr><td><strong>GitHub</strong></td><td>Code hosting, branches, pull requests</td><td>Team</td><td>Free</td><td><a href="https://github.com/ravishkansal22/LaborLink">ravishkansal22/LaborLink</a></td></tr>
           <tr><td><strong>PyPI &amp; npm</strong></td><td>Installing dependencies</td><td>Setup</td><td>Free</td><td>Internet needed only during installation.</td></tr>
@@ -142,7 +143,8 @@
         <thead><tr><th>API</th><th>Used for</th><th>Requirement</th></tr></thead>
         <tbody>
           <tr><td><strong>Geolocation</strong> (<code>watchPosition</code>)</td><td>Worker’s live location during the trip; employer’s home location</td><td>HTTPS or <code>localhost</code>, plus the user’s permission. A phone with GPS gives the best accuracy.</td></tr>
-          <tr><td><strong>Web Speech API</strong> (SpeechRecognition)</td><td>Voice-to-text job description today</td><td>Chrome or Edge only, and weak for regional languages. The Sarvam AI speech-to-text API (below) is planned to replace it.</td></tr>
+          <tr><td><strong>Web Speech API</strong> (SpeechRecognition)</td><td>Fallback voice-to-text when no Sarvam key is set</td><td>Chrome or Edge only, and weak for regional languages.</td></tr>
+          <tr><td><strong>MediaRecorder + microphone</strong></td><td>Records the voice note (WebM/Opus, up to 25 s) that is sent to Sarvam AI</td><td>Microphone permission; HTTPS or <code>localhost</code>. Works in all modern browsers.</td></tr>
           <tr><td><strong>Camera / file picker</strong></td><td>Job photo and before/after completion photos</td><td>Any modern browser. Photos are limited to 5 MB (JPEG, PNG or WebP).</td></tr>
           <tr><td><strong>localStorage</strong></td><td>Remembers the session (role, employer and worker IDs) on the device</td><td>Clearing site data resets the app.</td></tr>
         </tbody>
@@ -158,7 +160,7 @@
       <table>
         <thead><tr><th>Service</th><th>What it does for LaborLink</th><th>Key (env var)</th><th>Priority</th></tr></thead>
         <tbody>
-          <tr><td><strong>Sarvam AI — Speech-to-Text</strong><br><small>Saarika model</small></td><td>Turns the employer’s voice note into text in Hindi, English and other Indian languages, with code-mixed Hinglish. Works on every browser, because audio is sent to our backend rather than recognised in the browser.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Must</strong></td></tr>
+          <tr><td><strong>Sarvam AI — Speech-to-Text</strong><br><small>api.sarvam.ai/speech-to-text</small></td><td>Turns the employer’s voice note into text in Hindi, English and other Indian languages, with code-mixed Hinglish. Works on every browser, because audio is sent through our backend (<code>POST /api/v1/speech/transcribe</code>) rather than recognised in the browser. Audio is not stored.</td><td><code>SARVAM_API_KEY</code></td><td><span class="ok">In use</span> (when the key is set)</td></tr>
           <tr><td><strong>Sarvam AI — Speech-to-Text-Translate</strong><br><small>Saaras model</small></td><td>Takes speech in a regional language and returns English text directly for the work-order engine, while keeping the original for the worker.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Should</strong></td></tr>
           <tr><td><strong>Sarvam AI — Text-to-Speech</strong><br><small>Bulbul model</small></td><td>Reads job details, offers and passbook entries aloud to workers with low literacy, in their language.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Should</strong></td></tr>
           <tr><td><strong>Sarvam AI — Translation</strong><br><small>Mayura model</small></td><td>Translates the work order and messages between the employer’s and the worker’s languages.</td><td><code>SARVAM_API_KEY</code></td><td><strong>Should</strong></td></tr>
@@ -320,9 +322,10 @@
           <li>FastAPI, Uvicorn</li>
           <li>Pydantic v2, pydantic-settings</li>
           <li>SQLAlchemy 2.0 + SQLite (PostgreSQL for the pilot)</li>
-          <li>python-multipart (photo uploads)</li>
+          <li>python-multipart (photo and audio uploads)</li>
+          <li>httpx (calls Sarvam AI)</li>
           <li>pytest, httpx, ruff (dev)</li>
-          <li>Planned: Alembic, httpx clients for Sarvam/OCR, Redis</li>
+          <li>Planned: Alembic, OCR client, Redis</li>
         </ul>
       </div>
       <div class="card">
@@ -368,7 +371,8 @@
         <tbody>
           <tr><td><code>LABORLINK_DATABASE_URL</code></td><td>Database connection (SQLite today, PostgreSQL in the pilot)</td><td>Backend</td><td><span class="ok">In use</span></td></tr>
           <tr><td><code>LABORLINK_API_URL</code></td><td>Where the frontend forwards API calls</td><td>Frontend</td><td><span class="ok">In use</span></td></tr>
-          <tr><td><code>SARVAM_API_KEY</code></td><td>Sarvam AI: speech-to-text, translation, text-to-speech</td><td>Backend</td><td><strong>Must</strong></td></tr>
+          <tr><td><code>SARVAM_API_KEY</code></td><td>Sarvam AI: speech-to-text (built in); translation and text-to-speech (planned)</td><td>Backend</td><td><span class="ok">In use</span></td></tr>
+          <tr><td><code>LABORLINK_SARVAM_STT_MODEL</code>, <code>LABORLINK_MAX_AUDIO_BYTES</code></td><td>Optional Sarvam model override and voice-note size limit (2 MB)</td><td>Backend</td><td><span class="ok">In use</span></td></tr>
           <tr><td><code>GOOGLE_APPLICATION_CREDENTIALS</code> or <code>AZURE_DOCINTEL_KEY</code></td><td>OCR provider</td><td>Backend</td><td>Should</td></tr>
           <tr><td><code>VISION_API_KEY</code></td><td>Image-understanding model for problem photos</td><td>Backend</td><td>Should</td></tr>
           <tr><td><code>BHASHINI_USER_ID</code>, <code>BHASHINI_API_KEY</code></td><td>Backup Indian-language AI</td><td>Backend</td><td>Later</td></tr>

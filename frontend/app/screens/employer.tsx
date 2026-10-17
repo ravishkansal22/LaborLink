@@ -160,8 +160,11 @@ export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { ses
         <div className="row spread">
           <label className="field-label" htmlFor="description">Description</label>
           {speech.supported && (
-            <button type="button" className={`mic-chip ${speech.listening ? 'on' : ''}`} onClick={speech.listening ? speech.stop : speech.start}>
-              {speech.listening ? <><span className="dot" />Listening — tap to stop</> : <><Mic size={15} />Speak</>}
+            <button type="button" className={`mic-chip ${speech.listening ? 'on' : ''}`} disabled={speech.transcribing}
+              onClick={speech.listening ? speech.stop : speech.start}>
+              {speech.transcribing ? <><span className="dot" />Writing it down…</>
+                : speech.listening ? <><span className="dot" />{speech.engine === 'server' ? 'Recording' : 'Listening'} — tap to stop</>
+                  : <><Mic size={15} />Speak</>}
             </button>
           )}
         </div>
@@ -169,6 +172,7 @@ export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { ses
           placeholder="e.g. Bathroom pump switch trips the MCB every time it’s turned on"
           onChange={(e) => setDescription(e.target.value)} />
         {!speech.supported && <p className="small with-icon mt-6"><MicOff size={13} />Voice input needs Chrome or Edge. You can type instead.</p>}
+        {speech.engine === 'server' && !speech.problem && <p className="small mt-6">Speak in Hindi, English or a mix — up to 25 seconds per recording.</p>}
         {speech.problem && <p className="small danger mt-6">{speech.problem}</p>}
       </section>
 

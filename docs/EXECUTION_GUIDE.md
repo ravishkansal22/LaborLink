@@ -81,6 +81,17 @@ This document outlines how project changes are run, tested, and validated locall
 curl.exe -X POST http://127.0.0.1:8000/api/v1/jobs -H "content-type: application/json" -d "{\"description\":\"Kitchen tap leaking\",\"location\":{\"address\":\"Ahmedabad\"}}"
 ```
 
+### Speech-to-text (optional)
+
+Set `SARVAM_API_KEY` (in `backend/.env` or the environment) to transcribe voice job descriptions
+with Sarvam AI. Check it with `GET /api/v1/speech/status` (`"available": true`). The app then
+records up to 25 seconds per tap of **Speak** and fills the description box. Without a key the
+app uses the browser's own recognition (Chrome/Edge). Quick check with any short WAV file:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8000/api/v1/speech/transcribe -F "file=@voice.wav;type=audio/wav" -F "language=en"
+```
+
 ### Phase 2 configuration
 
 No new environment variables. Offer limits live in the rate card
