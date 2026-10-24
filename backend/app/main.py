@@ -64,8 +64,8 @@ def create_app(
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origin_list,
-        allow_methods=["GET", "POST", "PATCH"],
+        allow_origins=["*"],
+        allow_methods=["*"],
         allow_headers=["*"],
     )
     register_error_handlers(app)

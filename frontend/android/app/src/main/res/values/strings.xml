@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LaborLink</string>
+    <string name="title_activity_main">LaborLink</string>
+    <string name="package_name">com.laborlink.app</string>
+    <string name="custom_url_scheme">com.laborlink.app</string>
+</resources>
