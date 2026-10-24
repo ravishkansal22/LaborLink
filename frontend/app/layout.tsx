@@ -4,6 +4,7 @@ import { Mukta } from 'next/font/google';
 import { BatteryFull, Signal, Wifi } from 'lucide-react';
 import { Clock } from './components/clock';
 import { DeviceScaler } from './device-scaler';
+import { LocationProvider } from './lib/location/LocationContext';
 import './globals.css';
 
 // Mukta is designed for Devanagari and Latin together, so Hindi and English text match.
@@ -44,7 +45,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
                 </span>
               </div>
               <div className="device-scroll" id="device-scroll">
-                {children}
+                <LocationProvider>
+                  {children}
+                </LocationProvider>
               </div>
               <div className="home-indicator" aria-hidden="true" />
             </div>
