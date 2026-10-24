@@ -79,3 +79,14 @@ Thumbs.db
 .idea/
 *.sublime-workspace
 *.sublime-project
+
+# Mobile binaries and Android build caches
+*.apk
+*.aab
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/local.properties
+frontend/android/.idea/
+frontend/android/*.iml
+frontend/android/app/*.iml

@@ -7,7 +7,7 @@ import { LiveMap, googleMapsUrl, type LatLng } from '../components/live-map';
 import { SwipeButton } from '../components/swipe';
 import { Avatar, ErrorNote, Loading } from '../components/ui';
 import { api, money, tradeNames, type Tracking } from '../lib/api';
-import { SPEED_KMH, etaMinutes, fetchRoute, pointAlong, remainingKm, type Pt, type Route } from '../lib/route';
+import { SPEED_KMH, etaMinutes, fetchRoute, pointAlong, remainingKm, type Pt, type Route } from '../lib/routing';
 import { useLoad } from '../lib/session';
 
 const SHEET_INSET = 290; // keeps the map's points above the bottom sheet

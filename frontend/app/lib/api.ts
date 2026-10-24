@@ -242,7 +242,8 @@ export class ApiError extends Error {
   }
 }
 
-const BASE = '/api/v1';
+const API_HOST = process.env.NEXT_PUBLIC_API_URL || '';
+const BASE = `${API_HOST.replace(/\/$/, '')}/api/v1`;
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const isJson = typeof init.body === 'string';
@@ -250,7 +251,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     response = await fetch(`${BASE}${path}`, {
       ...init,
-      headers: isJson ? { 'content-type': 'application/json' } : undefined,
+      headers: {
+        ...(isJson ? { 'content-type': 'application/json' } : {}),
+        'ngrok-skip-browser-warning': 'true',
+        ...(init.headers || {}),
+      },
       cache: 'no-store',
     });
   } catch {
