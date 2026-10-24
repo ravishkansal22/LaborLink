@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     upload_dir: str = "./var/uploads"
     max_upload_bytes: int = Field(default=5 * 1024 * 1024, gt=0)
     rate_card_path: str = "./app/data/rate_card.json"
-    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,capacitor://localhost,https://localhost"
 
     work_order_provider: Literal["rule_based", "anthropic"] = "rule_based"
     anthropic_model: str = "claude-opus-5-5"

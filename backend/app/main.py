@@ -63,10 +63,11 @@ def create_app(
     app.state.translation_service = translation_service or build_translation_service(settings)
 
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
     )
     register_error_handlers(app)
     app.include_router(v1_router)

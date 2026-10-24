@@ -4,7 +4,7 @@ import { t } from '../lib/i18n';
 import { useEffect, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
 import { LocateFixed } from 'lucide-react';
-import { bearing, distanceKm, type Pt } from '../lib/route';
+import { bearing, distanceKm, type Pt } from '../lib/routing';
 import 'leaflet/dist/leaflet.css';
 
 export interface LatLng { latitude: number; longitude: number }

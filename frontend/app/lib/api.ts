@@ -242,7 +242,8 @@ export class ApiError extends Error {
   }
 }
 
-const BASE = 'https://coagulant-clover-prelude.ngrok-free.dev/api/v1';
+const API_HOST = process.env.NEXT_PUBLIC_API_URL || '';
+const BASE = `${API_HOST.replace(/\/$/, '')}/api/v1`;
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const isJson = typeof init.body === 'string';
