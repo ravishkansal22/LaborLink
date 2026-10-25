@@ -13,6 +13,7 @@ import {
 import { TrackBanner } from './tracking';
 import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, type Trade, type Urgency } from '../lib/api';
 import { useLoad, useSpeech, type Language, type Session } from '../lib/session';
+import { LocationHeader, LocationPicker } from '../components/location';
 
 const tradeIcons: Record<Trade, JSX.Element> = {
   electrician: <Zap size={20} />, plumber: <Droplets size={20} />, mason: <BrickWall size={20} />, carpenter: <Hammer size={20} />,
@@ -59,6 +60,7 @@ function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
 export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }: {
   session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
   const jobs = useMyJobs(session, 10000);
   const active = (jobs.data ?? []).filter((j) => !finished(j));
   const onTheWay = active.filter((j) => j.status === 'booked' || j.status === 'in_progress');
@@ -66,12 +68,17 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }
   return (
     <main className="screen has-nav">
       <header className="home-head">
-        <div className="location-btn">
-          <MapPin size={16} />
-          <span><small>{t('Your location')}</small><strong>{employer.address}</strong></span>
-        </div>
+        <LocationHeader onClick={() => setPickerOpen(true)} />
         <button type="button" onClick={go.profile} aria-label={t('Profile')} className="plain"><Avatar name={employer.name} size={36} /></button>
       </header>
+
+      <LocationPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onAdd={() => {
+          // Add address placeholder for Agent B
+        }}
+      />
 
       {onTheWay.map((j) => (
         <div key={j.id} className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={() => onTrack(j.id)} /></div>

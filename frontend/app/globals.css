@@ -24,6 +24,14 @@
   --stage: #e7e9f4;
   --radius: 16px;
   --radius-sm: 12px;
+
+  /* Location feature green tokens (Zomato style) */
+  --loc-green: #0C831F;
+  --loc-green-soft: #E8F5EA;
+  --loc-bg: #F4F5F9;
+  --loc-text: #1C1C1C;
+  --loc-muted: #6B7280;
+
   font-family: var(--font-mukta), system-ui, sans-serif;
   color: var(--ink);
 }
