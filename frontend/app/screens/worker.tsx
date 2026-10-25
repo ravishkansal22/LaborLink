@@ -17,6 +17,16 @@ import { useLoad, type Language } from '../lib/session';
 import { AvailabilitySwitch } from '../components/AvailabilitySwitch';
 import { WorkerProfileScreenNew } from '../components/profile/worker';
 import { WorkerProfileScreenLegacy } from '../components/profile/worker/WorkerProfileScreen.legacy';
+import { WorkerHomeScreenNew } from '../components/worker-home/HomeScreen.new';
+import { FindWorkScreenNew } from '../components/worker-jobs/FindWorkScreen.new';
+import { OpportunityScreenNew } from '../components/worker-job-detail/OpportunityScreen.new';
+
+/** Flip to false to restore the legacy Worker Home layout instantly. */
+const USE_NEW_WORKER_HOME = true;
+/** Flip to false to restore the legacy Find work layout instantly. */
+const USE_NEW_FIND_WORK = true;
+/** Flip to false to restore the legacy opportunity / job-detail layout instantly. */
+const USE_NEW_JOB_DETAIL = true;
 
 export type WorkerGo = { home: () => void; jobs: () => void; passbook: () => void; profile: () => void };
 function workerNav(active: 'home' | 'jobs' | 'passbook' | 'profile', go: WorkerGo) {
@@ -74,7 +84,19 @@ function OpportunityRow({ item, onOpen }: { item: Opportunity; onOpen: () => voi
 
 /* ------------------------------------------------------------------ home */
 
-export function WorkerHomeScreen({ workerId, go, onOpenJob, onOpportunity }: { workerId: string; go: WorkerGo; onOpenJob: (id: string) => void; onOpportunity: (o: Opportunity) => void }) {
+export function WorkerHomeScreen(props: {
+  workerId: string; go: WorkerGo; onOpenJob: (id: string) => void; onOpportunity: (o: Opportunity) => void;
+}) {
+  if (USE_NEW_WORKER_HOME) {
+    return <WorkerHomeScreenNew {...props} />;
+  }
+  return <WorkerHomeScreenLegacy {...props} />;
+}
+
+/** Legacy Worker Home — restore via USE_NEW_WORKER_HOME = false. */
+function WorkerHomeScreenLegacy({ workerId, go, onOpenJob, onOpportunity }: {
+  workerId: string; go: WorkerGo; onOpenJob: (id: string) => void; onOpportunity: (o: Opportunity) => void;
+}) {
   const data = useLoad(async () => {
     const [worker, passbook, offers, opportunities] = await Promise.all([
       api.getWorker(workerId), api.passbook(workerId), api.workerOffers(workerId), api.opportunities(workerId),
@@ -159,7 +181,19 @@ export function WorkerHomeScreen({ workerId, go, onOpenJob, onOpportunity }: { w
 
 /* ------------------------------------------------------------------ find work */
 
-export function FindWorkScreen({ workerId, go, onOpportunity }: { workerId: string; go: WorkerGo; onOpportunity: (o: Opportunity) => void }) {
+export function FindWorkScreen(props: {
+  workerId: string; go: WorkerGo; onOpportunity: (o: Opportunity) => void;
+}) {
+  if (USE_NEW_FIND_WORK) {
+    return <FindWorkScreenNew {...props} />;
+  }
+  return <FindWorkScreenLegacy {...props} />;
+}
+
+/** Legacy Find work — restore via USE_NEW_FIND_WORK = false. */
+function FindWorkScreenLegacy({ workerId, go, onOpportunity }: {
+  workerId: string; go: WorkerGo; onOpportunity: (o: Opportunity) => void;
+}) {
   const data = useLoad(async () => {
     const [worker, opportunities] = await Promise.all([api.getWorker(workerId), api.opportunities(workerId)]);
     return { worker, opportunities };
@@ -204,7 +238,19 @@ export function FindWorkScreen({ workerId, go, onOpportunity }: { workerId: stri
 
 /* ------------------------------------------------------------------ one opportunity, offers */
 
-export function OpportunityScreen({ workerId, opportunity, onBack, onCounter, onSent }: { workerId: string; opportunity: Opportunity; onBack: () => void; onCounter: () => void; onSent: () => void }) {
+export function OpportunityScreen(props: {
+  workerId: string; opportunity: Opportunity; onBack: () => void; onCounter: () => void; onSent: () => void;
+}) {
+  if (USE_NEW_JOB_DETAIL) {
+    return <OpportunityScreenNew {...props} />;
+  }
+  return <OpportunityScreenLegacy {...props} />;
+}
+
+/** Legacy opportunity detail — restore via USE_NEW_JOB_DETAIL = false. */
+function OpportunityScreenLegacy({ workerId, opportunity, onBack, onCounter, onSent }: {
+  workerId: string; opportunity: Opportunity; onBack: () => void; onCounter: () => void; onSent: () => void;
+}) {
   const o = opportunity;
   const terms = o.offer_terms;
   const [saving, setSaving] = useState(false);

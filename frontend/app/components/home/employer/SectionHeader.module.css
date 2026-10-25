@@ -1,0 +1,52 @@
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--pf-text, var(--ink));
+  min-width: 0;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 2px;
+  margin: -10px 0;
+  border: none;
+  background: transparent;
+  color: var(--pf-muted, var(--ink-3));
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+}
+
+.action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+}
+
+.action:active {
+  opacity: 0.75;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action:hover {
+    color: var(--pf-brand, var(--brand));
+  }
+}

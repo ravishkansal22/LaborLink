@@ -1,0 +1,80 @@
+.card {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--pf-brand-dark, var(--brand-dark)) 92%, #0a1628) 0%,
+      var(--pf-brand, var(--brand)) 100%
+    );
+  color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--pf-brand, var(--brand)) 35%, transparent);
+}
+
+.label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: color-mix(in srgb, #ffffff 78%, transparent);
+}
+
+.amount {
+  display: block;
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.split span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.split small {
+  font-size: 12px;
+  font-weight: 500;
+  color: color-mix(in srgb, #ffffff 72%, transparent);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #cfe8ff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+}
+
+.link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #ffffff 40%, transparent);
+}
+
+.link:active {
+  opacity: 0.85;
+}

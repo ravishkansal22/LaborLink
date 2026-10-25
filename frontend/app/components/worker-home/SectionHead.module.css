@@ -1,0 +1,55 @@
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 24px 0 12px;
+}
+
+.title {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--pf-text, var(--ink));
+}
+
+.meta {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pf-muted, var(--ink-3));
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin: -10px 0;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  color: var(--pf-muted, var(--ink-3));
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+}
+
+.action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action:hover {
+    color: var(--pf-brand, var(--brand));
+  }
+}

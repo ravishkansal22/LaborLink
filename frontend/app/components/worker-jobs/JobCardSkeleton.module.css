@@ -1,0 +1,67 @@
+.root {
+  pointer-events: none;
+}
+
+.block {
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--pf-surface-2, var(--surface-2)) 0%,
+    color-mix(in srgb, var(--pf-surface, var(--surface)) 40%, var(--pf-surface-2, var(--surface-2))) 50%,
+    var(--pf-surface-2, var(--surface-2)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.art {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+
+.meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chip {
+  width: 72px;
+  height: 18px;
+}
+
+.title {
+  width: 80%;
+  height: 16px;
+}
+
+.facts {
+  width: 60%;
+  height: 12px;
+}
+
+.apply {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 36px;
+  border-radius: 9999px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+  }
+}
