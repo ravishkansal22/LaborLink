@@ -14,6 +14,10 @@ import { TrackBanner } from './tracking';
 import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, type Trade, type Urgency } from '../lib/api';
 import { useLoad, useSpeech, type Language, type Session } from '../lib/session';
 import { LocationHeader, LocationPicker } from '../components/location';
+import { WorkerGrid } from '../components/worker-grid';
+
+/** Flip to false to restore the old 2×2 trade-tile grid instantly. */
+const USE_3D_WORKER_GRID = true;
 
 const tradeIcons: Record<Trade, JSX.Element> = {
   electrician: <Zap size={20} />, plumber: <Droplets size={20} />, mason: <BrickWall size={20} />, carpenter: <Hammer size={20} />,
@@ -93,15 +97,21 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }
         <button type="button" className="btn btn-primary mt-12" onClick={() => onNewJob()}><Mic size={18} />{t('Describe a new job')}</button>
       </section>
 
-      <div className="section-head"><h2 className="h3">{t('Book a worker')}</h2></div>
-      <div className="grid-2">
-        {allTrades.map((trade) => (
-          <button key={trade} type="button" className="trade-tile" onClick={() => onNewJob(trade)}>
-            <span className="tile-icon">{tradeIcons[trade]}</span>
-            <span><strong>{t(tradeNames[trade].en)}</strong><small>{currentLanguage() === 'en' ? tradeNames[trade].hi : tradeNames[trade].en}</small></span>
-          </button>
-        ))}
-      </div>
+      {USE_3D_WORKER_GRID ? (
+        <WorkerGrid onSelect={(trade) => onNewJob(trade)} />
+      ) : (
+        <>
+          <div className="section-head"><h2 className="h3">{t('Book a worker')}</h2></div>
+          <div className="grid-2">
+            {allTrades.map((trade) => (
+              <button key={trade} type="button" className="trade-tile" onClick={() => onNewJob(trade)}>
+                <span className="tile-icon">{tradeIcons[trade]}</span>
+                <span><strong>{t(tradeNames[trade].en)}</strong><small>{currentLanguage() === 'en' ? tradeNames[trade].hi : tradeNames[trade].en}</small></span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="section-head">
         <h2 className="h3">{t('Your active jobs')}</h2>
