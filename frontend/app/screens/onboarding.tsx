@@ -143,7 +143,7 @@ const CURRENT = '__current__';
 
 export function ProfileSetupScreen({ role, session, onBack, onEmployerReady, onWorkerReady }: {
   role: Role; session: Session; onBack: () => void;
-  onEmployerReady: (profile: { name: string; phone: string; address: string; latitude: number; longitude: number }) => void;
+  onEmployerReady: (profile: { name: string; phone: string; address: string; latitude: number; longitude: number; userId?: string }) => void;
   onWorkerReady: (workerId: string) => void;
 }) {
   // Employer and worker are different people, so only an employer's own details are prefilled.
@@ -173,9 +173,24 @@ export function ProfileSetupScreen({ role, session, onBack, onEmployerReady, onW
     setSaving(true);
     setError(null);
     try {
+      // 1. Authenticate with backend and get permanent unique UUID
+      const authUser = await api.login({
+        phone: `+91${phone}`,
+        name: name.trim(),
+        role: role,
+        mode: 'auto',
+      });
+
       if (role === 'employer') {
         const address = [street.trim(), place.name === 'Current location' ? '' : place.name].filter(Boolean).join(', ') || 'Current location';
-        onEmployerReady({ name: name.trim(), phone, address, latitude: place.latitude, longitude: place.longitude });
+        onEmployerReady({ 
+          name: name.trim(), 
+          phone, 
+          address, 
+          latitude: place.latitude, 
+          longitude: place.longitude,
+          userId: authUser.user_id, // Pass real user ID
+        });
       } else {
         const worker = await api.createWorker({
           display_name: name.trim(),

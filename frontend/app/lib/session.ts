@@ -22,6 +22,7 @@ export interface EmployerProfile {
 export interface Session {
   language: Language;
   role: Role | null;
+  userId?: string | null;
   employer: EmployerProfile | null;
   workerId: string | null;
   jobIds: string[]; // jobs this employer posted from this device (the API has no "list my jobs" yet)
@@ -29,7 +30,15 @@ export interface Session {
 }
 
 const KEY = 'laborlink.session.v1';
-export const emptySession: Session = { language: 'en', role: null, employer: null, workerId: null, jobIds: [], coords: null };
+export const emptySession: Session = { 
+  language: 'en', 
+  role: null, 
+  userId: null, 
+  employer: null, 
+  workerId: null, 
+  jobIds: [], 
+  coords: null 
+};
 
 function read(): Session {
   try {
