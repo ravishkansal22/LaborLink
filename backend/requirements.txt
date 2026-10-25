@@ -13,3 +13,5 @@ anthropic==1.15.0
 # Development / testing
 pytest==9.1.1
 ruff==0.17.1
+
+google-genai

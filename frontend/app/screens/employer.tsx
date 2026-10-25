@@ -1,7 +1,7 @@
 'use client';
 
 import { currentLanguage, t, tx } from '../lib/i18n';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight, BadgeCheck, BrickWall, BriefcaseBusiness, ChevronRight, CircleCheck, ClipboardList, Droplets, Hammer, House,
   LogOut, MapPin, Mic, MicOff, Navigation, RefreshCw, Send, ShieldCheck, Sparkles, TriangleAlert, UserRound, Users, Wallet, Zap,
@@ -129,9 +129,18 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }
 export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { session: Session; initialTrade?: Trade; onBack: () => void; onCreated: (job: Job) => void }) {
   const employer = session.employer!;
   const [photos, setPhotos] = useState<PickedPhoto[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState('');
   const [description, setDescription] = useState('');
   const [usedVoice, setUsedVoice] = useState(false);
   const [trade, setTrade] = useState<Trade | null>(initialTrade ?? null);
+  const tradeManuallySelectedRef = useRef(Boolean(initialTrade));
+
+  const chooseTrade = (nextTrade: Trade | null) => {
+    tradeManuallySelectedRef.current = true;
+    setTrade(nextTrade);
+    };
   const [urgency, setUrgency] = useState<Urgency>('normal');
   const [address, setAddress] = useState(employer.address);
   const [saving, setSaving] = useState(false);
@@ -142,6 +151,53 @@ export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { ses
     setDescription((current) => (current ? `${current} ${text}` : text));
   }, []);
   const speech = useSpeech(session.language, onText);
+  const imageId = photos[0]?.id;
+
+useEffect(() => {
+  let cancelled = false;
+
+  if (!imageId) {
+    setSuggestions([]);
+    setSuggestionsError('');
+    setSuggestionsLoading(false);
+    return;
+  }
+
+  setSuggestions([]);
+  setSuggestionsError('');
+  setSuggestionsLoading(true);
+
+  api.suggestImageDescriptions(imageId)
+    .then((result) => {
+      if (!cancelled) {
+        setSuggestions(result.suggestions);
+
+        if (!tradeManuallySelectedRef.current) {
+          setTrade(
+            result.recommended_trade === 'not_sure'
+              ? null
+              : result.recommended_trade,
+          );
+        }
+      }
+    })
+    .catch(() => {
+      if (!cancelled) {
+        setSuggestionsError(
+          'Could not generate suggestions. You can still enter the description manually.',
+        );
+      }
+    })
+    .finally(() => {
+      if (!cancelled) {
+        setSuggestionsLoading(false);
+      }
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, [imageId]);
 
   const submit = async () => {
     setSaving(true);
@@ -194,11 +250,53 @@ export function NewJobScreen({ session, initialTrade, onBack, onCreated }: { ses
 
       <p className="field-label mt-16">{t('Photo of the problem')} <span className="tiny-tag">{t('optional')}</span></p>
       <PhotoPicker photos={photos} onChange={setPhotos} max={1} label={t('Photo')} />
+      
+      {imageId && (
+        <section className="mt-12" aria-live="polite">
+          <p className="field-label">
+            <Sparkles size={16} /> {t('AI job description suggestions')}
+          </p>
+
+          {suggestionsLoading && (
+            <p className="small mt-6">
+              {t('Analysing your photo and generating suggestions…')}
+            </p>
+          )}
+
+          {suggestionsError && (
+            <p className="small mt-6" role="status">
+              {t(suggestionsError)}
+            </p>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="stack mt-6">
+              <p className="small">
+                {t('Choose a suggestion to fill your description. You can edit it afterwards.')}
+              </p>
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={`${imageId}-${index}`}
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setDescription(suggestion);
+                    setUsedVoice(false);
+                  }}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
 
       <p className="field-label mt-16">{t('Who do you need?')}</p>
       <div className="tag-row">
-        <button type="button" className={`tag ${trade === null ? 'on' : ''}`} onClick={() => setTrade(null)}><Sparkles size={14} />{t('Not sure')}</button>
-        {allTrades.map((tr) => <button key={tr} type="button" className={`tag ${trade === tr ? 'on' : ''}`} onClick={() => setTrade(tr)}>{t(tradeNames[tr].en)}</button>)}
+        <button type="button" className={`tag ${trade === null ? 'on' : ''}`} onClick={() => chooseTrade(null)}><Sparkles size={14} />{t('Not sure')}</button>
+        {allTrades.map((tr) => <button key={tr} type="button" className={`tag ${trade === tr ? 'on' : ''}`} onClick={() => chooseTrade(tr)}>{t(tradeNames[tr].en)}</button>)}
       </div>
 
       <p className="field-label mt-16">{t('When?')}</p>

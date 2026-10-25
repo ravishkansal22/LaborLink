@@ -291,6 +291,19 @@ export const api = {
     return request<UploadedImage>('/images', { method: 'POST', body: form });
   },
   imageUrl: (imageId: string) => `${BASE}/images/${encodeURIComponent(imageId)}`,
+  suggestImageDescriptions: (imageId: string) =>
+    request<{
+      recommended_trade:
+        | 'electrician'
+        | 'plumber'
+        | 'mason'
+        | 'carpenter'
+        | 'not_sure';
+      suggestions: string[];
+    }>(
+      `/images/${encodeURIComponent(imageId)}/suggestions`,
+      { method: 'POST' },
+    ),
 
   translate: (texts: string[], targetLanguage: string, sourceLanguage: 'en' | 'auto' = 'en') =>
     post<{ target_language: string; translations: Array<string | null>; available: boolean }>('/translate', {

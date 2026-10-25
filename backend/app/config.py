@@ -39,7 +39,11 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
     anthropic_effort: Literal["low", "medium", "high", "xhigh", "max"] = "low"
     provider_timeout_seconds: float = Field(default=30.0, gt=0)
-
+    gemini_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("GEMINI_API_KEY", "LABORLINK_GEMINI_API_KEY"),
+    )
+    gemini_model: str = "gemini-3.5-flash-lite"
     # Speech-to-text (Sarvam AI). No key = feature off; the app uses browser recognition.
     sarvam_api_key: SecretStr | None = Field(
         default=None, validation_alias=AliasChoices("SARVAM_API_KEY", "LABORLINK_SARVAM_API_KEY")

@@ -56,7 +56,9 @@ class PayloadTooLargeError(AppError):
 class DatabaseUnavailableError(AppError):
     status_code = 503
     code = "database_unavailable"
-
+class ServiceUnavailableError(AppError):
+    status_code = 503
+    code = "service_unavailable"
 
 def error_body(code: str, message: str, details: list[Any] | None = None) -> dict[str, Any]:
     return {"error": {"code": code, "message": message, "details": details}}
