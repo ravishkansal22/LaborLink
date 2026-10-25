@@ -33,6 +33,23 @@ from app.db import Base, UTCDateTime, utcnow
 def new_id() -> str:
     return str(uuid.uuid4())
 
+class User(Base):
+    """Central identity record.
+
+    Provides a persistent, global unique identifier for both workers and
+    employers. Users can identify via phone, email, or both.
+    """
+
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    phone: Mapped[str | None] = mapped_column(String(20), unique=True, index=True, nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
+    name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="worker")  # "worker", "employer", "both"
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
+
 
 class ImageUpload(Base):
     """Metadata for an uploaded job photo. The binary lives on disk, never in the database."""
