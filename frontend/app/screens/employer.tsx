@@ -13,7 +13,8 @@ import {
 import { TrackBanner } from './tracking';
 import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, type Trade, type Urgency } from '../lib/api';
 import { useLoad, useSpeech, type Language, type Session } from '../lib/session';
-import { LocationHeader, LocationPicker } from '../components/location';
+import { LocationHeader } from '../components/location';
+import { useLocation } from '../lib/location';
 import { WorkerGrid } from '../components/worker-grid';
 import { ProfileScreen as ProfileScreenNew } from '../components/profile/ProfileScreen';
 
@@ -67,7 +68,7 @@ function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
 export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }: {
   session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const { openPicker } = useLocation();
   const jobs = useMyJobs(session, 10000);
   const active = (jobs.data ?? []).filter((j) => !finished(j));
   const onTheWay = active.filter((j) => j.status === 'booked' || j.status === 'in_progress');
@@ -75,17 +76,9 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }
   return (
     <main className="screen has-nav">
       <header className="home-head">
-        <LocationHeader onClick={() => setPickerOpen(true)} />
+        <LocationHeader onClick={() => openPicker()} />
         <button type="button" onClick={go.profile} aria-label={t('Profile')} className="plain"><Avatar name={employer.name} size={36} /></button>
       </header>
-
-      <LocationPicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onAdd={() => {
-          // Add address placeholder for Agent B
-        }}
-      />
 
       {onTheWay.map((j) => (
         <div key={j.id} className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={() => onTrack(j.id)} /></div>

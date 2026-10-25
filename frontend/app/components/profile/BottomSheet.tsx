@@ -6,7 +6,7 @@
  *
  * Features:
  *  - Backdrop click / Escape key / close button → onClose()
- *  - Scroll-lock on <body> while open; cleaned up on close
+ *  - Ref-counted scroll-lock on #device-scroll while open; cleaned up on close
  *  - Focus trap: first focusable child receives focus on open
  *  - Respects prefers-reduced-motion for the slide animation
  *  - Safe-area padding at the bottom (CSS env())
@@ -15,6 +15,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { acquireScrollLock } from '../../lib/location/scrollLock';
 
 interface BottomSheetProps {
   open: boolean;
@@ -28,12 +29,10 @@ interface BottomSheetProps {
 export function ProfileBottomSheet({ open, onClose, title, children, noHandle }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  /* Scroll-lock while open */
+  /* Ref-counted lock on #device-scroll (shared with LocationPicker) */
   useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    if (!open) return undefined;
+    return acquireScrollLock();
   }, [open]);
 
   /* Escape key */

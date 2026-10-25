@@ -28,7 +28,6 @@ import { useProfile, maskPhone, computeCompletion, type ProfileData } from '../_
 import { EditProfileStub } from '../EditProfileStub';
 import { LanguageSheet } from '../LanguageSheet';
 import { ComingSoonSheet } from '../ComingSoonSheet';
-import { LocationPicker } from '../../location';
 import { useLocation } from '../../../lib/location';
 import { languageInfo, type Language } from '../../../lib/languages';
 import type { Session } from '../../../lib/session';
@@ -91,11 +90,10 @@ function AccountProfileScreenInner({
   onLanguage,
 }: AccountProfileScreenProps) {
   const { profile } = useProfile(session);
-  const { selected } = useLocation();
+  const { selected, openPicker } = useLocation();
   const { preference } = useTheme();
   const [edit, setEdit] = useState<EditState>({ open: false });
   const [langOpen, setLangOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [soon, setSoon] = useState<SoonId>(null);
 
@@ -143,7 +141,7 @@ function AccountProfileScreenInner({
       title: t('Saved addresses'),
       subtitle: addressSub,
       icon: MapPin,
-      onPress: () => setPickerOpen(true),
+      onPress: () => openPicker(),
       showChevron: true,
     },
     {
@@ -244,8 +242,6 @@ function AccountProfileScreenInner({
       />
 
       <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
-
-      <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
 
       <BottomNav
         items={[
