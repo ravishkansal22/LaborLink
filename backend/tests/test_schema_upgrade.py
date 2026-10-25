@@ -33,7 +33,7 @@ def test_phase1_database_is_upgraded_in_place(settings, make_client):
     created = init_db(engine)
     assert sorted(created) == [
         "bookings", "completion_evidence", "completion_evidence_images", "completion_reviews",
-        "job_executions", "offers", "settlements", "translations", "worker_locations", "workers",
+        "job_executions", "offers", "settlements", "translations", "users", "worker_locations", "workers",
     ]  # Phase 2 + 3 + tracking tables; jobs.employer_ref already exists in this metadata-built DB
     assert init_db(engine) == []  # idempotent
     index_names = {i["name"] for i in inspect(engine).get_indexes("offers")}
