@@ -9,11 +9,19 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
+import dynamic from 'next/dynamic';
 import { getCurrentCoords, LocationPermissionDeniedError } from './geolocation';
 import { reverseGeocode } from './geocode';
 import { nearbyPlaces } from './nearbyPlaces';
 import { loadAddresses, loadSelectedId, saveAddresses, saveSelectedId } from './storage';
 import type { Coords, LocationStatus, PlaceSuggestion, SavedAddress } from './types';
+
+/** Single app-wide picker host (avoids circular import with LocationPicker). */
+const LocationPicker = dynamic(
+  () =>
+    import('../../components/location/LocationPicker').then((m) => m.LocationPicker),
+  { ssr: false },
+);
 
 export interface CurrentLocationInfo {
   coords: Coords;
@@ -32,6 +40,12 @@ export interface LocationContextValue {
   addAddress: (data: Omit<SavedAddress, 'id' | 'createdAt'>) => SavedAddress;
   updateAddress: (id: string, patch: Partial<SavedAddress>) => void;
   removeAddress: (id: string) => void;
+  /** Whether the shared LocationPicker overlay is open. */
+  isPickerOpen: boolean;
+  /** Open the single app-wide location picker (Home header / Saved addresses). */
+  openPicker: () => void;
+  /** Close the shared location picker. */
+  closePicker: () => void;
 }
 
 const LocationContext = createContext<LocationContextValue | null>(null);
@@ -48,6 +62,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const [nearby, setNearby] = useState<PlaceSuggestion[]>([]);
   const [status, setStatus] = useState<LocationStatus>('idle');
   const [hydrated, setHydrated] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  const openPicker = useCallback(() => setIsPickerOpen(true), []);
+  const closePicker = useCallback(() => setIsPickerOpen(false), []);
 
   useEffect(() => {
     setSaved(loadAddresses());
@@ -162,6 +180,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       addAddress,
       updateAddress,
       removeAddress,
+      isPickerOpen,
+      openPicker,
+      closePicker,
     }),
     [
       selected,
@@ -175,10 +196,19 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       addAddress,
       updateAddress,
       removeAddress,
+      isPickerOpen,
+      openPicker,
+      closePicker,
     ],
   );
 
-  return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>;
+  return (
+    <LocationContext.Provider value={value}>
+      {children}
+      {/* Single LocationPicker for the whole app — screens only call openPicker(). */}
+      <LocationPicker open={isPickerOpen} onClose={closePicker} />
+    </LocationContext.Provider>
+  );
 }
 
 /**

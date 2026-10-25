@@ -15,10 +15,20 @@ import {
 } from 'lucide-react';
 import { useLocation } from '../../lib/location/LocationContext';
 import { searchPlaces } from '../../lib/location/geocode';
+import { acquireScrollLock } from '../../lib/location/scrollLock';
 import type { PlaceSuggestion, SavedAddress } from '../../lib/location/types';
 import { SavedAddressCard } from './SavedAddressCard';
 import { NearbyRow } from './NearbyRow';
 import { AddAddressSheet } from './AddAddressSheet';
+
+/** Exit slide duration — must match transition-transform duration below. */
+const EXIT_MS = 250;
+
+/**
+ * Overlay z-index scale (phone container):
+ *   content < bottom-nav (15) < picker (100) < sheets (600) < toasts (700)
+ * Mount once via LocationProvider; screens only call openPicker()/closePicker().
+ */
 
 interface LocationPickerProps {
   open: boolean;
@@ -46,6 +56,9 @@ export function LocationPicker({
 
   const [mounted, setMounted] = useState(false);
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  /** Keep in DOM during exit slide; unmount when fully closed (zero layout space). */
+  const [present, setPresent] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<PlaceSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -55,7 +68,7 @@ export function LocationPicker({
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Locate the phone screen container on mount
+  // Locate the phone screen container on mount (portal target = phone frame root)
   useEffect(() => {
     setMounted(true);
     const container =
@@ -65,22 +78,29 @@ export function LocationPicker({
     setPortalTarget(container);
   }, []);
 
-  // Lock phone scroll container while open
+  // Mounted/visible two-state: open → present+slide up; close → slide down then unmount
   useEffect(() => {
-    if (!open) return undefined;
-    const scrollEl = document.getElementById('device-scroll');
-    if (scrollEl) {
-      const prevOverflow = scrollEl.style.overflow;
-      scrollEl.style.overflow = 'hidden';
-      return () => {
-        scrollEl.style.overflow = prevOverflow;
-      };
+    if (open) {
+      setPresent(true);
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
     }
+    setVisible(false);
+    setIsAddSheetOpen(false);
+    setAddressToEdit(null);
+    const timer = window.setTimeout(() => setPresent(false), EXIT_MS);
+    return () => window.clearTimeout(timer);
   }, [open]);
+
+  // Ref-counted lock on #device-scroll while picker is showing
+  useEffect(() => {
+    if (!visible) return undefined;
+    return acquireScrollLock();
+  }, [visible]);
 
   // Handle escape key
   useEffect(() => {
-    if (!open) return undefined;
+    if (!visible) return undefined;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -88,11 +108,11 @@ export function LocationPicker({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  }, [visible, onClose]);
 
   // Focus search input when opened
   useEffect(() => {
-    if (open) {
+    if (visible) {
       const timer = setTimeout(() => {
         searchInputRef.current?.focus();
       }, 150);
@@ -100,7 +120,7 @@ export function LocationPicker({
     }
     setSearchQuery('');
     setSearchResults([]);
-  }, [open]);
+  }, [visible]);
 
   // Debounced search
   useEffect(() => {
@@ -151,17 +171,24 @@ export function LocationPicker({
     }
   };
 
-  if (!mounted || !portalTarget) return null;
+  // Closed = fully unmounted (preferred): zero layout space, no flow contribution
+  if (!mounted || !portalTarget || !present) return null;
 
   const content = (
     <>
       <div
         className={`absolute inset-0 z-[100] flex flex-col bg-[var(--loc-bg)] text-[var(--loc-text)] transition-transform duration-[250ms] ease-out ${
-        open ? 'translate-y-0' : 'translate-y-full pointer-events-none'
+        visible ? 'translate-y-0' : 'translate-y-full pointer-events-none'
       }`}
       role="dialog"
       aria-modal="true"
       aria-label="Select a location"
+      aria-hidden={!visible}
+      ref={(node) => {
+        if (!node) return;
+        if (!visible) node.setAttribute('inert', '');
+        else node.removeAttribute('inert');
+      }}
     >
       {/* Top Navigation Bar */}
       <div className="flex items-center gap-2 px-4 pt-12 pb-3 bg-white border-b border-slate-100 shrink-0">

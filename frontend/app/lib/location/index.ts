@@ -20,3 +20,4 @@ export {
   type CurrentLocationInfo,
   type LocationContextValue,
 } from './LocationContext';
+export { acquireScrollLock } from './scrollLock';

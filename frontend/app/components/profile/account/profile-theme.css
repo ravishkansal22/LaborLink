@@ -1,0 +1,749 @@
+/**
+ * Profile theme tokens (--pf-*). Hosted on [data-theme] (phone .device-screen
+ * and .pf-theme-root). Light values match the pre-theme look exactly.
+ */
+
+/* ── Light (exact current Profile look) ─────────────────────── */
+[data-theme="light"] {
+  --pf-bg: #faf8ff;
+  --pf-surface: #ffffff;
+  --pf-surface-2: #eef0ff;
+  --pf-border: #e2e5f3;
+  --pf-text: #10193c;
+  --pf-muted: #7a7f92;
+  --pf-muted-2: #4f5568;
+  --pf-brand: #0758d8;
+  --pf-brand-dark: #0647b0;
+  --pf-brand-soft: #e3e9ff;
+  --pf-on-brand: #ffffff;
+  --pf-danger: #d13939;
+  --pf-overlay: rgba(16, 25, 60, 0.45);
+}
+
+/* ── Dark ───────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --pf-bg: #0f1115;
+  --pf-surface: #171a21;
+  --pf-surface-2: #1f232c;
+  --pf-border: #2a303c;
+  --pf-text: #f3f4f6;
+  --pf-muted: #9ca3af;
+  --pf-muted-2: #c4c9d4;
+  /* Lightened blue for ≥4.5:1 text / ≥3:1 icon on dark surfaces */
+  --pf-brand: #6b9fff;
+  --pf-brand-dark: #8bb3ff;
+  --pf-brand-soft: #1a2740;
+  --pf-on-brand: #0f1115;
+  --pf-danger: #f07178;
+  --pf-overlay: rgba(0, 0, 0, 0.55);
+}
+
+/* Wrapper must not break #device-scroll flex layout */
+.pf-theme-root {
+  display: contents;
+}
+
+/* Smooth theme transitions (Profile + phone chrome) */
+.device-screen[data-theme],
+.acct {
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device-screen[data-theme],
+  .pf-theme-root,
+  .acct,
+  .acct * {
+    transition: none !important;
+  }
+}
+
+/* Phone chrome while Profile theme is active */
+.device-screen[data-theme="dark"],
+.device-screen[data-theme="light"] {
+  background: var(--pf-bg);
+}
+
+.device-screen[data-theme="dark"] .status-bar,
+.device-screen[data-theme="light"] .status-bar {
+  background: var(--pf-bg);
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme="dark"] .home-indicator {
+  background: var(--pf-text);
+}
+
+/* Map account aliases → pf tokens */
+.acct {
+  --acct-bg: var(--pf-bg);
+  --acct-ink: var(--pf-text);
+  --acct-ink-2: var(--pf-muted-2);
+  --acct-muted: var(--pf-muted);
+  --acct-brand: var(--pf-brand);
+  --acct-brand-dark: var(--pf-brand-dark);
+  --acct-brand-soft: var(--pf-brand-soft);
+  --acct-danger: var(--pf-danger);
+  --acct-press: var(--pf-surface-2);
+  --acct-surface: var(--pf-surface);
+  --acct-focus: var(--pf-brand);
+
+  color: var(--pf-text);
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.acct-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 2px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* ── top bar (gear) ─────────────────────────────────────────── */
+.acct-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 40px;
+  margin: 0 -4px;
+}
+
+.acct-gear-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--acct-ink-2);
+  transition: background 0.12s;
+}
+
+.acct-gear-btn:hover {
+  background: var(--acct-press);
+}
+
+.acct-gear-btn:focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 2px;
+}
+
+/* ── hero: name + avatar ────────────────────────────────────── */
+.acct-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.acct-hero-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.acct-hero-text:focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 4px;
+}
+
+.acct-name {
+  display: block;
+  margin: 0;
+  font-size: clamp(34px, 9.2vw, 40px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--acct-ink);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.acct-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.acct-chip-role {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 6px;
+  background: var(--acct-brand-soft);
+  color: var(--acct-brand);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.acct-chip-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--acct-muted);
+}
+
+.acct-avatar-btn {
+  flex: 0 0 auto;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid var(--pf-border);
+  background: var(--acct-brand);
+  color: var(--pf-on-brand);
+  display: grid;
+  place-items: center;
+  transition: transform 0.1s, opacity 0.1s;
+}
+
+.acct-avatar-btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.acct-avatar-btn:focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 3px;
+}
+
+.acct-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.acct-avatar-initials {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--pf-on-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-avatar-btn,
+  .acct-gear-btn,
+  .acct-row {
+    transition: none;
+  }
+}
+
+/* ── completion ─────────────────────────────────────────────── */
+.acct-completion {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.acct-completion:not(:disabled):focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.acct-completion:disabled {
+  cursor: default;
+}
+
+.acct-completion-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acct-ink-2);
+}
+
+.acct-completion-done {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acct-brand);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.acct-completion-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--acct-brand-soft);
+  overflow: hidden;
+}
+
+.acct-completion-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--acct-brand);
+  transition: width 400ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-completion-fill {
+    transition: none;
+  }
+}
+
+/* ── verify banner ──────────────────────────────────────────── */
+.acct-verify {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--acct-brand-soft);
+  width: 100%;
+}
+
+.acct-verify-icon {
+  flex: 0 0 auto;
+  color: var(--acct-brand);
+  display: grid;
+  place-items: center;
+}
+
+.acct-verify-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--acct-ink);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acct-verify-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--acct-brand);
+  color: var(--pf-on-brand);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.acct-verify-btn:hover {
+  background: var(--acct-brand-dark);
+}
+
+.acct-verify-btn:focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 2px;
+}
+
+/* ── flat rows ──────────────────────────────────────────────── */
+.acct-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0 -4px;
+  padding: 0;
+}
+
+.acct-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 16px 8px;
+  text-align: left;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.08s;
+  color: var(--acct-ink);
+}
+
+.acct-row:active {
+  background: var(--acct-press);
+}
+
+.acct-row:focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 0;
+}
+
+.acct-row-icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--acct-ink);
+}
+
+.acct-row-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acct-row-title {
+  font-size: 16.5px;
+  font-weight: 500;
+  color: var(--acct-ink);
+  line-height: 1.25;
+}
+
+.acct-row-sub {
+  font-size: 14px;
+  color: var(--acct-muted);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acct-row-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 42%;
+}
+
+.acct-row-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--acct-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acct-row-chevron {
+  flex: 0 0 auto;
+  color: var(--acct-muted);
+  opacity: 0.7;
+}
+
+.acct-row-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--acct-brand);
+  color: var(--pf-on-brand);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── footer ─────────────────────────────────────────────────── */
+.acct-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.acct-signout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--acct-danger);
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.acct-signout:focus-visible {
+  outline: 2px solid var(--acct-focus);
+  outline-offset: 2px;
+}
+
+.acct-employer-id {
+  font-size: 13px;
+  color: var(--acct-muted);
+  text-align: center;
+}
+
+/* ── Theme sheet rows ───────────────────────────────────────── */
+.pf-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+}
+
+.pf-theme-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  text-align: left;
+  color: var(--pf-text);
+  transition: background 0.08s;
+}
+
+.pf-theme-option:active {
+  background: var(--pf-surface-2);
+}
+
+.pf-theme-option:focus-visible {
+  outline: 2px solid var(--pf-brand);
+  outline-offset: 0;
+}
+
+.pf-theme-option-icon {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--pf-surface-2);
+  color: var(--pf-brand);
+}
+
+.pf-theme-option-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-theme-option-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pf-text);
+}
+
+.pf-theme-option-desc {
+  font-size: 13px;
+  color: var(--pf-muted);
+  line-height: 1.3;
+}
+
+.pf-theme-option-check {
+  flex: 0 0 auto;
+  color: var(--pf-brand);
+}
+
+.pf-theme-done {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Profile primitives (sheets / toast / edit / bottom nav) while
+   data-theme is on the phone container — no globals.css edits.
+   Light mode: values equal the previous look.
+   ══════════════════════════════════════════════════════════════ */
+
+.device-screen[data-theme] .prof-sheet-overlay {
+  background: var(--pf-overlay);
+}
+
+.device-screen[data-theme] .prof-sheet {
+  background: var(--pf-surface);
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .prof-sheet-title {
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .prof-sheet-close {
+  border-color: var(--pf-border);
+  background: var(--pf-surface);
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .prof-cs-icon {
+  background: var(--pf-brand-soft);
+  color: var(--pf-brand);
+}
+
+.device-screen[data-theme] .prof-cs-text {
+  color: var(--pf-muted-2);
+}
+
+.device-screen[data-theme] .prof-lang-note {
+  color: var(--pf-muted);
+}
+
+.device-screen[data-theme] .prof-lang-row {
+  border-top-color: var(--pf-border);
+}
+
+.device-screen[data-theme] .prof-lang-row:active {
+  background: var(--pf-surface-2);
+}
+
+.device-screen[data-theme] .prof-lang-native {
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .prof-lang-english {
+  color: var(--pf-muted);
+}
+
+.device-screen[data-theme] .prof-lang-row-active .prof-lang-native {
+  color: var(--pf-brand);
+}
+
+.device-screen[data-theme] .prof-lang-check {
+  color: var(--pf-brand);
+}
+
+.device-screen[data-theme] .prof-toast {
+  background: var(--pf-text);
+  color: var(--pf-bg);
+}
+
+.device-screen[data-theme] .bottom-nav {
+  background: var(--pf-surface);
+  border-top-color: var(--pf-border);
+}
+
+.device-screen[data-theme] .bottom-nav button {
+  color: var(--pf-muted);
+}
+
+.device-screen[data-theme] .bottom-nav button.active {
+  color: var(--pf-brand);
+}
+
+.device-screen[data-theme] .btn-primary {
+  background: var(--pf-brand);
+  color: var(--pf-on-brand);
+}
+
+.device-screen[data-theme] .btn-primary:hover {
+  background: var(--pf-brand-dark);
+}
+
+.device-screen[data-theme] .btn-ghost.danger,
+.device-screen[data-theme] .danger {
+  color: var(--pf-danger);
+}
+
+.device-screen[data-theme] .small,
+.device-screen[data-theme] .muted {
+  color: var(--pf-muted);
+}
+
+.device-screen[data-theme] .h1,
+.device-screen[data-theme] .h2,
+.device-screen[data-theme] .h3,
+.device-screen[data-theme] .appbar-title {
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .appbar {
+  background: var(--pf-bg);
+}
+
+.device-screen[data-theme] .icon-btn {
+  border-color: var(--pf-border);
+  background: var(--pf-surface);
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .screen {
+  color: var(--pf-text);
+}
+
+/* Edit Profile stub + future edit fields */
+.device-screen[data-theme] .prof-edit-stub {
+  color: var(--pf-muted-2);
+}
+
+.device-screen[data-theme] .field-label {
+  color: var(--pf-muted-2);
+}
+
+.device-screen[data-theme] input,
+.device-screen[data-theme] select,
+.device-screen[data-theme] textarea,
+.device-screen[data-theme] .phone-field {
+  background: var(--pf-surface);
+  border-color: var(--pf-border);
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] input:disabled,
+.device-screen[data-theme] select:disabled,
+.device-screen[data-theme] textarea:disabled,
+.device-screen[data-theme] .phone-field:has(input:disabled),
+.device-screen[data-theme] [aria-readonly="true"],
+.device-screen[data-theme] .pf-readonly {
+  background: var(--pf-surface-2);
+  color: var(--pf-muted);
+  border-color: var(--pf-border);
+  opacity: 1;
+}
+
+.device-screen[data-theme] .segmented {
+  background: var(--pf-surface-2);
+}
+
+.device-screen[data-theme] .segmented span {
+  color: var(--pf-muted-2);
+}
+
+.device-screen[data-theme] .segmented span.on {
+  background: var(--pf-surface);
+  color: var(--pf-text);
+}
+
+.device-screen[data-theme] .error-note,
+.device-screen[data-theme] .pf-error {
+  color: var(--pf-danger);
+  background: color-mix(in srgb, var(--pf-danger) 14%, var(--pf-surface));
+  border-color: color-mix(in srgb, var(--pf-danger) 35%, var(--pf-border));
+}
+
+.device-screen[data-theme="dark"] .chip-green,
+.device-screen[data-theme="dark"] .tag.on {
+  background: var(--pf-brand-soft);
+  color: var(--pf-brand);
+  border-color: var(--pf-brand);
+}
