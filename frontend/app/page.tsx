@@ -5,6 +5,7 @@ import { Loading } from './components/ui';
 import { api, ApiError, type Job, type Opportunity, type Trade } from './lib/api';
 import { setLanguage, useTranslations } from './lib/i18n';
 import { useSession, type Language, type Role } from './lib/session';
+import { useLocation } from './lib/location';
 import {
   EmployerHomeScreen, EmployerJobScreen, EmployerJobsScreen, EmployerProfileScreen, NewJobScreen, type EmployerGo,
 } from './screens/employer';
@@ -68,7 +69,11 @@ export default function App() {
   }, [session]);
 
   const route = stack[stack.length - 1];
-  useEffect(() => { document.getElementById('device-scroll')?.scrollTo({ top: 0 }); }, [route]);
+  const { closePicker } = useLocation();
+  useEffect(() => {
+    document.getElementById('device-scroll')?.scrollTo({ top: 0 });
+    closePicker(); // tab/route change must leave overlays inert
+  }, [route, closePicker]);
 
   if (!session || !route) return <main className="screen"><Loading /></main>;
 

@@ -13,7 +13,15 @@ import {
 import { TrackBanner } from './tracking';
 import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, type Trade, type Urgency } from '../lib/api';
 import { useLoad, useSpeech, type Language, type Session } from '../lib/session';
-import { LocationHeader, LocationPicker } from '../components/location';
+import { LocationHeader } from '../components/location';
+import { useLocation } from '../lib/location';
+import { WorkerGrid } from '../components/worker-grid';
+import { ProfileScreen as ProfileScreenNew } from '../components/profile/ProfileScreen';
+
+/** Flip to false to restore the old 2×2 trade-tile grid instantly. */
+const USE_3D_WORKER_GRID = true;
+/** Flip to false to instantly restore the old Profile design. */
+const USE_NEW_PROFILE = true;
 
 const tradeIcons: Record<Trade, JSX.Element> = {
   electrician: <Zap size={20} />, plumber: <Droplets size={20} />, mason: <BrickWall size={20} />, carpenter: <Hammer size={20} />,
@@ -60,7 +68,7 @@ function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
 export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }: {
   session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const { openPicker } = useLocation();
   const jobs = useMyJobs(session, 10000);
   const active = (jobs.data ?? []).filter((j) => !finished(j));
   const onTheWay = active.filter((j) => j.status === 'booked' || j.status === 'in_progress');
@@ -68,17 +76,9 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }
   return (
     <main className="screen has-nav">
       <header className="home-head">
-        <LocationHeader onClick={() => setPickerOpen(true)} />
+        <LocationHeader onClick={() => openPicker()} />
         <button type="button" onClick={go.profile} aria-label={t('Profile')} className="plain"><Avatar name={employer.name} size={36} /></button>
       </header>
-
-      <LocationPicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onAdd={() => {
-          // Add address placeholder for Agent B
-        }}
-      />
 
       {onTheWay.map((j) => (
         <div key={j.id} className="mt-12"><TrackBanner jobId={j.id} employerId={employer.employerId} onOpen={() => onTrack(j.id)} /></div>
@@ -93,15 +93,21 @@ export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }
         <button type="button" className="btn btn-primary mt-12" onClick={() => onNewJob()}><Mic size={18} />{t('Describe a new job')}</button>
       </section>
 
-      <div className="section-head"><h2 className="h3">{t('Book a worker')}</h2></div>
-      <div className="grid-2">
-        {allTrades.map((trade) => (
-          <button key={trade} type="button" className="trade-tile" onClick={() => onNewJob(trade)}>
-            <span className="tile-icon">{tradeIcons[trade]}</span>
-            <span><strong>{t(tradeNames[trade].en)}</strong><small>{currentLanguage() === 'en' ? tradeNames[trade].hi : tradeNames[trade].en}</small></span>
-          </button>
-        ))}
-      </div>
+      {USE_3D_WORKER_GRID ? (
+        <WorkerGrid onSelect={(trade) => onNewJob(trade)} />
+      ) : (
+        <>
+          <div className="section-head"><h2 className="h3">{t('Book a worker')}</h2></div>
+          <div className="grid-2">
+            {allTrades.map((trade) => (
+              <button key={trade} type="button" className="trade-tile" onClick={() => onNewJob(trade)}>
+                <span className="tile-icon">{tradeIcons[trade]}</span>
+                <span><strong>{t(tradeNames[trade].en)}</strong><small>{currentLanguage() === 'en' ? tradeNames[trade].hi : tradeNames[trade].en}</small></span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="section-head">
         <h2 className="h3">{t('Your active jobs')}</h2>
@@ -506,7 +512,9 @@ export function EmployerJobsScreen({ session, go, onOpenJob, onNewJob }: { sessi
   );
 }
 
-export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut, onLanguage }: {
+// ─── Profile screen toggle ────────────────────────────────────────────────────
+/** Legacy profile (kept for one-line revert – set USE_NEW_PROFILE = false) */
+function EmployerProfileScreenLegacy({ session, go, onWorkerMode, onSignOut, onLanguage }: {
   session: Session; go: EmployerGo; onWorkerMode: () => void; onSignOut: () => void; onLanguage: (language: Language) => void;
 }) {
   const e = session.employer!;
@@ -534,4 +542,14 @@ export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut, on
       {employerNav('profile', go)}
     </main>
   );
+}
+
+/** EmployerProfileScreen – routes to new or legacy design via USE_NEW_PROFILE flag. */
+export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut, onLanguage }: {
+  session: Session; go: EmployerGo; onWorkerMode: () => void; onSignOut: () => void; onLanguage: (language: Language) => void;
+}) {
+  if (!USE_NEW_PROFILE) {
+    return <EmployerProfileScreenLegacy session={session} go={go} onWorkerMode={onWorkerMode} onSignOut={onSignOut} onLanguage={onLanguage} />;
+  }
+  return <ProfileScreenNew session={session} go={go} onWorkerMode={onWorkerMode} onSignOut={onSignOut} onLanguage={onLanguage} />;
 }
