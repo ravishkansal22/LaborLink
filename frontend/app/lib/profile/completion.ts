@@ -81,3 +81,63 @@ export function computeCompletion(base: CompletionBase, extras: ProfileExtras | 
   const percent = Math.round((earned / total) * 100);
   return { percent, missingFields };
 }
+
+/** Inputs for {@link computeWorkerCompletion} (employer {@link computeCompletion} unchanged). */
+export interface WorkerCompletionBase {
+  hasName: boolean;
+  hasPhone: boolean;
+  hasPhoto: boolean;
+  hasEmail: boolean;
+  hasDobOrGender: boolean;
+  hasTrade: boolean;
+  hasYearsExperience: boolean;
+  hasBaseLocation: boolean;
+}
+
+const WORKER_WEIGHTS = {
+  name: 15,
+  phone: 15,
+  photo: 10,
+  email: 10,
+  dobOrGender: 10,
+  trade: 15,
+  yearsExperience: 10,
+  baseLocation: 15,
+} as const;
+
+/**
+ * Worker profile completion — separate from employer weights so employer
+ * {@link computeCompletion} stays byte-identical.
+ */
+export function computeWorkerCompletion(base: WorkerCompletionBase): CompletionResult {
+  let earned = 0;
+  const missingFields: string[] = [];
+
+  if (base.hasName) earned += WORKER_WEIGHTS.name;
+  else missingFields.push('Full name');
+
+  if (base.hasPhone) earned += WORKER_WEIGHTS.phone;
+  else missingFields.push('Phone');
+
+  if (base.hasPhoto) earned += WORKER_WEIGHTS.photo;
+  else missingFields.push('Photo');
+
+  if (base.hasEmail) earned += WORKER_WEIGHTS.email;
+  else missingFields.push('Email');
+
+  if (base.hasDobOrGender) earned += WORKER_WEIGHTS.dobOrGender;
+  else missingFields.push('Date of birth or gender');
+
+  if (base.hasTrade) earned += WORKER_WEIGHTS.trade;
+  else missingFields.push('Trade');
+
+  if (base.hasYearsExperience) earned += WORKER_WEIGHTS.yearsExperience;
+  else missingFields.push('Years of experience');
+
+  if (base.hasBaseLocation) earned += WORKER_WEIGHTS.baseLocation;
+  else missingFields.push('Base location');
+
+  const total = Object.values(WORKER_WEIGHTS).reduce((a, b) => a + b, 0);
+  const percent = Math.round((earned / total) * 100);
+  return { percent, missingFields };
+}

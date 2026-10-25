@@ -6,7 +6,8 @@ export const MAX_PHOTO_DATA_URL_CHARS = 300 * 1024;
 
 /**
  * Builds the versioned localStorage key for one user.
- * @param userKey Stable id — prefer `employerId` (e.g. `emp-9911050007`).
+ * @param userKey Stable id — prefer role-scoped ids so extras never collide:
+ *   employer `emp-9911050007`, worker `worker-<workerId>`.
  */
 export function extrasKey(userKey: string): string {
   return `${KEY_PREFIX}${userKey}`;
@@ -105,5 +106,10 @@ function parseExtras(value: unknown): ProfileExtras | null {
   if (typeof v.photoDataUrl === 'string') extras.photoDataUrl = v.photoDataUrl;
   if (typeof v.businessName === 'string') extras.businessName = v.businessName;
   if (typeof v.alternatePhone === 'string') extras.alternatePhone = v.alternatePhone;
+  if (typeof v.phone === 'string') extras.phone = v.phone;
+  if (typeof v.yearsExperience === 'number' && Number.isFinite(v.yearsExperience)) {
+    extras.yearsExperience = v.yearsExperience;
+  }
+  if (typeof v.aboutYou === 'string') extras.aboutYou = v.aboutYou;
   return extras;
 }

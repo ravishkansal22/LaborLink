@@ -10,6 +10,18 @@ export interface ProfileExtras {
   photoDataUrl?: string;
   businessName?: string;
   alternatePhone?: string;
+  /**
+   * Worker-only: 10-digit setup phone kept on-device (backend Worker has no phone).
+   * Never used for employers — their phone stays on the session.
+   */
+  phone?: string;
+  /**
+   * Worker Edit Profile only — local display extras.
+   * Backend `years_experience` remains the source for the main Profile trade line.
+   */
+  yearsExperience?: number;
+  /** Worker Edit Profile only — short bio, max 200 chars, local-only. */
+  aboutYou?: string;
   updatedAt: number;
 }
 

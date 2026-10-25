@@ -8,13 +8,20 @@ export type {
 export { PhotoTooLargeError } from './types';
 export { maskPhone } from './mask';
 export { getInitials } from './initials';
-export { computeCompletion, type CompletionBase } from './completion';
+export {
+  computeCompletion,
+  computeWorkerCompletion,
+  type CompletionBase,
+  type WorkerCompletionBase,
+} from './completion';
 export {
   validateName,
   validateEmail,
   validatePhone,
   validateDob,
   validateBusinessName,
+  validateAboutYou,
+  validateYearsExperience,
 } from './validation';
 export {
   loadExtras,
