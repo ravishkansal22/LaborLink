@@ -15,9 +15,12 @@ import { allTrades, api, capitalise, hours, money, tradeNames, when, type Job, t
 import { useLoad, useSpeech, type Language, type Session } from '../lib/session';
 import { LocationHeader, LocationPicker } from '../components/location';
 import { WorkerGrid } from '../components/worker-grid';
+import { ProfileScreen as ProfileScreenNew } from '../components/profile/ProfileScreen';
 
 /** Flip to false to restore the old 2×2 trade-tile grid instantly. */
 const USE_3D_WORKER_GRID = true;
+/** Flip to false to instantly restore the old Profile design. */
+const USE_NEW_PROFILE = true;
 
 const tradeIcons: Record<Trade, JSX.Element> = {
   electrician: <Zap size={20} />, plumber: <Droplets size={20} />, mason: <BrickWall size={20} />, carpenter: <Hammer size={20} />,
@@ -516,7 +519,9 @@ export function EmployerJobsScreen({ session, go, onOpenJob, onNewJob }: { sessi
   );
 }
 
-export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut, onLanguage }: {
+// ─── Profile screen toggle ────────────────────────────────────────────────────
+/** Legacy profile (kept for one-line revert – set USE_NEW_PROFILE = false) */
+function EmployerProfileScreenLegacy({ session, go, onWorkerMode, onSignOut, onLanguage }: {
   session: Session; go: EmployerGo; onWorkerMode: () => void; onSignOut: () => void; onLanguage: (language: Language) => void;
 }) {
   const e = session.employer!;
@@ -544,4 +549,14 @@ export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut, on
       {employerNav('profile', go)}
     </main>
   );
+}
+
+/** EmployerProfileScreen – routes to new or legacy design via USE_NEW_PROFILE flag. */
+export function EmployerProfileScreen({ session, go, onWorkerMode, onSignOut, onLanguage }: {
+  session: Session; go: EmployerGo; onWorkerMode: () => void; onSignOut: () => void; onLanguage: (language: Language) => void;
+}) {
+  if (!USE_NEW_PROFILE) {
+    return <EmployerProfileScreenLegacy session={session} go={go} onWorkerMode={onWorkerMode} onSignOut={onSignOut} onLanguage={onLanguage} />;
+  }
+  return <ProfileScreenNew session={session} go={go} onWorkerMode={onWorkerMode} onSignOut={onSignOut} onLanguage={onLanguage} />;
 }
