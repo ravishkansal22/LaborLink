@@ -108,10 +108,13 @@ function AccountProfileScreenInner({
         session={session}
         focusField={edit.focusField}
         onBack={closeEdit}
-        onUpdated={(updatedName) => {
+        onUpdated={(updatedName, updatedEmail) => {
           setCurrentName(updatedName);
           if (session.employer) {
             session.employer.name = updatedName;
+            if (updatedEmail) {
+              (session.employer as any).email = updatedEmail;
+            }
           }
         }}
       />

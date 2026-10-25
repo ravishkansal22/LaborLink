@@ -16,18 +16,20 @@ interface EditProfileProps {
 export function EditProfileStub({ session, focusField, onBack, onUpdated }: EditProfileProps) {
   const currentName = session?.employer?.name || '';
   const currentPhone = session?.employer?.phone || '';
+  const currentEmail = (session?.employer as any)?.email || '';
   const userId = session?.userId || session?.employer?.employerId || '';
 
   const [name, setName] = useState(currentName);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(currentEmail);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    if (!trimmedName) return;
 
     setSaving(true);
     setError(null);
@@ -35,8 +37,8 @@ export function EditProfileStub({ session, focusField, onBack, onUpdated }: Edit
     try {
       if (userId) {
         await api.updateUser(userId, {
-          name: trimmed,
-          email: email.trim() || undefined,
+          name: trimmedName,
+          email: trimmedEmail || undefined,
         });
       }
 
@@ -46,7 +48,8 @@ export function EditProfileStub({ session, focusField, onBack, onUpdated }: Edit
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed.employer) {
-            parsed.employer.name = trimmed;
+            parsed.employer.name = trimmedName;
+            parsed.employer.email = trimmedEmail;
           }
           localStorage.setItem('laborlink.session.v1', JSON.stringify(parsed));
         }
@@ -55,7 +58,7 @@ export function EditProfileStub({ session, focusField, onBack, onUpdated }: Edit
       }
 
       setSaved(true);
-      onUpdated?.(trimmed, email.trim() || undefined);
+      onUpdated?.(trimmedName, trimmedEmail || undefined);
       setTimeout(() => {
         onBack();
       }, 400);
