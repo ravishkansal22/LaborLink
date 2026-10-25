@@ -104,7 +104,11 @@ export default function App() {
       return (
         <ProfileSetupScreen role={route.role ?? role} session={session} onBack={back}
           onEmployerReady={(p) => {
-            update({ role: 'employer', employer: { ...p, employerId: `emp-${p.phone}` } });
+            update({ 
+              role: 'employer', 
+              userId: p.userId,
+              employer: { ...p, employerId: p.userId || `emp-${p.phone}` } 
+            });
             reset({ screen: 'home' });
           }}
           onWorkerReady={(workerId) => { update({ role: 'worker', workerId }); reset({ screen: 'workerHome' }); }} />

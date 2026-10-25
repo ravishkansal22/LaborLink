@@ -106,3 +106,12 @@ class ImageUploadResponse(BaseModel):
     size_bytes: int
     sha256: str
     created_at: datetime
+class ImageDescriptionSuggestions(BaseModel):
+    recommended_trade: Literal[
+        "electrician",
+        "plumber",
+        "mason",
+        "carpenter",
+        "not_sure",
+    ]
+    suggestions: list[str] = Field(min_length=2, max_length=3)
