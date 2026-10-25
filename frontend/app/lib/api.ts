@@ -298,11 +298,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+
 const post = <T>(path: string, body: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(body) });
+const patch = <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
 
 export const api = {
-  login: (body: AuthLoginPayload) => post<UserProfile>('/auth/login', body),
+login: (body: AuthLoginPayload) => post<UserProfile>('/auth/login', body),
   getUser: (userId: string) => request<UserProfile>(`/auth/user/${encodeURIComponent(userId)}`),
+  updateUser: (userId: string, body: { name?: string; email?: string }) =>
+    patch<UserProfile>(`/auth/user/${encodeURIComponent(userId)}`, body),
   
   health: () => request<{ status: string }>('/health'),
 

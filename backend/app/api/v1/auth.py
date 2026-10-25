@@ -4,8 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.auth import AuthLoginRequest, UserProfileResponse
-from app.services.auth import authenticate_or_register_user, get_user_by_id
+from app.schemas.auth import AuthLoginRequest, UserProfileResponse, UserUpdateRequest
+from app.services.auth import (
+    authenticate_or_register_user,
+    get_user_by_id,
+    update_user_profile,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -45,3 +49,12 @@ def get_profile(
         created_at=user.created_at,
         is_new=False,
     )
+
+@router.patch("/user/{user_id}", response_model=UserProfileResponse)
+def update_profile(
+    user_id: str,
+    payload: UserUpdateRequest,
+    db: Session = Depends(get_db),
+) -> UserProfileResponse:
+    """Update user profile name or email."""
+    return update_user_profile(db, user_id, payload)

@@ -44,6 +44,7 @@ import { AccountRowList } from './AccountRowList';
 import { AccountFooter } from './AccountFooter';
 import { ThemeSheet, themePreferenceLabel } from './ThemeSheet';
 import type { AccountRowConfig } from './types';
+// @ts-ignore
 import './profile-theme.css';
 
 interface AccountProfileScreenProps {
@@ -90,6 +91,7 @@ function AccountProfileScreenInner({
   onLanguage,
 }: AccountProfileScreenProps) {
   const { profile } = useProfile(session);
+  const [currentName, setCurrentName] = useState(session.employer?.name || profile?.name || '');
   const { selected, openPicker } = useLocation();
   const { preference } = useTheme();
   const [edit, setEdit] = useState<EditState>({ open: false });
@@ -102,7 +104,17 @@ function AccountProfileScreenInner({
 
   if (edit.open) {
     return (
-      <EditProfileStub focusField={edit.focusField} onBack={closeEdit} />
+      <EditProfileStub
+        session={session}
+        focusField={edit.focusField}
+        onBack={closeEdit}
+        onUpdated={(updatedName) => {
+          setCurrentName(updatedName);
+          if (session.employer) {
+            session.employer.name = updatedName;
+          }
+        }}
+      />
     );
   }
 
@@ -114,8 +126,9 @@ function AccountProfileScreenInner({
     );
   }
 
-  const pct = computeCompletion(profile);
-  const maskedPh = maskPhone(profile.phone);
+  const activeProfile: ProfileData = { ...profile, name: currentName || profile.name };
+  const pct = computeCompletion(activeProfile);
+  const maskedPh = maskPhone(activeProfile.phone);
   const currentLangName = languageInfo(session.language).native;
   const addressSub = selectedAddressSubtitle(selected);
   const themeLabel = themePreferenceLabel(preference);
@@ -209,23 +222,26 @@ function AccountProfileScreenInner({
         <AccountTopBar />
 
         <AccountHeader
-          name={profile.name}
+          name={activeProfile.name}
           role={profile.role}
           maskedPhone={maskedPh}
           photoUrl={profile.photoUrl}
-          onOpenEdit={() => openEdit()}
+          onOpenEdit={() => openEdit('name')}
         />
 
         <AccountCompletion
           pct={pct}
-          onOpenEdit={() => openEdit(firstMissingField(profile))}
+          onOpenEdit={() => openEdit(firstMissingField(activeProfile))}
         />
 
         <AccountVerifyBanner verified={profile.verified} />
 
         <AccountRowList rows={rows} />
 
-        <AccountFooter onSignOut={onSignOut} employerId={profile.employerId} />
+        <AccountFooter
+          onSignOut={onSignOut}
+          employerId={session.userId || profile.employerId}
+        />
       </div>
 
       <LanguageSheet

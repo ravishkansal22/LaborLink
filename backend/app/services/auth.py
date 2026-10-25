@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 from app.errors import AppError, ConflictError, NotFoundError
 from app.models import User
-from app.schemas.auth import AuthLoginRequest, UserProfileResponse
+from app.schemas.auth import AuthLoginRequest, UserProfileResponse, UserUpdateRequest
 
 
 class BadRequestError(AppError):
@@ -82,3 +82,36 @@ def authenticate_or_register_user(db: Session, payload: AuthLoginRequest) -> Use
 
 def get_user_by_id(db: Session, user_id: str) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
+
+def update_user_profile(
+    db: Session,
+    user_id: str,
+    payload: UserUpdateRequest,
+) -> UserProfileResponse:
+    user = get_user_by_id(db, user_id)
+    if not user:
+        raise NotFoundError(f"User '{user_id}' not found.")
+
+    if payload.name is not None:
+        user.name = payload.name.strip()
+
+    if payload.email is not None:
+        cleaned_email = payload.email.strip().lower()
+        # Check if another user already has this email
+        existing = db.query(User).filter(User.email == cleaned_email, User.id != user_id).first()
+        if existing:
+            raise ConflictError("This email address is already in use by another account.")
+        user.email = cleaned_email
+
+    db.commit()
+    db.refresh(user)
+
+    return UserProfileResponse(
+        user_id=user.id,
+        phone=user.phone,
+        email=user.email,
+        name=user.name,
+        role=user.role,
+        created_at=user.created_at,
+        is_new=False,
+    )

@@ -58,3 +58,17 @@ class UserProfileResponse(BaseModel):
     role: str
     created_at: datetime
     is_new: bool = False
+
+class UserUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, description="Updated display name")
+    email: str | None = Field(default=None, description="Updated email address")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str | None) -> str | None:
+        if not v:
+            return None
+        cleaned = v.strip().lower()
+        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", cleaned):
+            raise ValueError("Enter a valid email address.")
+        return cleaned
