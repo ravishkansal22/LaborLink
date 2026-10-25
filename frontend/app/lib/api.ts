@@ -58,6 +58,24 @@ export interface Job {
   updated_at: string;
 }
 
+export interface AuthLoginPayload {
+  phone?: string;
+  email?: string;
+  name?: string;
+  role?: 'worker' | 'employer' | 'both';
+  mode?: 'auto' | 'login' | 'register';
+}
+
+export interface UserProfile {
+  user_id: string;
+  phone: string | null;
+  email: string | null;
+  name: string | null;
+  role: string;
+  created_at: string;
+  is_new: boolean;
+}
+
 export interface WorkerSummary {
   id: string;
   display_name: string;
@@ -280,9 +298,16 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+
 const post = <T>(path: string, body: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(body) });
+const patch = <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
 
 export const api = {
+login: (body: AuthLoginPayload) => post<UserProfile>('/auth/login', body),
+  getUser: (userId: string) => request<UserProfile>(`/auth/user/${encodeURIComponent(userId)}`),
+  updateUser: (userId: string, body: { name?: string; email?: string }) =>
+    patch<UserProfile>(`/auth/user/${encodeURIComponent(userId)}`, body),
+  
   health: () => request<{ status: string }>('/health'),
 
   uploadImage(file: File) {
