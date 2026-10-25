@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loading } from './components/ui';
+import { ErrorNote, Loading } from './components/ui';
 import { api, ApiError, type Job, type Opportunity, type Trade } from './lib/api';
-import { setLanguage, useTranslations } from './lib/i18n';
+import { setLanguage, t, useTranslations } from './lib/i18n';
 import { useSession, type Language, type Role } from './lib/session';
 import { useLocation } from './lib/location';
 import {
@@ -24,11 +24,16 @@ interface Route { screen: Screen; jobId?: string; opportunity?: Opportunity; tra
 
 const employerTabs: Screen[] = ['home', 'jobs', 'profile', 'newJob'];
 const workerTabs: Screen[] = ['workerHome', 'findWork', 'passbook', 'workerProfile'];
+/** Show a Retry affordance if first-screen routing takes longer than this. */
+const BOOT_SLOW_MS = 9_000;
 
 export default function App() {
   const { session, update, clear } = useSession();
   const [stack, setStack] = useState<Route[]>([]);
   const [role, setRole] = useState<Role>('employer');
+  const [bootSlow, setBootSlow] = useState(false);
+  const [bootError, setBootError] = useState<unknown>(null);
+  const [bootNonce, setBootNonce] = useState(0);
   useTranslations(); // re-render the whole screen when translations arrive
   useEffect(() => { if (session) setLanguage(session.language); }, [session?.language]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -41,32 +46,53 @@ export default function App() {
   useEffect(() => {
     if (!session || stack.length) return undefined;
     let cancelled = false;
+    setBootSlow(false);
+    setBootError(null);
+    const slowTimer = window.setTimeout(() => {
+      if (!cancelled) setBootSlow(true);
+    }, BOOT_SLOW_MS);
+
     void (async () => {
-      // A worker saved on this phone may no longer exist (e.g. the database was reset):
-      // forget it instead of showing "Worker … was not found" everywhere.
-      if (session.workerId) {
-        const gone = await api.getWorker(session.workerId).then(
-          () => false,
-          (err: unknown) => err instanceof ApiError && err.status === 404,
-        );
-        if (cancelled) return;
-        if (gone) {
-          update({ workerId: null, role: session.role === 'worker' ? (session.employer ? 'employer' : null) : session.role });
-          return; // the session change runs this effect again
+      try {
+        // A worker saved on this phone may no longer exist (e.g. the database was reset):
+        // forget it instead of showing "Worker … was not found" everywhere.
+        // Network/timeout must NOT block first paint — proceed and let screens retry.
+        if (session.workerId) {
+          try {
+            await api.getWorker(session.workerId);
+          } catch (err: unknown) {
+            if (cancelled) return;
+            if (err instanceof ApiError && err.status === 404) {
+              update({
+                workerId: null,
+                role: session.role === 'worker' ? (session.employer ? 'employer' : null) : session.role,
+              });
+              return; // the session change runs this effect again
+            }
+            // unreachable / timed-out backend: continue to route selection below
+          }
         }
-      }
-      const requested = new URLSearchParams(window.location.search).get('screen') as Screen | null;
-      if (session.role === 'worker' && session.workerId) {
-        reset({ screen: requested && workerTabs.includes(requested) ? requested : 'workerHome' });
-      } else if (session.role === 'employer' && session.employer) {
-        reset({ screen: requested && employerTabs.includes(requested) ? requested : 'home' });
-      } else {
-        reset({ screen: 'welcome' });
+        if (cancelled) return;
+        const requested = new URLSearchParams(window.location.search).get('screen') as Screen | null;
+        if (session.role === 'worker' && session.workerId) {
+          reset({ screen: requested && workerTabs.includes(requested) ? requested : 'workerHome' });
+        } else if (session.role === 'employer' && session.employer) {
+          reset({ screen: requested && employerTabs.includes(requested) ? requested : 'home' });
+        } else {
+          reset({ screen: 'welcome' });
+        }
+      } catch (err: unknown) {
+        if (!cancelled) setBootError(err);
+      } finally {
+        window.clearTimeout(slowTimer);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      window.clearTimeout(slowTimer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, [session, bootNonce]);
 
   const route = stack[stack.length - 1];
   const { closePicker } = useLocation();
@@ -75,7 +101,37 @@ export default function App() {
     closePicker(); // tab/route change must leave overlays inert
   }, [route, closePicker]);
 
-  if (!session || !route) return <main className="screen"><Loading /></main>;
+  if (!session || !route) {
+    const retryBoot = () => {
+      setBootError(null);
+      setBootSlow(false);
+      setBootNonce((n) => n + 1);
+    };
+    return (
+      <main className="screen">
+        {bootError ? (
+          <ErrorNote error={bootError} onRetry={retryBoot} />
+        ) : (
+          <>
+            <Loading
+              label={
+                bootSlow
+                  ? t('Taking longer than expected. Check that the LaborLink server is running.')
+                  : undefined
+              }
+            />
+            {bootSlow && (
+              <div className="mt-16" style={{ display: 'flex', justifyContent: 'center' }}>
+                <button type="button" className="btn btn-secondary btn-small" onClick={retryBoot} style={{ width: 'auto', padding: '0 18px' }}>
+                  {t('Retry')}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+    );
+  }
 
   const employerGo: EmployerGo = { home: () => reset({ screen: 'home' }), jobs: () => reset({ screen: 'jobs' }), profile: () => reset({ screen: 'profile' }) };
   const workerGo: WorkerGo = {
