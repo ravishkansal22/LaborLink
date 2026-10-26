@@ -1,0 +1,42 @@
+.row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 0 4px;
+  margin: 0 -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--pf-border, var(--line));
+  background: var(--pf-surface, var(--surface));
+  color: var(--pf-text, var(--ink));
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+}
+
+.on {
+  border-color: var(--pf-brand, var(--brand));
+  background: var(--pf-brand, var(--brand));
+  color: #fff;
+}

@@ -84,6 +84,27 @@ export function validateBusinessName(value: string): string | null {
   return null;
 }
 
+/**
+ * Optional worker "About you" blurb, max 200 characters.
+ * @returns Error message, or `null` if valid / empty.
+ */
+export function validateAboutYou(value: string): string | null {
+  if (value.length > 200) return 'About you must be at most 200 characters.';
+  return null;
+}
+
+/**
+ * Optional years of experience 0–60 (local extras; backend may also store years).
+ * Empty string is valid. @returns Error message, or `null` if valid / empty.
+ */
+export function validateYearsExperience(value: string | number | null | undefined): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  const n = typeof value === 'number' ? value : Number(String(value).trim());
+  if (!Number.isFinite(n) || !Number.isInteger(n)) return 'Enter a whole number of years.';
+  if (n < 0 || n > 60) return 'Years of experience must be between 0 and 60.';
+  return null;
+}
+
 function ageInYears(dob: Date, today: Date): number {
   let age = today.getFullYear() - dob.getFullYear();
   const monthDiff = today.getMonth() - dob.getMonth();

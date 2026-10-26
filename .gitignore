@@ -90,3 +90,4 @@ frontend/android/local.properties
 frontend/android/.idea/
 frontend/android/*.iml
 frontend/android/app/*.iml
+frontend/undefined/

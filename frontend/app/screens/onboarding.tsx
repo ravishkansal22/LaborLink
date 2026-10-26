@@ -8,6 +8,7 @@ import { allTrades, api, tradeNames, type Trade } from '../lib/api';
 import { areas } from '../lib/places';
 import { LANGUAGES } from '../lib/languages';
 import type { Language, Role, Session } from '../lib/session';
+import { saveExtras } from '../lib/profile';
 
 
 export function WelcomeScreen({ language, setLanguage, onContinue }: { language: Language; setLanguage: (l: Language) => void; onContinue: () => void }) {
@@ -199,6 +200,17 @@ export function ProfileSetupScreen({ role, session, onBack, onEmployerReady, onW
           location: { latitude: place.latitude, longitude: place.longitude, locality: place.name === 'Current location' ? (street.trim() || null) : place.name },
           service_radius_km: radius,
         });
+        // Backend Worker has no phone — keep setup digits on-device under worker-<id>
+        // so Worker Profile can show a masked phone without colliding with emp-* extras.
+        try {
+          saveExtras(`worker-${worker.id}`, {
+            updatedAt: Date.now(),
+            phone: phone.replace(/\D/g, '').slice(0, 10),
+            fullName: name.trim(),
+          });
+        } catch {
+          /* private mode / quota: profile still works without local phone */
+        }
         onWorkerReady(worker.id);
       }
     } catch (err) {

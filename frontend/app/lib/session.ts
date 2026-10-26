@@ -40,13 +40,51 @@ export const emptySession: Session = {
   coords: null 
 };
 
+function isEmployerProfile(value: unknown): value is EmployerProfile {
+  if (!value || typeof value !== 'object') return false;
+  const e = value as Record<string, unknown>;
+  return typeof e.name === 'string'
+    && typeof e.phone === 'string'
+    && typeof e.employerId === 'string'
+    && typeof e.address === 'string'
+    && (e.latitude === null || typeof e.latitude === 'number')
+    && (e.longitude === null || typeof e.longitude === 'number');
+}
+
+/** Normalize / reject stale localStorage shapes from older builds so boot never hangs. */
+function normalize(raw: unknown): Session {
+  if (!raw || typeof raw !== 'object') return { ...emptySession };
+  const saved = raw as Record<string, unknown>;
+  const language = isLanguage(saved.language) ? saved.language : 'en';
+  const role = saved.role === 'employer' || saved.role === 'worker' ? saved.role : null;
+  const userId = typeof saved.userId === 'string' ? saved.userId : null;
+  const workerId = typeof saved.workerId === 'string' ? saved.workerId : null;
+  const employer = isEmployerProfile(saved.employer) ? saved.employer : null;
+  const jobIds = Array.isArray(saved.jobIds)
+    ? saved.jobIds.filter((id): id is string => typeof id === 'string')
+    : [];
+  let coords: Session['coords'] = null;
+  if (saved.coords && typeof saved.coords === 'object') {
+    const c = saved.coords as Record<string, unknown>;
+    if (typeof c.latitude === 'number' && typeof c.longitude === 'number') {
+      coords = { latitude: c.latitude, longitude: c.longitude };
+    }
+  }
+  return { language, role, userId, employer, workerId, jobIds, coords };
+}
+
 function read(): Session {
   try {
     const raw = window.localStorage.getItem(KEY);
-    const saved = raw ? { ...emptySession, ...(JSON.parse(raw) as Partial<Session>) } : emptySession;
-    return isLanguage(saved.language) ? saved : { ...saved, language: 'en' };
+    if (!raw) return { ...emptySession };
+    const parsed: unknown = JSON.parse(raw);
+    const next = normalize(parsed);
+    // Persist the cleaned shape so bad fields (e.g. non-string workerId) don't linger.
+    try { window.localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* private mode */ }
+    return next;
   } catch {
-    return emptySession;
+    try { window.localStorage.removeItem(KEY); } catch { /* ignore */ }
+    return { ...emptySession };
   }
 }
 

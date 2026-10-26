@@ -17,11 +17,14 @@ import { LocationHeader } from '../components/location';
 import { useLocation } from '../lib/location';
 import { WorkerGrid } from '../components/worker-grid';
 import { ProfileScreen as ProfileScreenNew } from '../components/profile/ProfileScreen';
+import { EmployerHomeScreenNew } from '../components/home/employer/HomeScreen.new';
 
 /** Flip to false to restore the old 2×2 trade-tile grid instantly. */
 const USE_3D_WORKER_GRID = true;
 /** Flip to false to instantly restore the old Profile design. */
 const USE_NEW_PROFILE = true;
+/** Flip to false to restore the legacy Employer Home layout instantly. */
+const USE_NEW_EMPLOYER_HOME = true;
 
 const tradeIcons: Record<Trade, JSX.Element> = {
   electrician: <Zap size={20} />, plumber: <Droplets size={20} />, mason: <BrickWall size={20} />, carpenter: <Hammer size={20} />,
@@ -65,7 +68,17 @@ function JobCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
 
 /* ------------------------------------------------------------------ home */
 
-export function EmployerHomeScreen({ session, go, onNewJob, onOpenJob, onTrack }: {
+export function EmployerHomeScreen(props: {
+  session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
+}) {
+  if (USE_NEW_EMPLOYER_HOME) {
+    return <EmployerHomeScreenNew {...props} />;
+  }
+  return <EmployerHomeScreenLegacy {...props} />;
+}
+
+/** Legacy Employer Home — untouched layout; restore via USE_NEW_EMPLOYER_HOME = false. */
+function EmployerHomeScreenLegacy({ session, go, onNewJob, onOpenJob, onTrack }: {
   session: Session; go: EmployerGo; onNewJob: (trade?: Trade) => void; onOpenJob: (id: string) => void; onTrack: (id: string) => void;
 }) {
   const { openPicker } = useLocation();

@@ -1,0 +1,98 @@
+/**
+ * Availability switch + Online label (green when ON only).
+ * Offline track/label match pre-change Home .toggle / .online and Profile
+ * .wp-switch:not(.on) / .wp-online (no .on).
+ */
+
+:root {
+  --avail-on-track: #0c831f;
+  --avail-on-label: #0c831f;
+}
+
+[data-theme='dark'] {
+  --avail-on-track: #22a33a;
+  --avail-on-label: #2ebd4a;
+}
+
+/* Hit area 44×44; painted track stays 46×28 */
+.avail-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  flex-shrink: 0;
+  align-self: center;
+  aspect-ratio: auto;
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.avail-switch:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.avail-switch-track {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 28px;
+  flex: none;
+  border-radius: 14px;
+  background: #cdd2e4;
+  transition: background 0.2s;
+}
+
+.avail-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.avail-switch.on .avail-switch-track {
+  background: var(--avail-on-track);
+}
+
+.avail-switch.on .avail-switch-thumb {
+  transform: translateX(18px);
+}
+
+.avail-switch:focus-visible .avail-switch-track {
+  outline: 2px solid var(--acct-focus, var(--brand, #0758d8));
+  outline-offset: 2px;
+}
+
+/* Inner white ring so focus stays visible on green */
+.avail-switch.on:focus-visible .avail-switch-track {
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avail-switch-track,
+  .avail-switch-thumb {
+    transition: none;
+  }
+}
+
+[data-theme='dark'] .avail-switch:not(.on) .avail-switch-track {
+  background: #3a4150;
+}
+
+/* Online label green when ON — beats .online.on / .wp-online.on brand blue */
+.online.avail-label.on,
+.wp-online.avail-label.on {
+  color: var(--avail-on-label);
+}

@@ -260,15 +260,30 @@ export class ApiError extends Error {
   }
 }
 
-const API_HOST = process.env.NEXT_PUBLIC_API_URL || '';
-const BASE = `${API_HOST.replace(/\/$/, '')}/api/v1`;
+/** Local FastAPI default so browser/dev works without env; override with NEXT_PUBLIC_API_URL. */
+const DEFAULT_API_HOST = 'http://127.0.0.1:8000';
+const API_HOST = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_HOST).replace(/\/$/, '');
+const BASE = `${API_HOST}/api/v1`;
+
+/** Abort hung fetches (e.g. wedged uvicorn) so the UI never spins forever. */
+export const API_FETCH_TIMEOUT_MS = 8_000;
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const isJson = typeof init.body === 'string';
+  const timeoutMs = API_FETCH_TIMEOUT_MS;
+  const controller = new AbortController();
+  const outerSignal = init.signal;
+  const onOuterAbort = () => controller.abort();
+  if (outerSignal) {
+    if (outerSignal.aborted) controller.abort();
+    else outerSignal.addEventListener('abort', onOuterAbort, { once: true });
+  }
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response: Response;
   try {
     response = await fetch(`${BASE}${path}`, {
       ...init,
+      signal: controller.signal,
       headers: {
         ...(isJson ? { 'content-type': 'application/json' } : {}),
         'ngrok-skip-browser-warning': 'true',
@@ -277,7 +292,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       cache: 'no-store',
     });
   } catch {
+    if (controller.signal.aborted && !outerSignal?.aborted) {
+      throw new ApiError(
+        0,
+        'timeout',
+        'This is taking too long. Check that the LaborLink server is running, then try again.',
+      );
+    }
     throw new ApiError(0, 'network', 'Can’t reach the LaborLink server. Check that the backend is running.');
+  } finally {
+    clearTimeout(timer);
+    outerSignal?.removeEventListener('abort', onOuterAbort);
   }
   const text = await response.text();
   let data: unknown = null;
