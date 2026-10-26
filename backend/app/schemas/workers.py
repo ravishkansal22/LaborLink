@@ -112,3 +112,16 @@ class WorkerResponse(BaseModel):
     )
     created_at: datetime
     updated_at: datetime
+
+class NearbyWorkerItem(BaseModel):
+    id: str
+    display_name: str
+    trades: list[Trade]
+    years_experience: int | None
+    distance_km: float
+    locality: str | None = None
+    availability: Availability
+
+
+class NearbyWorkersResponse(BaseModel):
+    items: list[NearbyWorkerItem]
