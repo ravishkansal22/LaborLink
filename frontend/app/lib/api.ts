@@ -328,6 +328,11 @@ const post = <T>(path: string, body: unknown) => request<T>(path, { method: 'POS
 const patch = <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
 
 export const api = {
+
+  nearbyWorkers: (params: { lat: number; lon: number; trade?: Trade; radius_km?: number }) =>
+    request<{ items: Array<{ id: string; display_name: string; trades: Trade[]; years_experience: number | null; distance_km: number; locality: string | null }> }>(
+      `/workers/nearby?lat=${params.lat}&lon=${params.lon}${params.trade ? `&trade=${params.trade}` : ''}${params.radius_km ? `&radius_km=${params.radius_km}` : ''}`
+    ),
 login: (body: AuthLoginPayload) => post<UserProfile>('/auth/login', body),
   getUser: (userId: string) => request<UserProfile>(`/auth/user/${encodeURIComponent(userId)}`),
   updateUser: (userId: string, body: { name?: string; email?: string }) =>
@@ -390,7 +395,7 @@ login: (body: AuthLoginPayload) => post<UserProfile>('/auth/login', body),
     location: { latitude: number; longitude: number; locality: string | null }; service_radius_km: number;
   }) => post<Worker>('/workers', body),
   getWorker: (workerId: string) => request<Worker>(`/workers/${workerId}`),
-  updateWorker: (workerId: string, patch: Partial<Pick<Worker, 'availability' | 'service_radius_km' | 'trades' | 'years_experience'>>) =>
+  updateWorker: (workerId: string, patch: Partial<Pick<Worker, 'display_name' | 'availability' | 'service_radius_km' | 'trades' | 'years_experience'>>) =>
     request<Worker>(`/workers/${workerId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   opportunities: (workerId: string) => request<Opportunities>(`/workers/${workerId}/jobs`),
   workerOffers: (workerId: string) => request<{ offers: WorkerOffer[] }>(`/workers/${workerId}/offers`),

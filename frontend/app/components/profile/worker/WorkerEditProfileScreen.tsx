@@ -2,11 +2,10 @@
 
 /**
  * Worker Edit Profile — local-only extras under `worker-<id>`.
- * Composes AppBar + theme tokens + lib/profile validators/image helpers
- * (Employer Edit Profile is still a stub; this is the worker composition).
+ * Composes AppBar + theme tokens + lib/profile validators/image helpers.
  *
- * yearsExperience in extras is display-only; the Profile trade line uses
- * backend `years_experience` (not overwritten by Save).
+ * Persists display_name and years_experience directly to SQLite via api.updateWorker,
+ * while saving device-only extras (photo, dob, etc.) to localStorage.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -27,12 +26,14 @@ import {
   validateYearsExperience,
   type ProfileExtras,
 } from '../../../lib/profile';
+import { api } from '../../../lib/api';
 import { t } from '../../../lib/i18n';
+// @ts-ignore
 import './worker-profile.css';
 
 type Gender = NonNullable<ProfileExtras['gender']>;
 
-interface WorkerEditProfileScreenProps {
+export interface WorkerEditProfileScreenProps {
   workerId: string;
   displayName: string;
   phoneDigits: string;
@@ -127,14 +128,14 @@ export function WorkerEditProfileScreen({
   }, [focusField]);
 
   const dirty =
-    form.fullName !== baseline.fullName
-    || form.email !== baseline.email
-    || form.alternatePhone !== baseline.alternatePhone
-    || form.dob !== baseline.dob
-    || form.gender !== baseline.gender
-    || form.yearsExperience !== baseline.yearsExperience
-    || form.aboutYou !== baseline.aboutYou
-    || form.photoDataUrl !== baseline.photoDataUrl;
+    form.fullName !== baseline.fullName ||
+    form.email !== baseline.email ||
+    form.alternatePhone !== baseline.alternatePhone ||
+    form.dob !== baseline.dob ||
+    form.gender !== baseline.gender ||
+    form.yearsExperience !== baseline.yearsExperience ||
+    form.aboutYou !== baseline.aboutYou ||
+    form.photoDataUrl !== baseline.photoDataUrl;
 
   const requestBack = () => {
     if (dirty) setDiscardOpen(true);
@@ -186,6 +187,13 @@ export function WorkerEditProfileScreen({
     setSaving(true);
     setErrors({});
     try {
+      // 1. Sync directly to SQLite database
+      await api.updateWorker(workerId, {
+        display_name: form.fullName.trim() || displayName,
+        years_experience: form.yearsExperience.trim() !== '' ? Number(form.yearsExperience) : null,
+      });
+
+      // 2. Persist local extras to browser storage
       const next: ProfileExtras = {
         ...(extras ?? { updatedAt: Date.now() }),
         updatedAt: Date.now(),
@@ -434,7 +442,7 @@ export function WorkerEditProfileScreen({
             }
           />
           <p className="wp-edit-hint">
-            {t('Saved on this phone only. Your public profile still uses the experience from your work profile.')}
+            {t('Updating here updates your public worker profile and searches.')}
           </p>
           {errors.yearsExperience ? (
             <p className="wp-edit-error">{errors.yearsExperience}</p>

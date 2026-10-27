@@ -91,3 +91,38 @@ def to_response(worker: Worker) -> WorkerResponse:
         created_at=worker.created_at,
         updated_at=worker.updated_at,
     )
+
+from sqlalchemy import select
+
+
+def find_nearby_workers(
+    session: Session,
+    lat: float,
+    lon: float,
+    *,
+    trade: Trade | None = None,
+    max_radius_km: float = 25.0,
+    limit: int = 10,
+) -> list[dict]:
+    from app.services.matching import haversine_km
+    stmt = select(Worker).where(Worker.availability == "available")
+    workers = session.execute(stmt).scalars().all()
+
+    results = []
+    for w in workers:
+        if trade and trade.value not in w.trades:
+            continue
+        dist = haversine_km(lat, lon, w.latitude, w.longitude)
+        if dist <= max_radius_km and dist <= w.service_radius_km:
+            results.append({
+                "id": w.id,
+                "display_name": w.display_name,
+                "trades": [Trade(t) for t in w.trades],
+                "years_experience": w.years_experience,
+                "distance_km": round(dist, 2),
+                "locality": w.locality,
+                "availability": Availability(w.availability),
+            })
+
+    results.sort(key=lambda x: x["distance_km"])
+    return results[:limit]

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_rate_card
 from app.schemas.common import ErrorResponse
 from app.schemas.completion import PassbookResponse
+from app.schemas.common import Trade
 from app.schemas.marketplace import OpportunitiesResponse, WorkerOffersResponse
 from app.schemas.pricing import RateCard
 from app.schemas.workers import WorkerCreate, WorkerResponse, WorkerUpdate
@@ -28,6 +29,22 @@ _NOT_FOUND = {404: {"model": ErrorResponse}, 503: {"model": ErrorResponse}}
 )
 def create_worker(payload: WorkerCreate, db: Session = Depends(get_db)) -> WorkerResponse:
     return worker_service.to_response(worker_service.create_worker(db, payload))
+
+from app.schemas.workers import NearbyWorkersResponse, NearbyWorkerItem
+
+@router.get("/nearby", response_model=NearbyWorkersResponse, summary="Find active workers near coordinates")
+def list_nearby_workers(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    trade: Trade | None = Query(default=None),
+    radius_km: float = Query(default=25.0, ge=1, le=50),
+    limit: int = Query(default=10, ge=1, le=50),
+    db: Session = Depends(get_db),
+) -> NearbyWorkersResponse:
+    workers = worker_service.find_nearby_workers(
+        db, lat=lat, lon=lon, trade=trade, max_radius_km=radius_km, limit=limit
+    )
+    return NearbyWorkersResponse(items=[NearbyWorkerItem(**w) for w in workers])
 
 
 @router.get("/{worker_id}", response_model=WorkerResponse, responses=_NOT_FOUND,

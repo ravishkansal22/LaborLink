@@ -46,7 +46,9 @@ import { WorkerFooter } from './WorkerFooter';
 import { WorkerEditProfileScreen } from './WorkerEditProfileScreen';
 import { ConfirmActionSheet } from './ConfirmActionSheet';
 import { useWorkerExtras } from './useWorkerExtras';
+// @ts-ignore
 import '../account/profile-theme.css';
+// @ts-ignore
 import './worker-profile.css';
 
 export type WorkerProfileGo = {
