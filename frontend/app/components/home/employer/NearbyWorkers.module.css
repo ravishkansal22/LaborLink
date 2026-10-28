@@ -22,15 +22,15 @@
   justify-content: space-between;
   padding: 14px;
   border-radius: 20px;
-  background: #141414;
-  border: 1px solid #242424;
+  background: var(--surface);
+  border: 1px solid var(--line);
   text-align: left;
   transition: transform 120ms ease, border-color 120ms ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .workerCard:hover {
-    border-color: #383838;
+    border-color: var(--line-light);
   }
 }
 
@@ -52,7 +52,7 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 1.5px solid #282828;
+  border: 1.5px solid var(--line);
   display: block;
 }
 
@@ -67,7 +67,7 @@
   border-radius: 50%;
   background: #2563EB;
   color: #FFFFFF;
-  border: 2px solid #141414;
+  border: 2px solid var(--surface);
 }
 
 .workerMeta {
@@ -82,7 +82,7 @@
   font-size: 14.5px;
   font-weight: 700;
   line-height: 1.2;
-  color: #FFFFFF;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,7 +91,7 @@
 .workerTrade {
   margin-top: 2px;
   font-size: 12px;
-  color: #8E8E93;
+  color: var(--ink-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -106,24 +106,24 @@
 }
 
 .starIcon {
-  color: #F5A623;
+  color: var(--star);
   flex-shrink: 0;
 }
 
 .ratingScore {
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .jobsCount {
-  color: #757575;
+  color: var(--ink-3);
   font-size: 10.5px;
 }
 
 .distance {
   margin-top: 3px;
   font-size: 11px;
-  color: #757575;
+  color: var(--ink-3);
 }
 
 .footerRow {
@@ -132,20 +132,20 @@
   justify-content: space-between;
   margin-top: 14px;
   padding-top: 10px;
-  border-top: 1px solid #1E1E1E;
+  border-top: 1px solid var(--line);
 }
 
 .price {
   font-size: 14.5px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .bookBtn {
   padding: 6px 16px;
   border-radius: 9999px;
-  background: #FFFFFF;
-  color: #000000;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   font-size: 12.5px;
   font-weight: 700;
   border: none;
@@ -155,10 +155,23 @@
   transition: transform 120ms ease, background 120ms ease;
 }
 
-.bookBtn:hover {
-  background: #E5E5E5;
+@media (hover: hover) and (pointer: fine) {
+  .bookBtn:hover {
+    background: var(--btn-primary-hover);
+  }
 }
 
 .bookBtn:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workerCard,
+  .bookBtn {
+    transition: none;
+  }
+
+  .bookBtn:active {
+    transform: none;
+  }
 }

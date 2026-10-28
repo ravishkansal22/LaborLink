@@ -1,17 +1,17 @@
 .root {
   padding: 0 !important;
-  color: #FFFFFF;
+  color: var(--ink);
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background: #000000;
+  background: var(--bg);
 }
 
 .hero {
   position: relative;
   flex: 0 0 auto;
   height: 220px;
-  background: #141414;
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -25,7 +25,7 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.2) 100%);
+  background: linear-gradient(to top, var(--bg) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.2) 100%);
   pointer-events: none;
 }
 
@@ -38,16 +38,15 @@
   height: 40px;
   display: grid;
   place-items: center;
-  border: 1px solid #333333;
+  border: 1px solid var(--line);
   border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #FFFFFF;
+  background: var(--surface);
+  color: var(--ink);
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 120ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .back:active {
@@ -67,9 +66,9 @@
   height: 24px;
   padding: 0 10px;
   border-radius: 6px;
-  background: #1E1E1E;
-  border: 1px solid #2E2E2E;
-  color: #FFFFFF;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
   font-size: 12px;
   font-weight: 600;
   align-self: flex-start;
@@ -81,7 +80,7 @@
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.015em;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .where {
@@ -89,7 +88,7 @@
   align-items: center;
   margin-top: 8px;
   font-size: 13.5px;
-  color: #8E8E93;
+  color: var(--ink-3);
 }
 
 .whereLeft {
@@ -98,8 +97,13 @@
   gap: 5px;
 }
 
+.whereIcon {
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
 .whereText {
-  color: #8E8E93;
+  color: var(--ink-3);
 }
 
 .facts {
@@ -109,8 +113,8 @@
   margin-top: 20px;
   padding: 14px 16px;
   border-radius: 16px;
-  border: 1px solid #242424;
-  background: #141414;
+  border: 1px solid var(--line);
+  background: var(--surface);
 }
 
 .fact {
@@ -122,24 +126,24 @@
 }
 
 .factIcon {
-  color: #8E8E93;
+  color: var(--ink-3);
 }
 
 .factValue {
   font-size: 16px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .factLabel {
   font-size: 11.5px;
-  color: #757575;
+  color: var(--ink-3);
 }
 
 .factSep {
   width: 1px;
   height: 36px;
-  background: #242424;
+  background: var(--line);
 }
 
 .section {
@@ -150,22 +154,22 @@
   margin: 0 0 8px;
   font-size: 15px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .description {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  color: #B3B3B3;
+  color: var(--ink-2);
 }
 
 .priceCard {
   margin-top: 22px;
   padding: 16px;
   border-radius: 16px;
-  background: #141414;
-  border: 1px solid #242424;
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .priceRow {
@@ -173,20 +177,20 @@
   align-items: center;
   justify-content: space-between;
   font-size: 14.5px;
-  color: #8E8E93;
+  color: var(--ink-3);
 }
 
 .priceRow strong {
   font-size: 18px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .priceNote {
   margin: 8px 0 0;
   font-size: 12.5px;
   line-height: 1.4;
-  color: #757575;
+  color: var(--ink-3);
 }
 
 .stickyActions {
@@ -199,8 +203,8 @@
   grid-template-columns: 1fr 1.6fr;
   gap: 12px;
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
-  background: #000000;
-  border-top: 1px solid #1E1E1E;
+  background: var(--bottom-nav-bg);
+  border-top: 1px solid var(--bottom-nav-border);
 }
 
 .counterBtn {
@@ -209,9 +213,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  border: 1px solid #2E2E2E;
-  background: #181818;
-  color: #FFFFFF;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
@@ -224,8 +228,8 @@
   justify-content: center;
   border-radius: 14px;
   border: none;
-  background: #FFFFFF;
-  color: #000000;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -233,7 +237,7 @@
 }
 
 .acceptBtn:hover {
-  background: #E5E5E5;
+  background: var(--btn-primary-hover);
 }
 
 .acceptBtn:disabled,

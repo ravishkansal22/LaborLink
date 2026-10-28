@@ -21,8 +21,8 @@
   flex-direction: column;
   padding: 8px;
   border-radius: 20px;
-  background: #141414;
-  border: 1px solid #242424;
+  background: var(--surface);
+  border: 1px solid var(--line);
   text-align: left;
   cursor: pointer;
   user-select: none;
@@ -33,8 +33,8 @@
 
 .card:focus-visible {
   outline: none;
-  border-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.2);
 }
 
 .card:active {
@@ -43,8 +43,8 @@
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    border-color: #383838;
-    background: #1A1A1A;
+    border-color: var(--line-light);
+    background: var(--surface-2);
   }
 }
 
@@ -54,7 +54,7 @@
   aspect-ratio: 4 / 3;
   border-radius: 14px;
   overflow: hidden;
-  background: #1E1E1E;
+  background: var(--surface-2);
 }
 
 .jobImage {
@@ -90,7 +90,7 @@
   font-size: 15px;
   font-weight: 700;
   line-height: 1.2;
-  color: #FFFFFF;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -99,7 +99,7 @@
 .jobLocation {
   margin: 3px 0 0;
   font-size: 11.5px;
-  color: #8E8E93;
+  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,17 +114,17 @@
 }
 
 .starIcon {
-  color: #F5A623;
+  color: var(--star);
   flex-shrink: 0;
 }
 
 .ratingScore {
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .jobsCount {
-  color: #757575;
+  color: var(--ink-3);
   font-size: 11px;
 }
 
@@ -139,7 +139,7 @@
 .price {
   font-size: 14px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .arrowBtn {
@@ -148,11 +148,23 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #242424;
-  color: #FFFFFF;
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
   transition: background 120ms ease;
 }
 
 .card:hover .arrowBtn {
-  background: #333333;
+  background: var(--surface-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .arrowBtn {
+    transition: none;
+  }
+
+  .card:active {
+    transform: none;
+  }
 }

@@ -439,9 +439,5 @@ function WorkerProfileScreenInner({
 }
 
 export function WorkerProfileScreenNew(props: WorkerProfileScreenProps) {
-  return (
-    <ThemeProvider>
-      <WorkerProfileScreenInner {...props} />
-    </ThemeProvider>
-  );
+  return <WorkerProfileScreenInner {...props} />;
 }

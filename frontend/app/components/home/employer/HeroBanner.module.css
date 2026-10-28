@@ -9,9 +9,9 @@
   padding: 22px 18px 22px 20px;
   border-radius: 24px;
   overflow: hidden;
-  background: #141414;
-  border: 1px solid #242424;
-  color: #FFFFFF;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
 }
 
 .copy {
@@ -28,7 +28,7 @@
   font-weight: 700;
   line-height: 1.22;
   letter-spacing: -0.015em;
-  color: #FFFFFF;
+  color: var(--ink);
 }
 
 .sub {
@@ -36,7 +36,7 @@
   font-size: 12.5px;
   font-weight: 500;
   line-height: 1.35;
-  color: #8E8E93;
+  color: var(--ink-2);
 }
 
 .ctaBtn {
@@ -46,8 +46,8 @@
   margin-top: 14px;
   padding: 8px 16px;
   border-radius: 9999px;
-  background: #FFFFFF;
-  color: #000000;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   font-size: 13.5px;
   font-weight: 700;
   border: none;
@@ -55,7 +55,7 @@
   user-select: none;
   -webkit-user-select: none;
   transition: transform 120ms ease, background 120ms ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .ctaBtn:active {
@@ -63,7 +63,7 @@
 }
 
 .ctaBtn:hover {
-  background: #E5E5E5;
+  background: var(--btn-primary-hover);
 }
 
 .imageContainer {
@@ -88,8 +88,8 @@
 .imageOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, #141414 0%, rgba(20, 20, 20, 0.75) 28%, rgba(20, 20, 20, 0) 70%),
-              linear-gradient(to top, rgba(20, 20, 20, 0.7) 0%, transparent 40%);
+  background: linear-gradient(to right, var(--surface) 0%, transparent 70%),
+              linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%);
   pointer-events: none;
 }
 
@@ -99,26 +99,31 @@
   right: 18px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  z-index: 3;
+  gap: 4px;
+  z-index: 2;
 }
 
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  transition: all 150ms ease;
+  background: var(--ink-3);
+  transition: width 150ms ease, background 150ms ease;
 }
 
 .dotActive {
-  width: 16px;
+  width: 18px;
   border-radius: 9999px;
-  background: #FFFFFF;
+  background: var(--ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .banner, .ctaBtn {
+  .ctaBtn,
+  .dot {
     transition: none;
+  }
+
+  .ctaBtn:active {
+    transform: none;
   }
 }

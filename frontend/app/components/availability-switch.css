@@ -2,14 +2,23 @@
  * Availability switch + Online label (Uber-style monochrome toggle).
  */
 
-:root {
-  --avail-on-track: #FFFFFF;
-  --avail-on-label: #FFFFFF;
-}
-
+:root,
 [data-theme='dark'] {
   --avail-on-track: #FFFFFF;
   --avail-on-label: #FFFFFF;
+  --avail-off-track: #262626;
+  --avail-off-border: #333333;
+  --avail-off-thumb: #8E8E93;
+  --avail-on-thumb: #000000;
+}
+
+[data-theme='light'] {
+  --avail-on-track: #000000;
+  --avail-on-label: #000000;
+  --avail-off-track: #E5E5E5;
+  --avail-off-border: #D1D1D6;
+  --avail-off-thumb: #FFFFFF;
+  --avail-on-thumb: #FFFFFF;
 }
 
 .avail-switch {
@@ -43,8 +52,8 @@
   height: 28px;
   flex: none;
   border-radius: 14px;
-  background: #262626;
-  border: 1px solid #333333;
+  background: var(--avail-off-track);
+  border: 1px solid var(--avail-off-border);
   transition: background 0.2s, border-color 0.2s;
 }
 
@@ -55,23 +64,23 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #FFFFFF;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  background: var(--avail-off-thumb);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   transition: transform 0.2s, background 0.2s;
 }
 
 .avail-switch.on .avail-switch-track {
-  background: #FFFFFF;
-  border-color: #FFFFFF;
+  background: var(--avail-on-track);
+  border-color: var(--avail-on-track);
 }
 
 .avail-switch.on .avail-switch-thumb {
   transform: translateX(18px);
-  background: #000000;
+  background: var(--avail-on-thumb);
 }
 
 .avail-switch:focus-visible .avail-switch-track {
-  outline: 2px solid #FFFFFF;
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
@@ -83,12 +92,12 @@
 }
 
 .online.avail-label {
-  color: #757575;
+  color: var(--ink-3);
   font-size: 14px;
   font-weight: 600;
 }
 
 .online.avail-label.on,
 .wp-online.avail-label.on {
-  color: #FFFFFF;
+  color: var(--ink);
 }

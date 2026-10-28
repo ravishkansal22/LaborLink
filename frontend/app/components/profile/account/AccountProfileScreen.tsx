@@ -274,9 +274,5 @@ function AccountProfileScreenInner({
 }
 
 export function AccountProfileScreen(props: AccountProfileScreenProps) {
-  return (
-    <ThemeProvider>
-      <AccountProfileScreenInner {...props} />
-    </ThemeProvider>
-  );
+  return <AccountProfileScreenInner {...props} />;
 }

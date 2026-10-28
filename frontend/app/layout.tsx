@@ -5,7 +5,9 @@ import { BatteryFull, Signal, Wifi } from 'lucide-react';
 import { Clock } from './components/clock';
 import { DeviceScaler } from './device-scaler';
 import { LocationProvider } from './lib/location/LocationContext';
+import { ThemeProvider } from './lib/theme';
 import './globals.css';
+import './components/profile/account/profile-theme.css';
 
 // Mukta is designed for Devanagari and Latin together, so Hindi and English text match.
 const mukta = Mukta({
@@ -23,7 +25,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#faf8ff',
+  themeColor: '#000000',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -31,28 +33,30 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="en" className={mukta.variable}>
       <body>
         <DeviceScaler />
-        {/* On wide screens the app is shown inside a phone frame; on real phones it fills the screen. */}
-        <div className="stage">
-          <div className="device">
-            <div className="device-screen">
-              <div className="status-bar" aria-hidden="true">
-                <Clock />
-                <span className="dynamic-island" />
-                <span className="status-icons">
-                  <Signal size={16} strokeWidth={2.5} />
-                  <Wifi size={16} strokeWidth={2.5} />
-                  <BatteryFull size={22} strokeWidth={2} />
-                </span>
+        <ThemeProvider>
+          {/* On wide screens the app is shown inside a phone frame; on real phones it fills the screen. */}
+          <div className="stage">
+            <div className="device">
+              <div className="device-screen">
+                <div className="status-bar" aria-hidden="true">
+                  <Clock />
+                  <span className="dynamic-island" />
+                  <span className="status-icons">
+                    <Signal size={16} strokeWidth={2.5} />
+                    <Wifi size={16} strokeWidth={2.5} />
+                    <BatteryFull size={22} strokeWidth={2} />
+                  </span>
+                </div>
+                <div className="device-scroll" id="device-scroll">
+                  <LocationProvider>
+                    {children}
+                  </LocationProvider>
+                </div>
+                <div className="home-indicator" aria-hidden="true" />
               </div>
-              <div className="device-scroll" id="device-scroll">
-                <LocationProvider>
-                  {children}
-                </LocationProvider>
-              </div>
-              <div className="home-indicator" aria-hidden="true" />
             </div>
           </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   );

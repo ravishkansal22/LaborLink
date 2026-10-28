@@ -7,9 +7,9 @@
   min-height: 44px;
   padding: 0 8px 0 16px;
   border-radius: 9999px;
-  background: #161616;
-  border: 1px solid #282828;
-  color: #FFFFFF;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
   text-align: left;
   cursor: pointer;
   user-select: none;
@@ -20,8 +20,8 @@
 
 .pill:focus-visible {
   outline: none;
-  border-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.2);
 }
 
 .pill:active {
@@ -30,14 +30,14 @@
 
 @media (hover: hover) and (pointer: fine) {
   .pill:hover {
-    border-color: #383838;
-    background: #1A1A1A;
+    border-color: var(--line-light);
+    background: var(--surface-3);
   }
 }
 
 .searchIcon {
   flex: 0 0 auto;
-  color: #8E8E93;
+  color: var(--ink-3);
 }
 
 .label {
@@ -46,7 +46,7 @@
   font-size: 15px;
   font-weight: 500;
   line-height: 1.25;
-  color: #8E8E93;
+  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -59,8 +59,8 @@
   display: grid;
   place-items: center;
   border-radius: 9999px;
-  background: #FFFFFF;
-  color: #000000;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   position: relative;
   overflow: hidden;
   transition: transform 120ms ease, background 120ms ease;
