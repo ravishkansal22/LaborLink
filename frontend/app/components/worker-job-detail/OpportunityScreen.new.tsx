@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * New opportunity / job-detail (apply flow). Gated by USE_NEW_JOB_DETAIL.
- * Same handlers as legacy OpportunityScreen: accept_suggested + Counter offer route.
- * No saved-jobs heart (concept absent). No requirements section (absent on Opportunity).
+ * Opportunity / job-detail (apply flow).
+ * Uses real-world photography and Uber/Ola monochrome dark palette.
  */
 
 import { useState } from 'react';
@@ -24,7 +23,6 @@ import {
   type Opportunity,
 } from '../../lib/api';
 import { Chip, ErrorNote, Note, Photo } from '../ui';
-import { tradeIllustrations } from '../worker-jobs/tradeArt';
 import styles from './OpportunityScreen.new.module.css';
 
 export interface OpportunityScreenNewProps {
@@ -46,7 +44,6 @@ export function OpportunityScreenNew({
   const terms = o.offer_terms;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const Illustration = tradeIllustrations[o.trade];
 
   const accept = async () => {
     setSaving(true);
@@ -65,7 +62,9 @@ export function OpportunityScreenNew({
       ? money(terms.suggested_labour_amount, terms.currency)
       : `${money(terms.permitted_min, terms.currency)}–${money(terms.permitted_max, terms.currency)}`;
 
-  const showFacts = true; // estimated_duration + suggested pay always present on Opportunity
+  const heroImage = o.image_id
+    ? api.imageUrl(o.image_id)
+    : `/images/jobs/${o.trade}.jpg`;
 
   return (
     <main className={`screen ${styles.root}`}>
@@ -76,11 +75,17 @@ export function OpportunityScreenNew({
           onClick={onBack}
           aria-label={t('Go back')}
         >
-          <ArrowLeft size={20} strokeWidth={2.25} aria-hidden />
+          <ArrowLeft size={20} strokeWidth={2.5} aria-hidden />
         </button>
-        <div className={styles.heroArt}>
-          <Illustration />
-        </div>
+        <img
+          src={heroImage}
+          alt={t(tradeNames[o.trade].en)}
+          className={styles.heroImg}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = `/images/jobs/${o.trade}.jpg`;
+          }}
+        />
+        <div className={styles.heroOverlay} />
       </section>
 
       <div className={styles.body}>
@@ -98,127 +103,70 @@ export function OpportunityScreenNew({
           </span>
         </div>
 
-        {showFacts && (
-          <div className={styles.facts} role="group" aria-label={t('Job facts')}>
-            <div className={styles.fact}>
-              <Clock size={16} strokeWidth={1.75} className={styles.factIcon} aria-hidden />
-              <strong className={styles.factValue}>
-                {t('about {time}', { time: hours(o.estimated_duration) })}
-              </strong>
-              <span className={styles.factLabel}>{t('Estimated time')}</span>
-            </div>
-            <span className={styles.factSep} aria-hidden />
-            <div className={styles.fact}>
-              <IndianRupee size={16} strokeWidth={1.75} className={styles.factIcon} aria-hidden />
-              <strong className={styles.factValue}>
-                {money(terms.suggested_labour_amount, terms.currency)}
-              </strong>
-              <span className={styles.factLabel}>{t('Expected pay')}</span>
-            </div>
-          </div>
-        )}
-
-        <section className={styles.block}>
-          <h2 className={styles.blockTitle}>{t('What the customer said')}</h2>
-          <blockquote className={styles.quote}>“{tx(o.description)}”</blockquote>
-          {o.image_id ? (
-            <div className={styles.photo}>
-              <Photo src={api.imageUrl(o.image_id)} label={t('Customer’s photo')} />
-            </div>
-          ) : null}
-        </section>
-
-        <section className={styles.rows} aria-label={t('Job details')}>
-          <div className={styles.row}>
-            <span>{t('Urgency')}</span>
-            <strong>
-              {o.urgency === 'urgent' ? (
-                <Chip tone="red" icon={<Clock size={12} />}>{t('Urgent')}</Chip>
-              ) : (
-                t(capitalise(o.urgency))
-              )}
+        <div className={styles.facts} role="group" aria-label={t('Job facts')}>
+          <div className={styles.fact}>
+            <Clock size={16} strokeWidth={1.75} className={styles.factIcon} aria-hidden />
+            <strong className={styles.factValue}>
+              {t('about {time}', { time: hours(o.estimated_duration) })}
             </strong>
+            <span className={styles.factLabel}>{t('Estimated time')}</span>
           </div>
-          <div className={styles.row}>
-            <span>{t('Type of work')}</span>
-            <strong>{t(capitalise(o.problem_category.replace(/_/g, ' ')))}</strong>
+          <span className={styles.factSep} aria-hidden />
+          <div className={styles.fact}>
+            <IndianRupee size={16} strokeWidth={1.75} className={styles.factIcon} aria-hidden />
+            <strong className={styles.factValue}>
+              {money(terms.suggested_labour_amount, terms.currency)}
+            </strong>
+            <span className={styles.factLabel}>{t('Expected pay')}</span>
           </div>
-          <div className={styles.row}>
-            <span>{t('Difficulty')}</span>
-            <strong>{t(capitalise(o.complexity))}</strong>
+        </div>
+
+        {o.description ? (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>{t('Details')}</h2>
+            <p className={styles.description}>{tx(o.description)}</p>
           </div>
-          <div className={styles.row}>
-            <span>{t('Price range')}</span>
+        ) : null}
+
+        {o.image_id ? (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>{t('Employer photo')}</h2>
+            <Photo src={api.imageUrl(o.image_id)} label={t('Photo of the problem')} />
+          </div>
+        ) : null}
+
+        <div className={styles.priceCard}>
+          <div className={styles.priceRow}>
+            <span>{t('Fair price range')}</span>
             <strong>{priceRange}</strong>
           </div>
-          <div className={styles.row}>
-            <span>{t('Travel')}</span>
-            <strong>{money(terms.travel_allowance, terms.currency)}</strong>
-          </div>
-          <div className={styles.row}>
-            <span>{t('Posted')}</span>
-            <strong>{when(o.created_at)}</strong>
-          </div>
-        </section>
-
-        <p className={styles.basis}>{t(terms.basis)}</p>
-
-        {o.limitations.map((l) => (
-          <div key={l} className={styles.note}>
-            <Note>{t(l)}</Note>
-          </div>
-        ))}
-
-        {o.has_active_offer && (
-          <div className={styles.note}>
-            <Note>
-              {t(
-                'You’ve already sent an offer for this job. The customer will see it with the others.',
-              )}
-            </Note>
-          </div>
-        )}
-
-        {Boolean(error) && (
-          <div className={styles.note}>
-            <ErrorNote error={error} />
-          </div>
-        )}
-
-        <div className={styles.sticky}>
-          {!o.has_active_offer && (
-            <button
-              type="button"
-              className={styles.secondary}
-              disabled={saving}
-              onClick={onCounter}
-            >
-              {t('Counter offer')}
-            </button>
-          )}
-          <button
-            type="button"
-            className={styles.primary}
-            disabled={o.has_active_offer || saving}
-            onClick={() => void accept()}
-          >
-            {o.has_active_offer
-              ? t('Offer sent')
-              : saving
-                ? t('Sending…')
-                : t('Apply for this job')}
-          </button>
-          {!o.has_active_offer && (
-            <p className={styles.hint}>
-              {t('Accept {amount}', { amount: money(terms.suggested_labour_amount) })}
-              {' · '}
-              {t('You can offer {range} · plus {travel} travel', {
-                range: `${money(terms.permitted_min)}–${money(terms.permitted_max)}`,
-                travel: money(terms.travel_allowance),
-              })}
-            </p>
-          )}
+          <p className={styles.priceNote}>
+            {t('You can accept the suggested price of {price} or send a counter offer.', {
+              price: money(terms.suggested_labour_amount, terms.currency),
+            })}
+          </p>
         </div>
+
+        {error ? <ErrorNote error={error} onRetry={accept} /> : null}
+      </div>
+
+      <div className={styles.stickyActions}>
+        <button
+          type="button"
+          className={styles.counterBtn}
+          onClick={onCounter}
+          disabled={saving || o.has_active_offer}
+        >
+          {t('Counter offer')}
+        </button>
+        <button
+          type="button"
+          className={styles.acceptBtn}
+          onClick={accept}
+          disabled={saving || o.has_active_offer}
+        >
+          {saving ? t('Sending…') : o.has_active_offer ? t('Offer sent') : t('Accept {price}', { price: money(terms.suggested_labour_amount, terms.currency) })}
+        </button>
       </div>
     </main>
   );

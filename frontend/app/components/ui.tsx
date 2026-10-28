@@ -29,12 +29,12 @@ export function Chip({ children, tone = 'plain', icon }: { children: ReactNode; 
   return <span className={`chip chip-${tone}`}>{icon}{children}</span>;
 }
 
-const avatarColors = ['#0758d8', '#29335b', '#08799e', '#5b4bb7', '#b4533c'];
+const avatarColors = ['#222222', '#282828', '#1F1F1F', '#2A2A2A', '#333333'];
 export function Avatar({ name, size = 44 }: { name: string; size?: number }) {
   const initials = name.trim().split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || '?';
   const hash = [...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
   return (
-    <span className="avatar" style={{ width: size, height: size, background: avatarColors[hash % avatarColors.length], fontSize: size * 0.36 }} aria-hidden="true">
+    <span className="avatar" style={{ width: size, height: size, background: avatarColors[hash % avatarColors.length], border: '1px solid #333333', color: '#FFFFFF', fontSize: size * 0.36 }} aria-hidden="true">
       {initials}
     </span>
   );

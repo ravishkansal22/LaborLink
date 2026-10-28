@@ -11,15 +11,15 @@ interface WorkerArtProps {
 }
 
 /**
- * Prefers an optional raster at `imageSrc` (e.g. /worker-icons/electrician.webp).
- * Shows the SVG until the image loads; on error keeps the SVG (no broken-image flash).
+ * Prefers the authentic real-world raster at `imageSrc` (e.g. /worker-icons/electrician.webp).
+ * Shows the clean SVG until the image loads; on error keeps the SVG.
  */
 export function WorkerArt({ Illustration, imageSrc, className, style }: WorkerArtProps) {
   const [rasterOk, setRasterOk] = useState(false);
   const [rasterFailed, setRasterFailed] = useState(!imageSrc);
 
   return (
-    <span className={className} style={{ position: 'relative', display: 'grid', placeItems: 'center', ...style }} aria-hidden="true">
+    <span className={className} style={{ position: 'relative', display: 'grid', placeItems: 'center', width: '100%', height: '100%', ...style }} aria-hidden="true">
       {!rasterOk && <Illustration />}
       {imageSrc && !rasterFailed && (
         <img
@@ -33,9 +33,10 @@ export function WorkerArt({ Illustration, imageSrc, className, style }: WorkerAr
           onError={() => setRasterFailed(true)}
           style={{
             position: rasterOk ? 'relative' : 'absolute',
-            width: 72,
-            height: 72,
-            objectFit: 'contain',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: 14,
             opacity: rasterOk ? 1 : 0,
             pointerEvents: 'none',
           }}

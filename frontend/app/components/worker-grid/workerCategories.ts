@@ -13,21 +13,21 @@ export interface WorkerCategory {
   label: string;
   labelHi: string;
   Illustration: ComponentType;
-  /** Optional raster under /public/worker-icons; WorkerArt falls back to SVG on error. */
+  /** Raster under /public/worker-icons; WorkerArt falls back to clean SVG on error. */
   imageSrc?: string;
   /** Optional corner pill; omit or leave unset to render nothing. */
   badge?: string;
-  /** Soft stage tint (CSS color). */
+  /** Dark stage tint. */
   tint: string;
 }
 
 /** Matches `allTrades` / `tradeNames` order and ids used by EmployerHomeScreen → onNewJob(trade). */
 export const workerCategories: WorkerCategory[] = (
   [
-    { id: 'electrician', Illustration: ElectricianIllustration, tint: '#e3e9ff' },
-    { id: 'plumber', Illustration: PlumberIllustration, tint: '#e1f3ff' },
-    { id: 'mason', Illustration: MasonIllustration, tint: '#ffe8e3' },
-    { id: 'carpenter', Illustration: CarpenterIllustration, tint: '#fff0e0' },
+    { id: 'electrician', Illustration: ElectricianIllustration, tint: '#1E1E1E' },
+    { id: 'plumber', Illustration: PlumberIllustration, tint: '#1E1E1E' },
+    { id: 'mason', Illustration: MasonIllustration, tint: '#1E1E1E' },
+    { id: 'carpenter', Illustration: CarpenterIllustration, tint: '#1E1E1E' },
   ] as const
 ).map((row) => ({
   ...row,

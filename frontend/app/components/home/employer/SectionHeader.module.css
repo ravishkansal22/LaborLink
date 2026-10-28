@@ -3,16 +3,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 24px 0 12px;
+  margin: 26px 0 14px;
 }
 
 .title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
   line-height: 1.25;
-  letter-spacing: -0.01em;
-  color: var(--pf-text, var(--ink));
+  letter-spacing: -0.015em;
+  color: #FFFFFF;
   min-width: 0;
 }
 
@@ -21,32 +21,32 @@
   align-items: center;
   gap: 2px;
   flex: 0 0 auto;
-  min-height: 44px;
-  padding: 0 2px;
-  margin: -10px 0;
+  min-height: 36px;
+  padding: 0 4px;
   border: none;
   background: transparent;
-  color: var(--pf-muted, var(--ink-3));
-  font-size: 14px;
+  color: #8E8E93;
+  font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   border-radius: 8px;
+  transition: color 120ms ease;
 }
 
 .action:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 .action:active {
-  opacity: 0.75;
+  opacity: 0.7;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .action:hover {
-    color: var(--pf-brand, var(--brand));
+    color: #FFFFFF;
   }
 }

@@ -1,20 +1,17 @@
 /**
- * Availability switch + Online label (green when ON only).
- * Offline track/label match pre-change Home .toggle / .online and Profile
- * .wp-switch:not(.on) / .wp-online (no .on).
+ * Availability switch + Online label (Uber-style monochrome toggle).
  */
 
 :root {
-  --avail-on-track: #0c831f;
-  --avail-on-label: #0c831f;
+  --avail-on-track: #FFFFFF;
+  --avail-on-label: #FFFFFF;
 }
 
 [data-theme='dark'] {
-  --avail-on-track: #22a33a;
-  --avail-on-label: #2ebd4a;
+  --avail-on-track: #FFFFFF;
+  --avail-on-label: #FFFFFF;
 }
 
-/* Hit area 44×44; painted track stays 46×28 */
 .avail-switch {
   position: relative;
   display: inline-flex;
@@ -35,7 +32,7 @@
 }
 
 .avail-switch:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -46,38 +43,36 @@
   height: 28px;
   flex: none;
   border-radius: 14px;
-  background: #cdd2e4;
-  transition: background 0.2s;
+  background: #262626;
+  border: 1px solid #333333;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .avail-switch-thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s;
+  background: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s, background 0.2s;
 }
 
 .avail-switch.on .avail-switch-track {
-  background: var(--avail-on-track);
+  background: #FFFFFF;
+  border-color: #FFFFFF;
 }
 
 .avail-switch.on .avail-switch-thumb {
   transform: translateX(18px);
+  background: #000000;
 }
 
 .avail-switch:focus-visible .avail-switch-track {
-  outline: 2px solid var(--acct-focus, var(--brand, #0758d8));
+  outline: 2px solid #FFFFFF;
   outline-offset: 2px;
-}
-
-/* Inner white ring so focus stays visible on green */
-.avail-switch.on:focus-visible .avail-switch-track {
-  box-shadow: inset 0 0 0 2px #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -87,12 +82,13 @@
   }
 }
 
-[data-theme='dark'] .avail-switch:not(.on) .avail-switch-track {
-  background: #3a4150;
+.online.avail-label {
+  color: #757575;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-/* Online label green when ON — beats .online.on / .wp-online.on brand blue */
 .online.avail-label.on,
 .wp-online.avail-label.on {
-  color: var(--avail-on-label);
+  color: #FFFFFF;
 }

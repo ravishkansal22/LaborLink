@@ -1,16 +1,9 @@
-/**
- * New Employer Home layout tokens — fall back to Home globals when
- * Profile [data-theme] tokens are not on the phone container.
- */
-
 .root {
-  /* Inherit .screen padding; keep theme-aware text defaults */
-  color: var(--pf-text, var(--ink));
+  color: #FFFFFF;
 }
 
 .head {
-  /* Spacing only — LocationHeader + avatar behaviour unchanged */
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .avatarBtn {
@@ -27,39 +20,41 @@
 
 .avatarBtn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+.greetingBlock {
+  margin-top: 12px;
+}
+
+.greetingPrefix {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #A0A0A0;
+  letter-spacing: -0.01em;
 }
 
 .greeting {
-  margin: 12px 0 0;
-  font-size: 31px;
-  font-weight: 700;
+  margin: 2px 0 0;
+  font-size: 30px;
+  font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  color: var(--pf-text, var(--ink));
+  color: #FFFFFF;
   overflow-wrap: anywhere;
 }
 
 .subtitle {
   margin: 6px 0 0;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 400;
   line-height: 1.4;
-  color: var(--pf-muted, var(--ink-3));
+  color: #8E8E93;
 }
 
 .pillBlock {
-  margin-top: 20px;
-}
-
-.pillCaption {
-  margin: 10px 2px 0;
-  font-size: 12.5px;
-  line-height: 1.35;
-  color: var(--pf-muted, var(--ink-3));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-top: 18px;
 }
 
 .jobStack {
@@ -74,20 +69,19 @@
   text-align: left;
   padding: 16px;
   border-radius: 20px;
-  border: 1px solid var(--pf-border, var(--line));
-  background: var(--pf-surface, var(--surface));
+  border: 1px solid #242424;
+  background: #141414;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 120ms ease, border-color 120ms ease;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--pf-text, var(--ink)) 5%, transparent);
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
 .jobCard:focus-visible {
   outline: none;
-  border-color: var(--pf-brand, var(--brand));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  border-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 .jobCard:active {
@@ -96,12 +90,9 @@
 
 @media (hover: hover) and (pointer: fine) {
   .jobCard:hover {
-    border-color: color-mix(in srgb, var(--pf-brand, var(--brand)) 35%, var(--pf-border, var(--line)));
+    border-color: #383838;
+    background: #1A1A1A;
   }
-}
-
-:global(.device-screen[data-theme='dark']) .jobCard {
-  box-shadow: none;
 }
 
 .jobTop {
@@ -112,32 +103,26 @@
 }
 
 .jobWhen {
-  font-size: 13px;
-  color: var(--pf-muted, var(--ink-3));
-  white-space: nowrap;
+  font-size: 12.5px;
+  color: #757575;
 }
 
 .jobTitle {
   margin: 10px 0 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
-  color: var(--pf-text, var(--ink));
+  color: #FFFFFF;
 }
 
 .jobMeta {
   margin: 4px 0 0;
-  font-size: 13px;
-  line-height: 1.35;
-  color: var(--pf-muted, var(--ink-3));
+  font-size: 13.5px;
+  color: #8E8E93;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .jobCard {
     transition: none;
-  }
-
-  .jobCard:active {
-    transform: none;
   }
 }
