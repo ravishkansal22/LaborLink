@@ -3,31 +3,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
   width: 100%;
-  min-height: 170px;
-  max-height: 190px;
-  padding: 20px 16px 20px 20px;
+  min-height: 160px;
+  margin-top: 24px;
+  padding: 22px 18px 22px 20px;
   border-radius: 24px;
   overflow: hidden;
-  background:
-    radial-gradient(110% 90% at 100% 10%, color-mix(in srgb, var(--pf-brand, var(--brand)) 50%, transparent) 0%, transparent 55%),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--pf-brand-dark, var(--brand-dark)) 90%, #0a1628) 0%,
-      var(--pf-brand, var(--brand)) 55%,
-      color-mix(in srgb, var(--pf-brand, var(--brand)) 72%, #0b1f4a) 100%
-    );
-  border: 1px solid color-mix(in srgb, var(--pf-brand, var(--brand)) 40%, transparent);
-  color: #fff;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
 }
 
 .copy {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 64%;
+  max-width: 58%;
 }
 
 .kicker {
@@ -35,77 +27,93 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
+  color: var(--ink-3);
   text-transform: uppercase;
-  color: color-mix(in srgb, #ffffff 72%, transparent);
 }
 
 .kickerCount {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: color-mix(in srgb, #ffffff 78%, transparent);
+  color: var(--ink);
 }
 
 .headline {
-  margin: 8px 0 0;
-  font-size: 24px;
+  margin: 6px 0 0;
+  font-size: 19px;
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 }
 
 .sub {
   margin: 6px 0 0;
-  font-size: 13px;
+  font-size: 12.5px;
+  font-weight: 400;
   line-height: 1.35;
-  color: color-mix(in srgb, #ffffff 78%, transparent);
+  color: var(--ink-2);
 }
 
 .cta {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   margin-top: 14px;
-  min-height: 36px;
-  padding: 0 14px;
-  border: none;
+  padding: 8px 16px;
   border-radius: 9999px;
-  background: #ffffff;
-  color: var(--pf-brand-dark, var(--brand-dark));
-  font-size: 13px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-size: 13.5px;
   font-weight: 700;
+  border: none;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease, background 120ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.cta:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #ffffff 55%, transparent);
+.cta:hover {
+  background: var(--btn-primary-hover);
 }
 
 .cta:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .cta:hover {
-    background: color-mix(in srgb, #ffffff 92%, var(--pf-brand, var(--brand)));
-  }
+.imageContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 52%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
 }
 
-.art {
-  flex: 0 0 auto;
-  width: 108px;
-  height: 108px;
-  margin-right: -4px;
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, var(--surface) 0%, transparent 70%),
+              linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%);
   pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cta {
+    transition: none;
+  }
+
   .cta:active {
     transform: none;
   }

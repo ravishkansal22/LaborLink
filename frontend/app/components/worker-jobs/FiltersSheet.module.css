@@ -11,7 +11,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--pf-muted, var(--ink-3));
+  color: #8E8E93;
 }
 
 .label:first-child {
@@ -26,31 +26,33 @@
 
 .chip {
   min-height: 36px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: 9999px;
-  border: 1px solid var(--pf-border, var(--line));
-  background: var(--pf-surface, var(--surface));
-  color: var(--pf-text, var(--ink));
+  border: 1px solid #282828;
+  background: #181818;
+  color: #B3B3B3;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition: all 120ms ease;
 }
 
 .chip:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }
 
 .chipOn {
-  border-color: var(--pf-brand, var(--brand));
-  background: var(--pf-brand, var(--brand));
-  color: #fff;
+  border-color: #FFFFFF;
+  background: #FFFFFF;
+  color: #000000;
+  font-weight: 700;
 }
 
 .chip:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -64,9 +66,9 @@
 .clear {
   min-height: 48px;
   border-radius: 14px;
-  border: 1px solid var(--pf-border, var(--line));
-  background: var(--pf-surface, var(--surface));
-  color: var(--pf-text, var(--ink));
+  border: 1px solid #2E2E2E;
+  background: #1E1E1E;
+  color: #FFFFFF;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -76,15 +78,15 @@
   min-height: 48px;
   border-radius: 14px;
   border: none;
-  background: var(--pf-brand, var(--brand));
-  color: #fff;
+  background: #FFFFFF;
+  color: #000000;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .clear:focus-visible,
 .apply:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }

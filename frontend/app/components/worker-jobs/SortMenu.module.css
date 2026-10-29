@@ -12,7 +12,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: var(--pf-muted, var(--ink-3));
+  color: #8E8E93;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -22,7 +22,7 @@
 
 .trigger:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }
 
 .menu {
@@ -35,9 +35,9 @@
   list-style: none;
   min-width: 148px;
   border-radius: 14px;
-  border: 1px solid var(--pf-border, var(--line));
-  background: var(--pf-surface, var(--surface));
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--pf-text, var(--ink)) 12%, transparent);
+  border: 1px solid #282828;
+  background: #181818;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .option {
@@ -48,7 +48,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: var(--pf-text, var(--ink));
+  color: #FFFFFF;
   font-size: 13px;
   font-weight: 600;
   text-align: left;
@@ -56,15 +56,12 @@
 }
 
 .optionOn {
-  background: var(--pf-brand-soft, var(--brand-soft));
-  color: var(--pf-brand, var(--brand));
+  background: #FFFFFF;
+  color: #000000;
+  font-weight: 700;
 }
 
 .option:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
-}
-
-:global(.device-screen[data-theme='dark']) .menu {
-  box-shadow: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }

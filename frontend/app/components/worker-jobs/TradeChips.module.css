@@ -17,26 +17,28 @@
 .chip {
   flex: 0 0 auto;
   min-height: 36px;
-  padding: 0 14px;
+  padding: 0 16px;
   border-radius: 9999px;
-  border: 1.5px solid var(--pf-border, var(--line));
-  background: var(--pf-surface, var(--surface));
-  color: var(--pf-text, var(--ink));
+  border: 1px solid #282828;
+  background: #161616;
+  color: #B3B3B3;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition: all 120ms ease;
 }
 
 .chip:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }
 
 .on {
-  border-color: var(--pf-brand, var(--brand));
-  background: var(--pf-brand, var(--brand));
-  color: #fff;
+  border-color: #FFFFFF;
+  background: #FFFFFF;
+  color: #000000;
+  font-weight: 700;
 }

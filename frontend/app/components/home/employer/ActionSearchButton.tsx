@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Mic, Search } from 'lucide-react';
+import { ArrowRight, Search } from 'lucide-react';
 import { t } from '../../../lib/i18n';
 import styles from './ActionSearchButton.module.css';
 
@@ -11,7 +11,7 @@ interface ActionSearchButtonProps {
 
 /**
  * Full-width search-style pill that starts the existing describe-new-job flow.
- * Not a real input — the whole control is one button.
+ * Matches Uber/Ola monochrome search style with white CTA arrow.
  */
 export function ActionSearchButton({ onDescribeJob }: ActionSearchButtonProps) {
   return (
@@ -19,13 +19,12 @@ export function ActionSearchButton({ onDescribeJob }: ActionSearchButtonProps) {
       type="button"
       className={styles.pill}
       onClick={onDescribeJob}
-      aria-label={t('Describe a new job')}
+      aria-label={t('Search for a job or worker')}
     >
       <Search size={18} strokeWidth={2} className={styles.searchIcon} aria-hidden />
       <span className={styles.label}>
-        {t('Describe your problem or search a worker…')}
+        {t('Search for a job or worker…')}
       </span>
-      <Mic size={16} strokeWidth={2.25} className={styles.micIcon} aria-hidden />
       <span className={styles.arrowCircle} aria-hidden>
         <ArrowRight size={18} strokeWidth={2.5} />
       </span>

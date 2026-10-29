@@ -2,7 +2,7 @@ import type { ThemePreference } from './types';
 
 export const THEME_STORAGE_KEY = 'laborlink.theme.v1';
 
-const DEFAULT_PREFERENCE: ThemePreference = 'light';
+const DEFAULT_PREFERENCE: ThemePreference = 'dark';
 
 function isThemePreference(value: unknown): value is ThemePreference {
   return value === 'light' || value === 'dark' || value === 'system';

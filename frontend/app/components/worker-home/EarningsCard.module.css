@@ -2,21 +2,16 @@
   margin-top: 24px;
   padding: 18px;
   border-radius: 20px;
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--pf-brand-dark, var(--brand-dark)) 92%, #0a1628) 0%,
-      var(--pf-brand, var(--brand)) 100%
-    );
-  color: #ffffff;
-  border: 1px solid color-mix(in srgb, var(--pf-brand, var(--brand)) 35%, transparent);
+  background: #141414;
+  color: #FFFFFF;
+  border: 1px solid #242424;
 }
 
 .label {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-  color: color-mix(in srgb, #ffffff 78%, transparent);
+  color: #8E8E93;
 }
 
 .amount {
@@ -26,7 +21,7 @@
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .split {
@@ -42,13 +37,13 @@
   gap: 2px;
   font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .split small {
   font-size: 12px;
   font-weight: 500;
-  color: color-mix(in srgb, #ffffff 72%, transparent);
+  color: #8E8E93;
 }
 
 .link {
@@ -60,7 +55,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: #cfe8ff;
+  color: #FFFFFF;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -72,9 +67,9 @@
 
 .link:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #ffffff 40%, transparent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }
 
 .link:active {
-  opacity: 0.85;
+  opacity: 0.75;
 }

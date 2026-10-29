@@ -3,39 +3,38 @@
  * and .pf-theme-root). Light values match the pre-theme look exactly.
  */
 
-/* ── Light (exact current Profile look) ─────────────────────── */
+/* ── Light (Uber Light Palette) ─────────────────────── */
 [data-theme="light"] {
-  --pf-bg: #faf8ff;
-  --pf-surface: #ffffff;
-  --pf-surface-2: #eef0ff;
-  --pf-border: #e2e5f3;
-  --pf-text: #10193c;
-  --pf-muted: #7a7f92;
-  --pf-muted-2: #4f5568;
-  --pf-brand: #0758d8;
-  --pf-brand-dark: #0647b0;
-  --pf-brand-soft: #e3e9ff;
-  --pf-on-brand: #ffffff;
-  --pf-danger: #d13939;
-  --pf-overlay: rgba(16, 25, 60, 0.45);
+  --pf-bg: #FFFFFF;
+  --pf-surface: #FFFFFF;
+  --pf-surface-2: #F6F6F6;
+  --pf-border: #E5E5E5;
+  --pf-text: #000000;
+  --pf-muted: #757575;
+  --pf-muted-2: #545454;
+  --pf-brand: #000000;
+  --pf-brand-dark: #1E1E1E;
+  --pf-brand-soft: #F3F3F3;
+  --pf-on-brand: #FFFFFF;
+  --pf-danger: #E11900;
+  --pf-overlay: rgba(0, 0, 0, 0.55);
 }
 
-/* ── Dark ───────────────────────────────────────────────────── */
+/* ── Dark (Uber Dark Palette) ───────────────────────── */
 [data-theme="dark"] {
-  --pf-bg: #0f1115;
-  --pf-surface: #171a21;
-  --pf-surface-2: #1f232c;
-  --pf-border: #2a303c;
-  --pf-text: #f3f4f6;
-  --pf-muted: #9ca3af;
-  --pf-muted-2: #c4c9d4;
-  /* Lightened blue for ≥4.5:1 text / ≥3:1 icon on dark surfaces */
-  --pf-brand: #6b9fff;
-  --pf-brand-dark: #8bb3ff;
-  --pf-brand-soft: #1a2740;
-  --pf-on-brand: #0f1115;
-  --pf-danger: #f07178;
-  --pf-overlay: rgba(0, 0, 0, 0.55);
+  --pf-bg: #000000;
+  --pf-surface: #141414;
+  --pf-surface-2: #1E1E1E;
+  --pf-border: #222222;
+  --pf-text: #FFFFFF;
+  --pf-muted: #8E8E93;
+  --pf-muted-2: #B3B3B3;
+  --pf-brand: #FFFFFF;
+  --pf-brand-dark: #E0E0E0;
+  --pf-brand-soft: #1E1E1E;
+  --pf-on-brand: #000000;
+  --pf-danger: #FF4D4F;
+  --pf-overlay: rgba(0, 0, 0, 0.7);
 }
 
 /* Wrapper must not break #device-scroll flex layout */
@@ -61,20 +60,55 @@
   }
 }
 
-/* Phone chrome while Profile theme is active */
-.device-screen[data-theme="dark"],
+/* Phone chrome */
 .device-screen[data-theme="light"] {
-  background: var(--pf-bg);
+  --pf-bg: #FFFFFF;
+  --pf-surface: #FFFFFF;
+  --pf-surface-2: #F6F6F6;
+  --pf-border: #E5E5E5;
+  --pf-text: #000000;
+  --pf-muted: #757575;
+  --pf-muted-2: #545454;
+  --pf-brand: #000000;
+  --pf-brand-dark: #1E1E1E;
+  --pf-brand-soft: #F3F3F3;
+  --pf-on-brand: #FFFFFF;
+  --pf-danger: #E11900;
+  --pf-overlay: rgba(0, 0, 0, 0.55);
 }
 
-.device-screen[data-theme="dark"] .status-bar,
+.device-screen[data-theme="dark"] {
+  --pf-bg: #000000;
+  --pf-surface: #141414;
+  --pf-surface-2: #1E1E1E;
+  --pf-border: #222222;
+  --pf-text: #FFFFFF;
+  --pf-muted: #8E8E93;
+  --pf-muted-2: #B3B3B3;
+  --pf-brand: #FFFFFF;
+  --pf-brand-dark: #E0E0E0;
+  --pf-brand-soft: #1E1E1E;
+  --pf-on-brand: #000000;
+  --pf-danger: #FF4D4F;
+  --pf-overlay: rgba(0, 0, 0, 0.7);
+}
+
 .device-screen[data-theme="light"] .status-bar {
-  background: var(--pf-bg);
-  color: var(--pf-text);
+  background: #FFFFFF;
+  color: #000000;
+}
+
+.device-screen[data-theme="dark"] .status-bar {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.device-screen[data-theme="light"] .home-indicator {
+  background: #000000;
 }
 
 .device-screen[data-theme="dark"] .home-indicator {
-  background: var(--pf-text);
+  background: #FFFFFF;
 }
 
 /* Map account aliases → pf tokens */

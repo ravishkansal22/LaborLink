@@ -3,9 +3,6 @@
 /**
  * New Employer Home layout. Gated by USE_NEW_EMPLOYER_HOME in screens/employer.tsx.
  * Preserves every handler/route from the legacy EmployerHomeScreen — look/layout only.
- *
- * The 3D WorkerGrid is not mounted here (local constant false). WorkerGrid files
- * and the USE_3D_WORKER_GRID flag in employer.tsx stay untouched for the legacy path.
  */
 
 import { useState } from 'react';
@@ -39,6 +36,7 @@ import type { EmployerGo } from '../../../screens/employer';
 import { ActionSearchButton } from './ActionSearchButton';
 import { PopularCategories } from './PopularCategories';
 import { HeroBanner } from './HeroBanner';
+import { JobsNearYou } from './JobsNearYou';
 import { NearbyWorkers } from './NearbyWorkers';
 import { SectionHeader } from './SectionHeader';
 import styles from './HomeScreen.new.module.css';
@@ -139,18 +137,16 @@ export function EmployerHomeScreenNew({
         </div>
       ))}
 
-      <h1 className={styles.greeting}>
-        {t('Namaste, {name}', { name: firstName })}
-      </h1>
-      <p className={styles.subtitle}>
-        {t('What work do you need done today?')}
-      </p>
+      <div className={styles.greetingBlock}>
+        <p className={styles.greetingPrefix}>{t('Good morning,')}</p>
+        <h1 className={styles.greeting}>{firstName}</h1>
+        <p className={styles.subtitle}>
+          {t('What kind of work do you need today?')}
+        </p>
+      </div>
 
       <div className={styles.pillBlock}>
         <ActionSearchButton onDescribeJob={() => onNewJob()} />
-        <p className={styles.pillCaption}>
-          {t('Add a photo and say or type what’s wrong. You’ll get a clear job description and a fair price range.')}
-        </p>
       </div>
 
       <PopularCategories
@@ -159,10 +155,15 @@ export function EmployerHomeScreenNew({
         onViewAll={openComingSoon}
       />
 
-      <HeroBanner />
+      <HeroBanner onBrowseJobs={() => onNewJob()} />
+
+      <JobsNearYou
+        onSelectJob={(trade) => onNewJob(trade)}
+        onSeeAll={openComingSoon}
+      />
 
       <NearbyWorkers
-        onDescribeJob={() => onNewJob()}
+        onDescribeJob={(trade) => onNewJob(trade)}
         onViewAll={openComingSoon}
       />
 

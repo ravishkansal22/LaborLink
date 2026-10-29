@@ -1,9 +1,11 @@
 'use client';
 
 /**
- * Profile-scoped theme (Phase A). Applies `data-theme` + `color-scheme` to the
- * phone container (`.device-screen`) so portaled sheets inherit tokens.
- * Does not touch `document.documentElement` / `body`.
+ * Global Uber Theme Provider. Supports 'light', 'dark', and 'system' modes.
+ * Applies `data-theme` + `color-scheme` to:
+ * 1. The phone frame (`.device-screen`)
+ * 2. `document.documentElement` (`<html>`)
+ * Persists user preference via localStorage and listens for system preference changes.
  */
 
 import {
@@ -30,7 +32,7 @@ const PHONE_SELECTOR = '.device-screen';
 
 function resolvePreference(preference: ThemePreference): ResolvedTheme {
   if (preference === 'light' || preference === 'dark') return preference;
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
@@ -39,38 +41,36 @@ function getPhoneContainer(): HTMLElement | null {
   return document.querySelector<HTMLElement>(PHONE_SELECTOR);
 }
 
-function applyToPhone(resolved: ResolvedTheme): void {
-  const el = getPhoneContainer();
-  if (!el) return;
-  el.setAttribute('data-theme', resolved);
-  el.style.colorScheme = resolved;
-}
-
-function clearPhoneTheme(): void {
-  const el = getPhoneContainer();
-  if (!el) return;
-  /* Phase A: leaving Profile restores light so Home stays unchanged. */
-  el.setAttribute('data-theme', 'light');
-  el.style.colorScheme = 'light';
+function applyTheme(resolved: ResolvedTheme): void {
+  if (typeof document === 'undefined') return;
+  const phone = getPhoneContainer();
+  if (phone) {
+    phone.setAttribute('data-theme', resolved);
+    phone.style.colorScheme = resolved;
+  }
+  document.documentElement.setAttribute('data-theme', resolved);
+  document.documentElement.style.colorScheme = resolved;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  /* SSR + first client render both use 'light' → no hydration mismatch. */
-  const [preference, setPreferenceState] = useState<ThemePreference>('light');
-  const [resolved, setResolved] = useState<ResolvedTheme>('light');
+  const [preference, setPreferenceState] = useState<ThemePreference>('dark');
+  const [resolved, setResolved] = useState<ResolvedTheme>('dark');
 
-  /* Read storage once before paint. */
+  /* Read stored preference on mount */
   useLayoutEffect(() => {
     const stored = loadThemePreference();
     setPreferenceState(stored);
+    const next = resolvePreference(stored);
+    setResolved(next);
+    applyTheme(next);
   }, []);
 
-  /* Resolve, paint phone container, listen for OS changes when System. */
+  /* Synchronize whenever preference changes or system theme changes */
   useLayoutEffect(() => {
     const sync = () => {
       const next = resolvePreference(preference);
       setResolved(next);
-      applyToPhone(next);
+      applyTheme(next);
     };
     sync();
 
@@ -81,12 +81,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener('change', sync);
   }, [preference]);
 
-  /* Restore light phone chrome when Profile (and this provider) unmounts. */
-  useLayoutEffect(() => () => clearPhoneTheme(), []);
-
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);
     saveThemePreference(next);
+    const resolvedNext = resolvePreference(next);
+    setResolved(resolvedNext);
+    applyTheme(resolvedNext);
   }, []);
 
   const value = useMemo(

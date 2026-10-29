@@ -1,65 +1,55 @@
-/**
- * Search-style "Describe a new job" pill.
- * Uses Home globals with Profile token fallbacks when [data-theme] is set.
- */
-
 .pill {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   height: 56px;
   min-height: 44px;
   padding: 0 8px 0 16px;
   border-radius: 9999px;
-  background: var(--pf-surface, var(--surface));
-  border: 1px solid var(--pf-border, var(--line));
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--pf-text, var(--ink)) 6%, transparent);
-  color: var(--pf-muted, var(--ink-3));
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
   text-align: left;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .pill:focus-visible {
   outline: none;
-  border-color: var(--pf-brand, var(--brand));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 28%, transparent);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.2);
 }
 
 .pill:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .pill:hover {
-    border-color: color-mix(in srgb, var(--pf-brand, var(--brand)) 35%, var(--pf-border, var(--line)));
+    border-color: var(--line-light);
+    background: var(--surface-3);
   }
 }
 
 .searchIcon {
   flex: 0 0 auto;
-  color: var(--pf-muted, var(--ink-3));
+  color: var(--ink-3);
 }
 
 .label {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.25;
-  color: var(--pf-muted, var(--ink-3));
+  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.micIcon {
-  flex: 0 0 auto;
-  color: var(--pf-brand, var(--brand));
 }
 
 .arrowCircle {
@@ -69,44 +59,15 @@
   display: grid;
   place-items: center;
   border-radius: 9999px;
-  background: var(--pf-brand, var(--brand));
-  color: var(--pf-on-brand, #fff);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   position: relative;
   overflow: hidden;
+  transition: transform 120ms ease, background 120ms ease;
 }
 
-/* Optional CSS-only idle shimmer on the arrow circle */
-.arrowCircle::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 40%,
-    color-mix(in srgb, var(--pf-on-brand, #fff) 22%, transparent) 50%,
-    transparent 60%
-  );
-  transform: translateX(-120%);
-  animation: ehPillShimmer 2.4s ease-in-out 1;
-  pointer-events: none;
-}
-
-@keyframes ehPillShimmer {
-  0%,
-  40% {
-    transform: translateX(-120%);
-  }
-  100% {
-    transform: translateX(120%);
-  }
-}
-
-:global(.device-screen[data-theme='dark']) .pill {
-  box-shadow: none;
-}
-
-:global(.device-screen[data-theme='dark']) .pill:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-brand, var(--brand)) 35%, transparent);
+.pill:hover .arrowCircle {
+  transform: scale(1.04);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -116,10 +77,5 @@
 
   .pill:active {
     transform: none;
-  }
-
-  .arrowCircle::after {
-    animation: none;
-    display: none;
   }
 }
