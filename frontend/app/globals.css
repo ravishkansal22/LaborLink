@@ -335,6 +335,15 @@ svg.filled { fill: var(--star); color: var(--star); }
 .role-card.selected { border-color: #FFFFFF; background: #1C1C1C; }
 .role-icon { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); color: var(--ink-2); }
 .role-card.selected .role-icon { background: #FFFFFF; color: #000000; }
+.role-card.selected .role-text strong {
+  color: #FFFFFF !important;
+}
+.role-card.selected .role-text small {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+.role-card.selected .radio {
+  border-color: #FFFFFF !important;
+}
 .role-text { flex: 1; display: flex; flex-direction: column; }
 .role-text strong { font-size: 18px; font-weight: 700; }
 .role-text em { font-style: normal; font-size: 15px; color: var(--ink-3); }

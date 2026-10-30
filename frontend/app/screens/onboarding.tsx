@@ -10,6 +10,50 @@ import { LANGUAGES } from '../lib/languages';
 import type { Language, Role, Session } from '../lib/session';
 import { saveExtras } from '../lib/profile';
 
+/**
+ * Automatically requests Location, Camera, and Microphone permissions.
+ * - On Mobile (Capacitor APK): Triggers native Android runtime dialogs
+ *   ("While using the app", "Only this time", "Don't allow").
+ * - On Web (localhost/browser): Triggers browser permission prompts.
+ */
+export async function requestAppPermissions(
+  onCoords?: (coords: { latitude: number; longitude: number }) => void
+) {
+  // 1. Geolocation
+  if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onCoords?.({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+      },
+      () => {
+        /* User selected "Don't allow" or timed out — continue gracefully */
+      },
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+    );
+  }
+
+  // 2. Camera & Microphone
+  if (typeof window !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+    try {
+      // Prompts combined Camera + Mic permission dialog
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      // Immediately stop all tracks so active indicators (green dot) turn off
+      stream.getTracks().forEach((track) => track.stop());
+    } catch {
+      // If combined prompt is denied/unsupported, attempt audio only
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStream.getTracks().forEach((track) => track.stop());
+      } catch {
+        /* Denied or unavailable — continue gracefully */
+      }
+    }
+  }
+}
+
 
 export function WelcomeScreen({ language, setLanguage, onContinue }: { language: Language; setLanguage: (l: Language) => void; onContinue: () => void }) {
   return (
@@ -49,8 +93,8 @@ export function WelcomeScreen({ language, setLanguage, onContinue }: { language:
 export function AccountScreen({ role, setRole, onBack, onContinue }: { role: Role; setRole: (r: Role) => void; onBack: () => void; onContinue: () => void }) {
   return (
     <main className="screen">
-      <AppBar onBack={onBack} right={<span className="step-count">{t('1 of 3')}</span>} />
-      <Steps current={1} total={3} />
+      <AppBar onBack={onBack} right={<span className="step-count">{t('1 of 2')}</span>} />
+      <Steps current={1} total={2} />
       <h1 className="h1 mt-20">{t('How will you use LaborLink?')}</h1>
       <p className="body mt-6">{t('You can switch between hiring and working from your profile.')}</p>
       <div className="stack mt-20">
@@ -221,8 +265,8 @@ export function ProfileSetupScreen({ role, session, onBack, onEmployerReady, onW
 
   return (
     <main className="screen">
-      <AppBar onBack={onBack} right={<span className="step-count">{t('3 of 3')}</span>} />
-      <Steps current={3} total={3} />
+      <AppBar onBack={onBack} right={<span className="step-count">{t('2 of 2')}</span>} />
+      <Steps current={2} total={2} />
       <h1 className="h1 mt-20">{role === 'worker' ? t('Your work profile') : t('About you')}</h1>
       <p className="body mt-6">{role === 'worker' ? t('Customers see your name, trade and experience.') : t('Workers see your name once you book them.')}</p>
 
