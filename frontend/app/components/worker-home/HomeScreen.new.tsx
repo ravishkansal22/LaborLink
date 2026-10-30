@@ -159,7 +159,14 @@ export function WorkerHomeScreenNew({
     <main className={`screen has-nav ${styles.root}`}>
       <header className={styles.head}>
         {/* Worker API has no photo field — initials Avatar only. */}
-        <Avatar name={worker.display_name} size={48} />
+        <button
+          type="button"
+          onClick={go.profile}
+          aria-label={t('Profile')}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+        >
+          <Avatar name={worker.display_name} size={48} />
+        </button>
         <div className={styles.identity}>
           <p className={styles.namaste}>{t('Namaste,')}</p>
           <h1 className={styles.name}>{worker.display_name}</h1>

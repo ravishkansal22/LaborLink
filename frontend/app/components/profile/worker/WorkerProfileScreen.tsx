@@ -50,6 +50,7 @@ import { useWorkerExtras } from './useWorkerExtras';
 import '../account/profile-theme.css';
 // @ts-ignore
 import './worker-profile.css';
+import { NotificationsSheet } from '../NotificationsSheet';
 
 export type WorkerProfileGo = {
   home: () => void;
@@ -70,6 +71,7 @@ export interface WorkerProfileScreenProps {
 
 type EditState = { open: false } | { open: true; focusField?: string };
 type SoonId = 'payments' | 'help' | 'safety' | 'notifications' | null;
+
 
 function firstEditableMissing(missing: string[]): string | undefined {
   for (const label of missing) {
@@ -107,6 +109,7 @@ function WorkerProfileScreenInner({
 }: WorkerProfileScreenProps) {
   const { preference } = useTheme();
   const { extras, ready, persist, resetExtras } = useWorkerExtras(workerId);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const data = useLoad(async () => {
     const [worker, passbook] = await Promise.all([
       api.getWorker(workerId),
@@ -256,7 +259,7 @@ function WorkerProfileScreenInner({
       icon: Receipt,
       onPress: () => {
         closeSheets();
-        setSoon('payments');
+        go.passbook();
       },
     },
     {
@@ -283,7 +286,7 @@ function WorkerProfileScreenInner({
       icon: Bell,
       onPress: () => {
         closeSheets();
-        setSoon('notifications');
+        setNotificationsOpen(true);
       },
     },
     {
@@ -402,10 +405,17 @@ function WorkerProfileScreenInner({
         onClose={() => setLangOpen(false)}
       />
 
-      <ComingSoonSheet
-        open={soon !== null}
-        title={soon ? soonTitles[soon] : ''}
-        onClose={() => setSoon(null)}
+      <NotificationsSheet
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        onViewJobs={go.jobs}
+        onViewPassbook={go.passbook}
+      />
+      <NotificationsSheet
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        onViewJobs={go.jobs}
+        onViewPassbook={go.passbook}
       />
 
       <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />

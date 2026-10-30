@@ -652,3 +652,42 @@ select.input { appearance: auto; }
 
 /* Employer's photo of the problem, shown to workers */
 .lead-thumb { width: 58px; height: 58px; flex: 0 0 58px; border-radius: 10px; object-fit: cover; background: var(--surface-2); }
+
+/* Ensure Kamai Passbook card stays visible with high-contrast text in all themes */
+.earn-card {
+  background: #141414 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+}
+
+.earn-card p {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 14px !important;
+}
+
+.earn-card strong {
+  color: #FFFFFF !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+}
+
+.earn-card .earn-split {
+  margin-top: 14px !important;
+  display: flex !important;
+  gap: 24px !important;
+}
+
+.earn-card .earn-split span {
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.earn-card .earn-split span small {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
