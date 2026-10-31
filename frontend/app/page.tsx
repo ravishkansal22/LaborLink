@@ -10,7 +10,7 @@ import {
   EmployerHomeScreen, EmployerJobScreen, EmployerJobsScreen, EmployerProfileScreen, NewJobScreen, type EmployerGo,
 } from './screens/employer';
 import { EmployerTrackScreen, WorkerTripScreen } from './screens/tracking';
-import { AccountScreen, PermissionsScreen, ProfileSetupScreen, WelcomeScreen } from './screens/onboarding';
+import { AccountScreen, ProfileSetupScreen, WelcomeScreen, requestAppPermissions } from './screens/onboarding';
 import {
   CounterOfferScreen, FindWorkScreen, OpportunityScreen, PassbookScreen, WorkerHomeScreen, WorkerJobScreen, WorkerProfileScreen,
   type WorkerGo,
@@ -153,9 +153,23 @@ export default function App() {
     case 'welcome':
       return <WelcomeScreen language={session.language} setLanguage={(language) => update({ language })} onContinue={() => push({ screen: 'account' })} />;
     case 'account':
-      return <AccountScreen role={role} setRole={setRole} onBack={back} onContinue={() => push({ screen: 'permissions' })} />;
+      return (
+        <AccountScreen
+          role={role}
+          setRole={setRole}
+          onBack={back}
+          onContinue={() => {
+            // Fire system permission dialogs in the background
+            void requestAppPermissions((coords) => update({ coords }));
+            // Jump straight to Step 2 (setup)
+            push({ screen: 'setup', role });
+          }}
+        />
+      );
     case 'permissions':
-      return <PermissionsScreen onBack={back} onCoords={(coords) => update({ coords })} onContinue={() => push({ screen: 'setup', role })} />;
+      // In case anything routes here, bounce immediately to setup
+      push({ screen: 'setup', role });
+      return null;
     case 'setup':
       return (
         <ProfileSetupScreen role={route.role ?? role} session={session} onBack={back}

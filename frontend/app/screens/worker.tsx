@@ -115,7 +115,15 @@ function WorkerHomeScreenLegacy({ workerId, go, onOpenJob, onOpportunity }: {
   return (
     <main className="screen has-nav">
       <header className="home-head">
-        <Avatar name={worker.display_name} size={40} />
+        <button
+          type="button"
+          onClick={go.profile}
+          aria-label={t('Profile')}
+          className="plain"
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+        >
+          <Avatar name={worker.display_name} size={40} />
+        </button>
         <div className="grow"><p className="small">{t('Namaste')}</p><h1 className="h3">{worker.display_name}</h1></div>
         <OnlineSwitch workerId={workerId} available={worker.availability === 'available'} onChanged={() => void data.reload(true)} />
       </header>
